@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import type { Pedido } from '../types/Pedido';
-import { gerarIdAleatorio } from '../utils/formatadores';
+import { ServicoPedidos } from '../services/ServicoPedidos';
 
 interface DadosContextoPedidos {
     pedidos: Pedido[];
@@ -22,38 +23,25 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
     const [pedidos, setPedidos] = useState<Pedido[]>([]);
     const [novoPedidoRecebido, setNovoPedidoRecebido] = useState(false);
 
+    useEffect(() => {
+        const descadastrar = ServicoPedidos.assinarMudancas(setPedidos);
+        return () => descadastrar();
+    }, []);
+
     function adicionarPedido(pedidoNovo: Omit<Pedido, 'id' | 'dataCriacao' | 'status'>) {
-        const pedido: Pedido = {
-            ...pedidoNovo,
-            id: gerarIdAleatorio(),
-            status: 'pendente',
-            dataCriacao: new Date().toISOString(),
-        };
-
-        setPedidos(atual => [...atual, pedido]);
+        const pedidoCriado = ServicoPedidos.criar(pedidoNovo);
+        setPedidos(atual => [...atual, pedidoCriado]);
         setNovoPedidoRecebido(true);
-
-        console.log('[DEBUG][adicionarPedido] Novo pedido recebido:', pedido);
     }
 
     function confirmarPedido(idPedido: string) {
-        setPedidos(atual =>
-            atual.map(pedido =>
-                pedido.id === idPedido
-                    ? { ...pedido, status: 'preparando' as const, dataAtualizacao: new Date().toISOString() }
-                    : pedido
-            )
-        );
+        const atualizados = ServicoPedidos.atualizarStatus(idPedido, 'preparando');
+        setPedidos(atualizados);
     }
 
     function marcarComoPronto(idPedido: string) {
-        setPedidos(atual =>
-            atual.map(pedido =>
-                pedido.id === idPedido
-                    ? { ...pedido, status: 'pronto' as const, dataAtualizacao: new Date().toISOString() }
-                    : pedido
-            )
-        );
+        const atualizados = ServicoPedidos.atualizarStatus(idPedido, 'pronto');
+        setPedidos(atualizados);
     }
 
     function limparNotificacao() {
@@ -64,28 +52,6 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
     const pedidosPendentes = pedidos.filter(
         p => p.status === 'pendente' || p.status === 'preparando'
     );
-
-    // Simulação: Adicionar pedido de teste após 5 segundos (remover em produção)
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            adicionarPedido({
-                idMesa: '5',
-                itens: [
-                    {
-                        idProduto: '4',
-                        quantidade: 2,
-                        observacao: 'Sem cebola, por favor',
-                    },
-                    {
-                        idProduto: '1',
-                        quantidade: 1,
-                    },
-                ],
-            });
-        }, 5000);
-
-        return () => clearTimeout(timer);
-    }, []);
 
     return (
         <ContextoPedidos.Provider

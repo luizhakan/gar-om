@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCarrinho } from '../../contexts/ContextoCarrinho';
 import { ControleQuantidade } from '../../components/ControleQuantidade';
 import { Botao } from '../../components/Botao';
 import { formatarMoeda } from '../../utils/formatadores';
+import { ServicoPedidos } from '../../services/ServicoPedidos';
 import styles from './RevisarPedido.module.css';
 
 export function RevisarPedido() {
@@ -15,17 +17,27 @@ export function RevisarPedido() {
         total,
         limparCarrinho
     } = useCarrinho();
+    const [mensagemSucesso, setMensagemSucesso] = useState('');
 
     const handleVoltarCardapio = () => {
         navigate(`/mesa/${idMesa}`);
     };
 
     const handleEnviarPedido = () => {
-        // TODO: Integrar com backend
-        console.log('[DEBUG][handleEnviarPedido] Enviando pedido:', itens);
-        alert('Pedido enviado para a cozinha! 🎉');
+        if (itens.length === 0) return;
+
+        ServicoPedidos.criar({
+            idMesa: idMesa ?? '0',
+            itens: itens.map(item => ({
+                idProduto: item.idProduto,
+                quantidade: item.quantidade,
+                observacao: item.observacao,
+            })),
+        });
+
+        setMensagemSucesso('Pedido enviado para a cozinha! 🎉');
         limparCarrinho();
-        navigate(`/mesa/${idMesa}`);
+        setTimeout(() => navigate(`/mesa/${idMesa}`), 600);
     };
 
     if (itens.length === 0) {
@@ -98,6 +110,10 @@ export function RevisarPedido() {
                         <span className={styles.labelTotal}>Total</span>
                         <span className={styles.valorTotal}>{formatarMoeda(total)}</span>
                     </div>
+
+                    {mensagemSucesso && (
+                        <p className={styles.mensagemSucesso}>{mensagemSucesso}</p>
+                    )}
 
                     <Botao
                         variante="primario"

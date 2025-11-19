@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCarrinho } from '../../contexts/ContextoCarrinho';
 import { ListaProdutos } from '../../components/ListaProdutos';
 import { CarrinhoFlutuante } from '../../components/CarrinhoFlutuante';
+import { ModalObservacao } from '../../components/ModalObservacao';
 import { produtosMock, categoriasMock } from '../../mocks/cardapio';
 import type { Produto } from '../../types/Produto';
 import styles from './styles.module.css';
@@ -11,10 +13,21 @@ export function CardapioCliente() {
     const navigate = useNavigate();
     const { adicionarItem } = useCarrinho();
 
-    const handleAdicionarProduto = (produto: Produto) => {
-        adicionarItem(produto);
-        // TODO: Abrir modal de observação
-        console.log('[DEBUG][handleAdicionarProduto] Produto adicionado:', produto.nome);
+    const [produtoSelecionado, setProdutoSelecionado] = useState<Produto | null>(null);
+
+    const handleSelecionarProduto = (produto: Produto) => {
+        setProdutoSelecionado(produto);
+    };
+
+    const handleConfirmarObservacao = (observacao: string) => {
+        if (!produtoSelecionado) return;
+
+        adicionarItem(produtoSelecionado, observacao);
+        setProdutoSelecionado(null);
+    };
+
+    const handleFecharModal = () => {
+        setProdutoSelecionado(null);
     };
 
     const handleRevisarPedido = () => {
@@ -34,11 +47,18 @@ export function CardapioCliente() {
                 <ListaProdutos
                     produtos={produtosMock}
                     categorias={categoriasMock}
-                    aoClicarProduto={handleAdicionarProduto}
+                    aoClicarProduto={handleSelecionarProduto}
                 />
             </main>
 
             <CarrinhoFlutuante aoClicarRevisar={handleRevisarPedido} />
+
+            <ModalObservacao
+                aberto={!!produtoSelecionado}
+                produto={produtoSelecionado}
+                aoConfirmar={handleConfirmarObservacao}
+                aoCancelar={handleFecharModal}
+            />
         </div>
     );
 }

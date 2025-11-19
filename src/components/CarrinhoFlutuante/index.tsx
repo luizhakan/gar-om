@@ -1,6 +1,5 @@
 import { useCarrinho } from '../../contexts/ContextoCarrinho';
 import { formatarMoeda } from '../../utils/formatadores';
-import { Botao } from '../Botao';
 import styles from './styles.module.css';
 
 interface PropsCarrinhoFlutuante {
