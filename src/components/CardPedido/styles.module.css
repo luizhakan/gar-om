@@ -1,0 +1,134 @@
+.card {
+    background-color: var(--cor-superficie);
+    border-radius: var(--raio-lg);
+    padding: var(--espaco-xl);
+    border: 3px solid transparent;
+    transition: all 0.3s ease;
+    min-width: 350px;
+}
+
+.card.pendente {
+    border-color: var(--cor-erro);
+    box-shadow: 0 0 20px rgba(255, 69, 58, 0.3);
+    animation: pulsar 2s infinite;
+}
+
+.card.preparando {
+    border-color: var(--cor-aviso);
+    opacity: 0.8;
+}
+
+/* Cabeçalho */
+.cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--espaco-lg);
+    padding-bottom: var(--espaco-md);
+    border-bottom: 2px solid var(--cor-borda);
+}
+
+.mesaDestaque {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-xs);
+}
+
+.labelMesa {
+    font-size: var(--tamanho-texto-sm);
+    color: var(--cor-texto-secundario);
+    font-weight: var(--peso-medio);
+    letter-spacing: 1px;
+}
+
+.numeroMesa {
+    font-size: 3rem;
+    font-weight: var(--peso-negrito);
+    color: var(--cor-primaria);
+    line-height: 1;
+}
+
+.tempo {
+    display: flex;
+    align-items: center;
+    gap: var(--espaco-sm);
+    font-size: var(--tamanho-texto-lg);
+    color: var(--cor-texto-secundario);
+}
+
+.iconeRelogio {
+    font-size: 1.5rem;
+}
+
+/* Lista de itens */
+.listaItens {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-md);
+    margin-bottom: var(--espaco-lg);
+}
+
+.item {
+    display: flex;
+    gap: var(--espaco-md);
+    align-items: flex-start;
+}
+
+.quantidadeBadge {
+    background-color: var(--cor-primaria);
+    color: white;
+    font-weight: var(--peso-negrito);
+    font-size: var(--tamanho-texto-md);
+    padding: var(--espaco-xs) var(--espaco-sm);
+    border-radius: var(--raio-sm);
+    min-width: 40px;
+    text-align: center;
+}
+
+.infoItem {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-xs);
+    flex: 1;
+}
+
+.nomeItem {
+    font-size: var(--tamanho-titulo-sm);
+    font-weight: var(--peso-negrito);
+    color: var(--cor-texto-primario);
+}
+
+.observacao {
+    font-size: var(--tamanho-texto-md);
+    color: var(--cor-aviso);
+    font-weight: var(--peso-medio);
+    background-color: rgba(255, 159, 10, 0.1);
+    padding: var(--espaco-xs) var(--espaco-sm);
+    border-radius: var(--raio-sm);
+    border-left: 3px solid var(--cor-aviso);
+}
+
+/* Ações */
+.acoes {
+    display: flex;
+    gap: var(--espaco-md);
+}
+
+.botaoAcao {
+    flex: 1;
+}
+
+/* Animação de pulsar para pedidos pendentes */
+@keyframes pulsar {
+    0% {
+        box-shadow: 0 0 20px rgba(255, 69, 58, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 0 30px rgba(255, 69, 58, 0.6);
+    }
+
+    100% {
+        box-shadow: 0 0 20px rgba(255, 69, 58, 0.3);
+    }
+}

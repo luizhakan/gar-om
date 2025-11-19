@@ -1,0 +1,33 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-2xl);
+}
+
+.secaoCategoria {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-lg);
+}
+
+.tituloCategoria {
+    font-size: var(--tamanho-titulo-md);
+    font-weight: var(--peso-negrito);
+    color: var(--cor-texto-primario);
+    margin: 0;
+    padding-bottom: var(--espaco-sm);
+    border-bottom: 2px solid var(--cor-primaria);
+}
+
+.grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--espaco-lg);
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .grade {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,30 @@
+.container {
+    min-height: 100vh;
+    padding-bottom: 120px;
+    /* Espaço para o botão flutuante */
+}
+
+.cabecalho {
+    background: linear-gradient(135deg, var(--cor-superficie) 0%, var(--cor-fundo) 100%);
+    padding: var(--espaco-xl) 0;
+    margin-bottom: var(--espaco-2xl);
+    border-bottom: 1px solid var(--cor-borda);
+}
+
+.titulo {
+    font-size: var(--tamanho-titulo-lg);
+    font-weight: var(--peso-negrito);
+    color: var(--cor-texto-primario);
+    margin: 0 0 var(--espaco-xs) 0;
+}
+
+.subtitulo {
+    font-size: var(--tamanho-texto-lg);
+    color: var(--cor-texto-secundario);
+    margin: 0;
+}
+
+.conteudoPrincipal {
+    padding-top: var(--espaco-lg);
+    padding-bottom: var(--espaco-lg);
+}

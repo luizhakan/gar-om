@@ -1,0 +1,77 @@
+/* Reset CSS Moderno */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto-primario);
+    font-family: var(--fonte-padrao);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.5;
+    min-height: 100vh;
+}
+
+/* Inputs e Botões herdam fonte */
+input,
+button,
+textarea,
+select {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+}
+
+/* Remover estilos padrão de botão */
+button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+/* Links */
+a {
+    color: var(--cor-primaria);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+a:hover {
+    color: var(--cor-primaria-hover);
+}
+
+/* Utilitários Globais */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--espaco-md);
+}
+
+/* Scrollbar customizada (estilo dark) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--cor-fundo);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--cor-superficie);
+    border-radius: var(--raio-md);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--cor-superficie-hover);
+}

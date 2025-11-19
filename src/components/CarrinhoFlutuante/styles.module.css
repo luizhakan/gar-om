@@ -1,0 +1,103 @@
+.container {
+    position: fixed;
+    bottom: var(--espaco-lg);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--z-flutuante);
+
+    /* Animação de entrada */
+    animation: aparecer 0.3s ease-out;
+}
+
+.botaoFlutuante {
+    background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-primaria-hover) 100%);
+    border: none;
+    border-radius: var(--raio-xl);
+    padding: var(--espaco-md) var(--espaco-xl);
+    cursor: pointer;
+
+    box-shadow: var(--sombra-forte);
+    transition: all 0.2s ease;
+}
+
+.botaoFlutuante:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+}
+
+.botaoFlutuante:active {
+    transform: translateY(0);
+}
+
+.conteudo {
+    display: flex;
+    align-items: center;
+    gap: var(--espaco-lg);
+}
+
+.badge {
+    background-color: white;
+    color: var(--cor-primaria);
+    width: 32px;
+    height: 32px;
+    border-radius: var(--raio-circulo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--peso-negrito);
+    font-size: var(--tamanho-texto-md);
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+}
+
+.label {
+    color: white;
+    font-size: var(--tamanho-texto-sm);
+    opacity: 0.9;
+}
+
+.total {
+    color: white;
+    font-size: var(--tamanho-titulo-sm);
+    font-weight: var(--peso-negrito);
+}
+
+.icone {
+    color: white;
+    font-size: var(--tamanho-titulo-md);
+    font-weight: bold;
+}
+
+@keyframes aparecer {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .container {
+        left: var(--espaco-md);
+        right: var(--espaco-md);
+        transform: none;
+    }
+
+    .botaoFlutuante {
+        width: 100%;
+    }
+
+    .conteudo {
+        justify-content: space-between;
+    }
+}

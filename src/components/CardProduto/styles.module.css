@@ -1,0 +1,92 @@
+.card {
+    background-color: var(--cor-superficie);
+    border-radius: var(--raio-lg);
+    padding: var(--espaco-lg);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sombra-media);
+    border-color: var(--cor-primaria);
+}
+
+.card.indisponivel {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.card.indisponivel:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.conteudo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-sm);
+}
+
+.nome {
+    font-size: var(--tamanho-titulo-sm);
+    font-weight: var(--peso-negrito);
+    color: var(--cor-texto-primario);
+    margin: 0;
+}
+
+.descricao {
+    font-size: var(--tamanho-texto-sm);
+    color: var(--cor-texto-secundario);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.rodape {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--espaco-sm);
+}
+
+.preco {
+    font-size: var(--tamanho-titulo-sm);
+    font-weight: var(--peso-negrito);
+    color: var(--cor-primaria);
+}
+
+.botaoAdicionar {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--raio-circulo);
+    background-color: var(--cor-primaria);
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.botaoAdicionar:hover {
+    background-color: var(--cor-primaria-hover);
+    transform: scale(1.1);
+}
+
+.botaoAdicionar:active {
+    transform: scale(0.95);
+}
+
+.badgeIndisponivel {
+    font-size: var(--tamanho-texto-xs);
+    padding: var(--espaco-xs) var(--espaco-sm);
+    background-color: var(--cor-erro);
+    color: white;
+    border-radius: var(--raio-sm);
+    font-weight: var(--peso-medio);
+}
