@@ -34,6 +34,29 @@ const EVENTO_ATUALIZACAO = 'pedidos-atualizados';
 const API_BASE = env.apiBaseUrl.replace(/\/$/, '');
 const usarApi = Boolean(API_BASE);
 
+async function requestStatusPublico(idPedido: string): Promise<PedidoApi> {
+    if (!usarApi) {
+        throw new Error('API não configurada');
+    }
+    const restauranteId = obterRestauranteId();
+    if ((restauranteId ?? '') === '') {
+        throw new Error('Restaurante não definido na sessão');
+    }
+
+    const resposta = await fetch(`${API_BASE}/pedidos/${idPedido}/status-publico`, {
+        headers: {
+            'Content-Type': 'application/json',
+            'x-restaurante-id': restauranteId ?? '',
+        },
+    });
+
+    const texto = await resposta.text();
+    if (!resposta.ok) {
+        throw new Error(texto || 'Falha ao obter status do pedido');
+    }
+    return JSON.parse(texto) as PedidoApi;
+}
+
 async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     if (!usarApi) {
         throw new Error('API não configurada');
@@ -41,7 +64,7 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
 
     const restauranteId = obterRestauranteId();
     const token = obterToken();
-    if ((restauranteId ?? '') === '' || (token ?? '') === '') {
+    if ((restauranteId ?? '') === '') {
         throw new Error('Sessão de restaurante não definida');
     }
 
@@ -54,12 +77,17 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
         ...init,
     });
 
+    const texto = await resposta.text();
+
     if (!resposta.ok) {
-        const texto = await resposta.text();
         throw new Error(texto || 'Falha na requisição de pedidos');
     }
 
-    return resposta.json() as Promise<T>;
+    if ((texto ?? '') === '') {
+        return undefined as T;
+    }
+
+    return JSON.parse(texto) as T;
 }
 
 function obterPedidosStorage(): Pedido[] {
@@ -88,12 +116,13 @@ function mapearPedidoApi(payload: PedidoApi): Pedido {
         idProduto: item.produtoId,
         quantidade: item.quantidade,
         observacao: item.observacao ?? undefined,
+        precoUnitario: item.precoUnitario ?? item.produto?.preco,
         produto: item.produto
             ? {
                 id: item.produto.id,
                 nome: item.produto.nome,
                 descricao: item.produto.descricao ?? undefined,
-                preco: item.produto.preco || 0,
+                preco: item.produto.preco || item.precoUnitario || 0,
                 idCategoria: item.produto.idCategoria,
                 disponivel: item.produto.disponivel,
                 imagemUrl: item.produto.imagemUrl ?? undefined,
@@ -152,6 +181,40 @@ export const ServicoPedidos = {
         salvarPedidosStorage([...pedidosAtuais, novoPedido]);
 
         return novoPedido;
+    },
+
+    async editar(idPedido: string, pedido: Omit<Pedido, 'id' | 'status' | 'dataCriacao'>): Promise<Pedido> {
+        if (usarApi) {
+            const data = await requestApi<PedidoApi>(`/pedidos/${idPedido}`, {
+                method: 'PATCH',
+                body: JSON.stringify(pedido),
+            });
+            return mapearPedidoApi(data);
+        }
+
+        const pedidosAtuais = obterPedidosStorage();
+        const indice = pedidosAtuais.findIndex(p => p.id === idPedido);
+        if (indice === -1) {
+            throw new Error('Pedido não encontrado para edição');
+        }
+
+        const original = pedidosAtuais[indice];
+        const atualizado: Pedido = {
+            ...original,
+            ...pedido,
+            status: 'pendente',
+            dataAtualizacao: new Date().toISOString(),
+        };
+
+        const novos = [...pedidosAtuais];
+        novos[indice] = atualizado;
+        salvarPedidosStorage(novos);
+        return atualizado;
+    },
+
+    async obterStatusPublico(idPedido: string): Promise<Pedido> {
+        const data = await requestStatusPublico(idPedido);
+        return mapearPedidoApi(data);
     },
 
     async atualizarStatus(idPedido: string, status: StatusPedido): Promise<Pedido[]> {

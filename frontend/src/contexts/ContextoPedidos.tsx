@@ -24,11 +24,24 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
             setPedidos((pedidosAntigos) => {
                 const pedidosPendentesNovos = novosPedidos.filter(p => p.status === 'pendente');
                 const pedidosPendentesAntigos = pedidosAntigos.filter(p => p.status === 'pendente');
-                
-                if (pedidosPendentesNovos.length > pedidosPendentesAntigos.length) {
+
+                const assinatura = (pedido: Pedido) => {
+                    const itens = pedido.itens
+                        .map(i => `${i.idProduto}:${i.quantidade}:${i.observacao ?? ''}`)
+                        .join('|');
+                    return `${pedido.id}|${pedido.status}|${pedido.dataAtualizacao ?? pedido.dataCriacao}|${itens}`;
+                };
+
+                const houveMudanca = pedidosPendentesNovos.some(novo => {
+                    const antigo = pedidosPendentesAntigos.find(a => a.id === novo.id);
+                    if (!antigo) return true;
+                    return assinatura(antigo) !== assinatura(novo);
+                });
+
+                if (pedidosPendentesNovos.length > pedidosPendentesAntigos.length || houveMudanca) {
                     setNovoPedidoRecebido(true);
                 }
-                
+
                 return novosPedidos;
             });
         });
@@ -84,5 +97,4 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
         </ContextoPedidos.Provider>
     );
 }
-
 

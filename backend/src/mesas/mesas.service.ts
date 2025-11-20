@@ -1,9 +1,29 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import type { Prisma } from '@prisma/client';
 
 @Injectable()
 export class MesasService {
     constructor(private prisma: PrismaService) {}
+
+    private async garantirMesa(idMesaRecebido: string, restauranteId: string) {
+        const numeroMesa = Number(idMesaRecebido);
+        const filtros: Prisma.MesaWhereInput[] = [{ id: idMesaRecebido }];
+        if (Number.isInteger(numeroMesa)) {
+            filtros.push({ numero: numeroMesa });
+        }
+
+        const mesaExistente = await this.prisma.mesa.findFirst({
+            where: {
+                restauranteId,
+                OR: filtros,
+            },
+        });
+
+        if (mesaExistente) return mesaExistente;
+
+        throw new NotFoundException('Mesa não encontrada ou não pertence ao restaurante');
+    }
 
     async listar(restauranteId: string) {
         const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
@@ -47,6 +67,7 @@ export class MesasService {
                 numero,
                 codigoQr: urlMesa.toString(),
                 ocupada: false,
+                contaSolicitada: false,
                 restauranteId: restaurante.id,
             }
         });
@@ -67,6 +88,16 @@ export class MesasService {
         const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
         if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
 
+        const pedidosExistentes = typeof this.prisma.pedido.count === 'function'
+            ? await this.prisma.pedido.count({ where: { restauranteId } })
+            : 0;
+
+        if (pedidosExistentes > 0) {
+            throw new BadRequestException(
+                'Não é possível reconfigurar mesas enquanto existirem pedidos vinculados.'
+            );
+        }
+
         await this.prisma.mesa.deleteMany({ where: { restauranteId } });
 
         const mesas = Array.from({ length: quantidade }, (_, idx) => {
@@ -78,6 +109,7 @@ export class MesasService {
                 numero,
                 codigoQr: urlMesa.toString(),
                 ocupada: false,
+                contaSolicitada: false,
                 restauranteId,
             };
         });
@@ -93,14 +125,69 @@ export class MesasService {
     }
 
     async excluir(id: string, restauranteId: string) {
-        const mesa = await this.prisma.mesa.findFirst({
-            where: { id, restauranteId },
-        });
+        const porId = await this.prisma.mesa.findFirst({ where: { id, restauranteId } });
+
+        const numeroExtraido = (() => {
+            const numericoDireto = Number(id);
+            if (Number.isInteger(numericoDireto)) return numericoDireto;
+            if (id.startsWith('mesa-')) {
+                const possivelNumero = Number(id.replace('mesa-', ''));
+                return Number.isInteger(possivelNumero) ? possivelNumero : undefined;
+            }
+            return undefined;
+        })();
+
+        const mesa =
+            porId ??
+            (numeroExtraido !== undefined
+                ? await this.prisma.mesa.findFirst({
+                    where: { numero: numeroExtraido, restauranteId },
+                })
+                : null);
 
         if (!mesa) {
             throw new NotFoundException('Mesa não encontrada ou não pertence a este restaurante.');
         }
 
-        await this.prisma.mesa.delete({ where: { id } });
+        const pedidosVinculados = await this.prisma.pedido.count({
+            where: { idMesa: mesa.id },
+        });
+
+        if (pedidosVinculados > 0) {
+            throw new BadRequestException(
+                'Mesa não pode ser excluída porque possui pedidos associados.'
+            );
+        }
+
+        await this.prisma.mesa.delete({ where: { id: mesa.id } });
+    }
+
+    async solicitarConta(id: string, restauranteId: string) {
+        const mesa = await this.garantirMesa(id, restauranteId);
+        if (!mesa.ocupada) {
+            throw new BadRequestException('Mesa não está ocupada');
+        }
+
+        return this.prisma.mesa.update({
+            where: { id: mesa.id },
+            data: { contaSolicitada: true, ocupada: true },
+        });
+    }
+
+    async fechar(id: string, restauranteId: string) {
+        const mesa = await this.garantirMesa(id, restauranteId);
+        if (!mesa.ocupada) {
+            throw new BadRequestException('Mesa já está livre');
+        }
+        if (!mesa.contaSolicitada) {
+            throw new BadRequestException('Conta não solicitada para esta mesa');
+        }
+        return this.prisma.mesa.update({
+            where: { id: mesa.id },
+            data: {
+                ocupada: false,
+                contaSolicitada: false,
+            },
+        });
     }
 }

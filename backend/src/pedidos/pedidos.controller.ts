@@ -5,6 +5,7 @@ import { AtualizarStatusDto } from './dto/atualizar-status.dto';
 import { AuthGuard, Roles } from '../auth/auth.guard';
 import { UsuarioAutenticado } from '../auth/auth-user.decorator';
 import type { AuthTokenPayload } from '../auth/token.util';
+import { EditarPedidoDto } from './dto/editar-pedido.dto';
 
 @Controller('pedidos')
 export class PedidosController {
@@ -24,6 +25,27 @@ export class PedidosController {
         }
 
         return this.pedidosService.criar(dto, restauranteId);
+    }
+
+    @Patch(':id')
+    editar(
+        @Param('id') id: string,
+        @Body() dto: EditarPedidoDto,
+        @Headers('x-restaurante-id') restauranteId?: string,
+    ) {
+        if (!restauranteId) {
+            throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
+        }
+
+        return this.pedidosService.editar(id, dto, restauranteId);
+    }
+
+    @Get(':id/status-publico')
+    statusPublico(@Param('id') id: string, @Headers('x-restaurante-id') restauranteId?: string) {
+        if (!restauranteId) {
+            throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
+        }
+        return this.pedidosService.statusPublico(id, restauranteId);
     }
 
     @UseGuards(AuthGuard)

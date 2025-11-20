@@ -91,6 +91,11 @@
     gap: var(--espaco-md);
 }
 
+.quantidadeResumo {
+    font-weight: var(--peso-negrito);
+    color: var(--cor-texto-primario);
+}
+
 .botaoRemover {
     background: none;
     border: none;
@@ -145,6 +150,47 @@
 
 .botaoEnviar {
     width: 100%;
+}
+
+.statusPedido {
+    margin: 0;
+    font-weight: var(--peso-medio);
+    color: var(--cor-texto-primario);
+}
+
+.resumoPedido {
+    border-top: 1px solid var(--cor-borda);
+    padding-top: var(--espaco-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-sm);
+}
+
+.resumoTitulo {
+    margin: 0;
+    font-weight: var(--peso-negrito);
+}
+
+.resumoLista {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-xs);
+}
+
+.resumoItem {
+    display: flex;
+    justify-content: space-between;
+    font-weight: var(--peso-medio);
+}
+
+.resumoTotalLinha {
+    display: flex;
+    justify-content: space-between;
+    font-weight: var(--peso-negrito);
+    margin-top: var(--espaco-xs);
 }
 
 /* Responsividade */

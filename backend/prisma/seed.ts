@@ -76,8 +76,10 @@ async function main() {
             return {
                 id: `mesa-${numero}`,
                 numero,
-                codigoQr: `${baseUrl}/mesa/${numero}`,
+                codigoQr: `${baseUrl}/mesa/${numero}?restauranteId=${restaurante.id}`,
                 restauranteId: restaurante.id,
+                ocupada: false,
+                contaSolicitada: false,
             };
         }),
     });
@@ -90,6 +92,8 @@ async function main() {
             status: PedidoStatus.pendente,
             mesa: { connect: { id: 'mesa-1' } },
             restaurante: { connect: { id: restaurante.id } },
+            // Marca mesa 1 como ocupada no estado inicial do seed
+            dataCriacao: new Date(),
             itens: {
                 create: [
                     {
@@ -106,6 +110,10 @@ async function main() {
                 ],
             },
         },
+    });
+    await prisma.mesa.update({
+        where: { id: 'mesa-1' },
+        data: { ocupada: true, contaSolicitada: false },
     });
 
     console.log('Pedido de demonstração criado.');

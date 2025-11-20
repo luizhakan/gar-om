@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ToastStack } from '../components/Toast';
 
@@ -30,18 +30,20 @@ interface ProvedorToastProps {
 export function ProvedorToast({ children }: ProvedorToastProps) {
     const [toasts, setToasts] = useState<Toast[]>([]);
 
-    function remover(id: string) {
+    const remover = useCallback((id: string) => {
         setToasts(lista => lista.filter(item => item.id !== id));
-    }
+    }, []);
 
-    function notificar(mensagem: string, tipo: TipoToast = 'info', duracaoMs = 4000) {
+    const notificar = useCallback((mensagem: string, tipo: TipoToast = 'info', duracaoMs = 4000) => {
         const toast: Toast = { id: gerarId(), mensagem, tipo, duracaoMs };
         setToasts(lista => [...lista, toast]);
         window.setTimeout(() => { remover(toast.id); }, duracaoMs);
-    }
+    }, [remover]);
+
+    const valorContexto = useMemo(() => ({ notificar }), [notificar]);
 
     return (
-        <ContextoToast.Provider value={{ notificar }}>
+        <ContextoToast.Provider value={valorContexto}>
             {children}
             <ToastStack toasts={toasts} onFechar={remover} />
         </ContextoToast.Provider>

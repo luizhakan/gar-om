@@ -26,7 +26,8 @@ function ConteudoPainelCozinha() {
     const [erroLogin, setErroLogin] = useState('');
 
     const pedidosNaoConfirmados = pedidosPendentes.filter(p => p.status === 'pendente');
-    const devTocarAlerta = pedidosNaoConfirmados.length > 0 && novoPedidoRecebido;
+    // Toca alerta sempre que houver pedidos pendentes na fila
+    const devTocarAlerta = pedidosNaoConfirmados.length > 0;
 
     const { ativarAudio } = useAlertaSonoro(devTocarAlerta);
 
@@ -36,9 +37,14 @@ function ConteudoPainelCozinha() {
     };
 
     const handleAtivarSom = async () => {
-        await ativarAudio();
-        setAudioAtivado(true);
-        setMostrarModalSom(false);
+        try {
+            await ativarAudio();
+            setAudioAtivado(true);
+            setMostrarModalSom(false);
+        } catch (error) {
+            console.warn('[PainelCozinha] Não foi possível ativar áudio automaticamente', error);
+            setMostrarModalSom(true);
+        }
     };
 
     const handleLoginCozinha = async () => {
@@ -53,20 +59,6 @@ function ConteudoPainelCozinha() {
             setErroLogin('Falha no login da cozinha.');
         }
     };
-
-    // Tentar ativar som automaticamente
-    useEffect(() => {
-        const tentarAtivar = async () => {
-            try {
-                await ativarAudio();
-                setAudioAtivado(true);
-                setMostrarModalSom(false);
-            } catch {
-                setMostrarModalSom(true);
-            }
-        };
-        void tentarAtivar();
-    }, [ativarAudio]);
 
     if ((restauranteId ?? '') === '' || (token ?? '') === '') {
         return (

@@ -1,13 +1,13 @@
-import { IsInt, IsNotEmpty, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString, IsUrl, Min } from 'class-validator';
 
 export class ConfigurarMesasDto {
     @IsInt()
     @Min(1)
-    @Max(200)
+    @IsNotEmpty()
     total!: number;
 
-    @IsOptional()
     @IsString()
-    @IsNotEmpty()
+    @IsUrl({ require_tld: false })
+    @IsOptional()
     baseUrl?: string;
 }

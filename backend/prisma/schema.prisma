@@ -80,6 +80,7 @@ model Mesa {
   numero        Int
   codigoQr      String
   ocupada       Boolean     @default(false)
+  contaSolicitada Boolean   @default(false)
   restauranteId String
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
   pedidos       Pedido[]

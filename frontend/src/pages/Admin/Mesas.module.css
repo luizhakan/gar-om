@@ -61,11 +61,17 @@
 .input {
     width: 100%;
     border-radius: var(--raio-borda-md);
-    border: 1px solid var(--cor-borda);
-    background: var(--cor-fundo);
-    color: var(--cor-texto-principal);
+    border: 1px solid var(--cor-texto-principal);
+    background: #fff;
+    color: #111;
     padding: 0.8rem;
     font-size: 1rem;
+}
+
+.input:focus {
+    outline: 2px solid var(--cor-primaria);
+    outline-offset: 2px;
+    border-color: var(--cor-primaria);
 }
 
 .mensagem {
@@ -112,6 +118,37 @@
 .mesaLabel {
     margin: 0.2rem 0 0;
     font-weight: 700;
+}
+
+.statusLinha {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.badgeEstado {
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.85rem;
+}
+
+.badgeEstado[data-ocupada="true"] {
+    background: rgba(76, 175, 80, 0.2);
+    color: #b6f2c2;
+}
+
+.badgeEstado[data-ocupada="false"] {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.badgeConta {
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffd166;
+    font-size: 0.85rem;
 }
 
 .link {

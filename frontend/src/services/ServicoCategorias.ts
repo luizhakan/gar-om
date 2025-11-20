@@ -21,36 +21,65 @@ function garantirRestauranteId() {
     return restauranteId;
 }
 
+async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
+    garantirBase();
+    const restauranteId = garantirRestauranteId();
+    const token = obterToken();
+
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-restaurante-id': restauranteId,
+    };
+
+    if ((token ?? '') !== '') {
+        headers.Authorization = `Bearer ${token}`;
+    }
+
+    const resposta = await fetch(`${API_BASE}${path}`, {
+        headers,
+        ...init,
+    });
+
+    const texto = await resposta.text();
+
+    if (!resposta.ok) {
+        try {
+            const parsed = JSON.parse(texto) as { message?: string };
+            throw new Error(parsed.message || texto || 'Falha na requisição de categorias');
+        } catch {
+            throw new Error(texto || 'Falha na requisição de categorias');
+        }
+    }
+
+    if ((texto ?? '') === '') {
+        return undefined as T;
+    }
+
+    return JSON.parse(texto) as T;
+}
+
 export const ServicoCategorias = {
     async listar(): Promise<Categoria[]> {
-        garantirBase();
-        const restauranteId = garantirRestauranteId();
-        const token = obterToken();
-        
-        const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-            'x-restaurante-id': restauranteId,
-        };
-
-        if (token !== undefined && token !== '') {
-            headers.Authorization = `Bearer ${token}`;
-        }
-
-        const resp = await fetch(`${API_BASE}/categorias`, {
-            headers,
-        });
-
-        if (!resp.ok) {
-            const texto = await resp.text();
-            throw new Error(texto || 'Falha ao listar categorias');
-        }
-
-        const data = (await resp.json()) as CategoriaApi[];
+        const data = await requestApi<CategoriaApi[]>('/categorias');
         return data.map((item) => ({
             id: item.id,
             nome: item.nome,
             ordem: item.ordem,
             restauranteId: item.restauranteId,
         }));
+    },
+
+    async criar(nome: string, ordem: number): Promise<Categoria> {
+        const criada = await requestApi<CategoriaApi>('/categorias', {
+            method: 'POST',
+            body: JSON.stringify({ nome, ordem }),
+        });
+
+        return {
+            id: criada.id,
+            nome: criada.nome,
+            ordem: criada.ordem,
+            restauranteId: criada.restauranteId,
+        };
     },
 };

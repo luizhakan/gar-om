@@ -6,7 +6,7 @@ import type { Mesa } from '../types/Mesa';
 import { ServicoProdutos, type ProdutoNovo } from '../services/ServicoProdutos';
 import { ServicoMesas } from '../services/ServicoMesas';
 import { ServicoAuth } from '../services/ServicoAuth';
-import { definirSessao, limparSessao, obterEmailSessao, obterRestauranteId, obterToken } from '../utils/sessao';
+import { definirSessao, limparSessao, obterEmailSessao, obterRestauranteId, obterTipoSessao, obterToken } from '../utils/sessao';
 import { useToast } from './ContextoToast';
 import { ServicoCategorias } from '../services/ServicoCategorias';
 import { ContextoAdmin } from './admin-context';
@@ -21,11 +21,18 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         restauranteId: obterRestauranteId(),
         token: obterToken(),
         email: obterEmailSessao(),
+        tipo: obterTipoSessao(),
     }), []);
 
-    const [autenticado, setAutenticado] = useState<boolean>(() => Boolean(sessaoInicial.token));
-    const [restauranteId, setRestauranteId] = useState<string | undefined>(() => sessaoInicial.restauranteId);
-    const [adminEmail, setAdminEmail] = useState<string | undefined>(() => sessaoInicial.email);
+    const sessaoEhAdmin = sessaoInicial.tipo === 'admin';
+
+    const [autenticado, setAutenticado] = useState<boolean>(() => Boolean(sessaoInicial.token) && sessaoEhAdmin);
+    const [restauranteId, setRestauranteId] = useState<string | undefined>(() => (
+        sessaoEhAdmin ? sessaoInicial.restauranteId : undefined
+    ));
+    const [adminEmail, setAdminEmail] = useState<string | undefined>(() => (
+        sessaoEhAdmin ? sessaoInicial.email : undefined
+    ));
     const [produtos, setProdutos] = useState<Produto[]>([]);
     const [mesas, setMesas] = useState<Mesa[]>([]);
 
@@ -94,6 +101,12 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         notificar('Produto criado com sucesso', 'sucesso');
     }
 
+    async function criarCategoria(nome: string, ordem: number) {
+        const criada = await ServicoCategorias.criar(nome, ordem);
+        setCategorias(lista => [...lista, criada].sort((a, b) => a.ordem - b.ordem));
+        notificar('Categoria criada com sucesso', 'sucesso');
+    }
+
     async function atualizarProduto(produto: Produto) {
         const atualizado = await ServicoProdutos.atualizar(produto);
         setProdutos(lista =>
@@ -134,6 +147,18 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         notificar('Mesa adicionada com sucesso', 'sucesso');
     }
 
+    async function fecharMesa(id: string) {
+        const mesa = await ServicoMesas.fecharMesa(id);
+        setMesas(lista => lista.map(m => m.id === mesa.id ? mesa : m));
+        notificar(`Mesa ${mesa.numero} fechada`, 'info');
+    }
+
+    async function definirNumeroMesas(total: number) {
+        const novasMesas = await ServicoMesas.configurarMesas(total);
+        setMesas(novasMesas);
+        notificar('Mesas atualizadas com sucesso', 'info');
+    }
+
     async function excluirMesa(id: string) {
         await ServicoMesas.excluirMesa(id);
         setMesas(lista => lista.filter(mesa => mesa.id !== id));
@@ -147,6 +172,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 login,
                 logout,
                 categorias,
+                criarCategoria,
                 produtos,
                 criarProduto,
                 atualizarProduto,
@@ -155,6 +181,8 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 mesas,
                 adicionarMesa,
                 excluirMesa,
+                definirNumeroMesas,
+                fecharMesa,
                 gerarLinkMesa,
                 restauranteId,
                 adminEmail,
@@ -164,5 +192,3 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         </ContextoAdmin.Provider>
     );
 }
-
-

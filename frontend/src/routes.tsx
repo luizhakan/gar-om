@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { DashboardAdmin } from './pages/Admin/Dashboard';
+import { CategoriasAdmin } from './pages/Admin/Categorias';
 import { ProdutosAdmin } from './pages/Admin/Produtos';
 import { MesasAdmin } from './pages/Admin/Mesas';
 import { LoginAdmin } from './pages/Admin/Login';
@@ -31,6 +32,10 @@ export const router = createBrowserRouter([
             {
                 path: 'produtos',
                 element: <ProdutosAdmin />,
+            },
+            {
+                path: 'categorias',
+                element: <CategoriasAdmin />,
             },
             {
                 path: 'mesas',

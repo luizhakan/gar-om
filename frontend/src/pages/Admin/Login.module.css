@@ -52,16 +52,17 @@
     width: 100%;
     padding: 0.85rem;
     border-radius: var(--raio-borda-md);
-    border: 1px solid var(--cor-borda);
-    background: var(--cor-fundo);
-    color: var(--cor-texto-principal);
+    border: 1px solid var(--cor-texto-principal);
+    background: #fff;
+    color: #111;
     font-size: 1rem;
 }
 
 .input:focus {
-    outline: none;
+    outline: 2px solid var(--cor-primaria);
+    outline-offset: 2px;
     border-color: var(--cor-primaria);
-    box-shadow: 0 0 0 3px rgba(255, 75, 95, 0.18);
+    box-shadow: none;
 }
 
 .botao {

@@ -7,6 +7,7 @@ export interface ItemPedido {
     produto?: Produto;
     quantidade: number;
     observacao?: string;
+    precoUnitario?: number;
 }
 
 export interface Pedido {

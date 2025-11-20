@@ -6,7 +6,7 @@ export class AdicionarMesaDto {
     numero!: number;
 
     @IsString()
-    @IsUrl()
+    @IsUrl({ require_tld: false })
     @IsOptional()
     baseUrl?: string;
 }

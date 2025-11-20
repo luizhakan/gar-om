@@ -89,7 +89,7 @@ export function CardapioCliente() {
         );
     }
 
-    if (erro !== '') {
+    if (erro !== null) {
         return (
             <div className={styles.container}>
                 <div className="container" style={{ paddingTop: '3rem' }}>

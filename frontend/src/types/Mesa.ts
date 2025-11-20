@@ -3,6 +3,7 @@ export interface Mesa {
     numero: number;
     codigoQr: string;
     ocupada: boolean;
+    contaSolicitada?: boolean;
     restauranteId: string;
     createdAt?: string;
     updatedAt?: string;

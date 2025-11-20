@@ -75,11 +75,19 @@
 .campo textarea {
     width: 100%;
     border-radius: var(--raio-borda-md);
-    border: 1px solid var(--cor-borda);
-    background: var(--cor-fundo);
-    color: var(--cor-texto-principal);
+    border: 1px solid var(--cor-texto-principal);
+    background: #fff;
+    color: #111;
     padding: 0.8rem;
     font-size: 1rem;
+}
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+    outline: 2px solid var(--cor-primaria);
+    outline-offset: 2px;
+    border-color: var(--cor-primaria);
 }
 
 .campo textarea {

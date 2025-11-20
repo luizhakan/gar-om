@@ -34,6 +34,9 @@ function ConteudoLayoutAdmin() {
                         <NavLink to="/admin" end className={linkAtivo}>
                             📊 Visão Geral
                         </NavLink>
+                        <NavLink to="/admin/categorias" className={linkAtivo}>
+                            🗂️ Categorias
+                        </NavLink>
                         <NavLink to="/admin/produtos" className={linkAtivo}>
                             🍔 Produtos
                         </NavLink>

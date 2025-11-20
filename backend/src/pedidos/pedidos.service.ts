@@ -3,6 +3,7 @@ import { PedidoStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CriarPedidoDto } from './dto/criar-pedido.dto';
 import { AtualizarStatusDto } from './dto/atualizar-status.dto';
+import { EditarPedidoDto } from './dto/editar-pedido.dto';
 
 @Injectable()
 export class PedidosService {
@@ -12,6 +13,7 @@ export class PedidosService {
         return {
             id: pedido.id,
             idMesa: pedido.mesa?.numero ? String(pedido.mesa.numero) : pedido.idMesa,
+            restauranteId: pedido.restauranteId,
             status: pedido.status,
             dataCriacao: pedido.dataCriacao,
             dataAtualizacao: pedido.dataAtualizacao ?? undefined,
@@ -19,6 +21,7 @@ export class PedidosService {
                 idProduto: item.produtoId,
                 quantidade: item.quantidade,
                 observacao: item.observacao ?? undefined,
+                precoUnitario: item.precoUnitario,
                 produto: item.produto
                     ? {
                         id: item.produto.id,
@@ -115,7 +118,88 @@ export class PedidosService {
             },
         });
 
+        if (typeof this.prisma.mesa.update === 'function') {
+            await this.prisma.mesa.update({
+                where: { id: mesa.id },
+                data: { ocupada: true, contaSolicitada: false },
+            });
+        }
+
         return this.formatarPedido(pedidoCriado);
+    }
+
+    async editar(id: string, dto: EditarPedidoDto, restauranteId: string) {
+        if (!restauranteId) throw new BadRequestException('Restaurante não informado');
+
+        const pedidoExistente = await this.prisma.pedido.findUnique({
+            where: { id },
+            include: { mesa: true },
+        });
+
+        if (!pedidoExistente) throw new NotFoundException('Pedido não encontrado');
+        if (pedidoExistente.restauranteId !== restauranteId) {
+            throw new UnauthorizedException('Pedido pertence a outro restaurante');
+        }
+
+        const agora = new Date();
+        const criadoEm = pedidoExistente.dataCriacao;
+        const diffSegundos = (agora.getTime() - criadoEm.getTime()) / 1000;
+        if (diffSegundos > 90) {
+            throw new BadRequestException('Pedido só pode ser editado até 1min30s após o envio');
+        }
+
+        if (pedidoExistente.status !== PedidoStatus.pendente) {
+            throw new BadRequestException('Pedido já confirmado pela cozinha e não pode ser editado');
+        }
+
+        if (pedidoExistente.mesa?.contaSolicitada) {
+            throw new BadRequestException('Conta solicitada, edição bloqueada');
+        }
+
+        const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
+        if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
+
+        const mesa = await this.garantirMesa(dto.idMesa, restaurante.id);
+
+        const itensPreparados = [];
+        for (const item of dto.itens) {
+            const produto = await this.prisma.produto.findUnique({
+                where: { id: item.idProduto },
+            });
+
+            if (!produto) {
+                throw new NotFoundException(`Produto não encontrado: ${item.idProduto}`);
+            }
+            if (produto.restauranteId !== restaurante.id) {
+                throw new UnauthorizedException('Um ou mais produtos não pertencem ao restaurante');
+            }
+
+            itensPreparados.push({
+                produtoId: item.idProduto,
+                quantidade: item.quantidade,
+                observacao: item.observacao,
+                precoUnitario: produto.preco,
+            });
+        }
+
+        const atualizado = await this.prisma.pedido.update({
+            where: { id: pedidoExistente.id },
+            data: {
+                idMesa: mesa.id,
+                status: PedidoStatus.pendente,
+                dataAtualizacao: new Date(),
+                itens: {
+                    deleteMany: { pedidoId: pedidoExistente.id },
+                    create: itensPreparados,
+                },
+            },
+            include: {
+                mesa: true,
+                itens: { include: { produto: true } },
+            },
+        });
+
+        return this.formatarPedido(atualizado);
     }
 
     async atualizarStatus(id: string, dto: AtualizarStatusDto, restauranteId: string) {
@@ -136,5 +220,27 @@ export class PedidosService {
         });
 
         return this.formatarPedido(atualizado);
+    }
+
+    async statusPublico(id: string, restauranteId: string) {
+        if (!restauranteId) throw new BadRequestException('Restaurante não informado');
+        const pedido = await this.prisma.pedido.findUnique({
+            where: { id },
+            include: { mesa: true, itens: { include: { produto: true } } },
+        });
+
+        if (!pedido) throw new NotFoundException('Pedido não encontrado');
+        if (pedido.restauranteId !== restauranteId) {
+            throw new UnauthorizedException('Pedido pertence a outro restaurante');
+        }
+
+        const agora = new Date();
+        const limiteHoras = 4;
+        const diffHoras = (agora.getTime() - pedido.dataCriacao.getTime()) / (1000 * 60 * 60);
+        if (diffHoras > limiteHoras) {
+            throw new BadRequestException('Status público indisponível para pedidos antigos');
+        }
+
+        return this.formatarPedido(pedido);
     }
 }
