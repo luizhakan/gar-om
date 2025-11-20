@@ -1,0 +1,114 @@
+.shell {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    background: linear-gradient(135deg, #0f1115 0%, #0b0c10 35%, #11141b 100%);
+    color: var(--cor-texto-principal);
+}
+
+.sidebar {
+    background: rgba(19, 21, 29, 0.9);
+    border-right: 1px solid rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(6px);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.logo {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.75rem;
+    border-radius: var(--raio-borda-md);
+    background: linear-gradient(135deg, rgba(255, 75, 95, 0.12), rgba(255, 255, 255, 0.03));
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.logoNome {
+    margin: 0;
+    font-weight: 700;
+}
+
+.logoSub {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+    font-size: 0.9rem;
+}
+
+.nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.link {
+    text-decoration: none;
+    padding: 0.75rem 0.85rem;
+    border-radius: var(--raio-borda-md);
+    color: var(--cor-texto-secundario);
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.link:hover {
+    color: var(--cor-texto-principal);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.linkAtivo {
+    background: linear-gradient(135deg, rgba(255, 75, 95, 0.16), rgba(255, 255, 255, 0.05));
+    color: var(--cor-texto-principal);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.botaoSair {
+    margin-top: auto;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    color: var(--cor-texto-principal);
+    padding: 0.7rem 0.9rem;
+    border-radius: var(--raio-borda-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.botaoSair:hover {
+    background: rgba(255, 75, 95, 0.15);
+    border-color: rgba(255, 75, 95, 0.3);
+}
+
+.main {
+    padding: 2rem;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+@media (max-width: 960px) {
+    .shell {
+        grid-template-columns: 1fr;
+    }
+
+    .sidebar {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .botaoSair {
+        margin-top: 0;
+    }
+}

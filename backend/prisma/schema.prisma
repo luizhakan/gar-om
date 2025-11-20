@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PedidoStatus {
+  pendente
+  preparando
+  pronto
+}
+
+model Restaurante {
+  id          String        @id @default(uuid())
+  nome        String
+  admins      Admin[]
+  cozinheiros UsuarioCozinha[]
+  categorias  Categoria[]
+  produtos    Produto[]
+  mesas       Mesa[]
+  pedidos     Pedido[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Admin {
+  id            String      @id @default(uuid())
+  nome          String
+  email         String      @unique
+  cpf           String      @unique
+  senhaHash     String
+  restauranteId String
+  restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model UsuarioCozinha {
+  id            String      @id @default(uuid())
+  email         String      @unique
+  senhaHash     String
+  restauranteId String
+  restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Categoria {
+  id            String      @id @default(uuid())
+  nome          String
+  ordem         Int
+  restauranteId String
+  restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
+  produtos      Produto[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Produto {
+  id            String        @id @default(uuid())
+  nome          String
+  descricao     String?
+  preco         Float
+  idCategoria   String
+  disponivel    Boolean       @default(true)
+  imagemUrl     String?
+  restauranteId String
+  restaurante   Restaurante   @relation(fields: [restauranteId], references: [id])
+  categoria     Categoria     @relation(fields: [idCategoria], references: [id])
+  itens         ItemPedido[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Mesa {
+  id            String      @id @default(uuid())
+  numero        Int
+  codigoQr      String
+  ocupada       Boolean     @default(false)
+  restauranteId String
+  restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
+  pedidos       Pedido[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([numero, restauranteId])
+}
+
+model Pedido {
+  id              String        @id @default(uuid())
+  idMesa          String
+  restauranteId   String
+  status          PedidoStatus  @default(pendente)
+  dataCriacao     DateTime      @default(now())
+  dataAtualizacao DateTime?
+  mesa            Mesa          @relation(fields: [idMesa], references: [id])
+  restaurante     Restaurante   @relation(fields: [restauranteId], references: [id])
+  itens           ItemPedido[]
+}
+
+model ItemPedido {
+  id             String   @id @default(uuid())
+  pedidoId       String
+  produtoId      String
+  quantidade     Int
+  observacao     String?
+  precoUnitario  Float
+  pedido         Pedido   @relation(fields: [pedidoId], references: [id])
+  produto        Produto  @relation(fields: [produtoId], references: [id])
+}

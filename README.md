@@ -1,116 +1,34 @@
-# React + TypeScript + Vite
+# Garçom Ágil – Monorepo (Frontend + Backend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este repositório agora está organizado em duas pastas:
 
-Currently, two official plugins are available:
+- `frontend/`: app React + Vite (cardápio, cozinha e admin).
+- `backend/`: API NestJS com Prisma (SQLite por padrão).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Como rodar
 
-### Stack Tecnológico
-- **Linguagem:** TypeScript (Rigoroso).
-- **Frontend:** React + Vite.
-- **Estilização:** Vanilla CSS (CSS Modules) com Variáveis CSS para Design System. **Foco em UI Premium.**
-- **Gerenciamento de Estado:** React Context API + Hooks customizados.
-- **Roteamento:** React Router DOM.
-- **Backend/Banco de Dados:** Supabase (PostgreSQL + Realtime + Auth).
+### Frontend
+1. `cd frontend`
+2. `npm install`
+3. `npm run dev` (abre em http://localhost:5173)
 
-### 🇧🇷 Padrão de Idioma (Regra de Ouro)
-- **Código:** Variáveis, Funções, Classes, Interfaces e Arquivos devem ser nomeados em **Português do Brasil**.
-  - Exemplo: `function calcularTotalPedido()` ao invés de `calculateOrderTotal()`.
-  - Exemplo: `interface Produto` ao invés de `interface Product`.
-- **Comentários e Documentação:** 100% em Português do Brasil.
-- **Commits:** Mensagens em Português do Brasil.
-- **Exceção:** Bibliotecas de terceiros e configurações de ferramentas (ex: `vite.config.ts`, `package.json`) mantêm o padrão exigido pela ferramenta (geralmente inglês), mas o conteúdo customizado deve ser PT-BR.
+### Backend
+1. `docker compose up -d db` (sobe Postgres em `localhost:5432`, user/senha `admin`)
+2. `cd backend`
+3. `npm install`
+4. Copie `.env.example` para `.env` (já aponta para o Postgres do compose)
+5. `npm run prisma:generate`
+6. `npm run prisma:migrate` (cria tabelas no Postgres)
+7. `npm run prisma:seed` (dados de exemplo: cardápio, mesas, pedido demo)
+8. `npm run start:dev` (API em http://localhost:3001)
 
-### Estrutura de Diretórios (O Mapa)
+## Endpoints principais
+- `GET /produtos` | `POST /produtos` | `PATCH /produtos/:id` | `DELETE /produtos/:id`
+- `PATCH /produtos/:id/disponibilidade`
+- `GET /categorias` | `POST /categorias`
+- `GET /mesas` | `PUT /mesas/configurar`
+- `GET /pedidos` | `POST /pedidos` | `PATCH /pedidos/:id/status`
 
-A estrutura de pastas segue o padrão `Feature-First` mas adaptada para o nosso contexto. Manteremos os nomes das pastas raiz em inglês para compatibilidade com ferramentas, mas o conteúdo será em PT-BR.
-
-```text
-src/
-├── assets/          # Imagens, fontes, ícones globais.
-├── components/      # Componentes UI "Burros" (Apresentação).
-│   ├── Botao/       # Nomes de componentes em PT-BR.
-│   │   ├── index.tsx
-│   │   ├── styles.module.css
-│   │   └── LEIAME.md (Documentação de uso)
-│   └── ...
-├── config/          # Configurações globais.
-├── contexts/        # Estado Global (Autenticacao, Carrinho).
-├── hooks/           # Lógica reutilizável (useAutenticacao, useCarrinho).
-├── layouts/         # Estruturas de página (LayoutAdmin, LayoutCliente).
-├── pages/           # As telas da aplicação.
-│   ├── Admin/       # Módulo 1: Painel Admin
-│   ├── Cliente/     # Módulo 2: Cliente na Mesa
-│   └── Cozinha/     # Módulo 3: Painel da Cozinha
-├── services/        # Comunicação com API/Supabase.
-├── styles/          # Design System global.
-├── types/           # Definições de Tipos (Interfaces de Domínio).
-└── utils/           # Funções auxiliares (formatarMoeda, validadores).
-```
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Notas
+- O frontend espera a API em `http://localhost:3001` (ajuste com `VITE_API_URL`).
+- Se a API não estiver rodando, os services do frontend usam fallback em `localStorage` + mocks.

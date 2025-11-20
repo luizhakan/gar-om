@@ -72,7 +72,7 @@ Abra o DevTools (F12) e veja os logs:
 
 ## 🔧 Personalização
 
-Para mudar o som, edite `src/hooks/useAlertaSonoro.ts`:
+Para mudar o som, edite `frontend/src/hooks/useAlertaSonoro.ts`:
 
 ```typescript
 // Mudar frequência (tom mais grave ou agudo)

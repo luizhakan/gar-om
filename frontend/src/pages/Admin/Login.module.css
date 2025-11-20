@@ -1,0 +1,69 @@
+.container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 75, 95, 0.08), transparent 35%),
+        radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.08), transparent 30%),
+        #0c0d12;
+    padding: 1.5rem;
+}
+
+.card {
+    width: min(420px, 100%);
+    padding: 2rem;
+    border-radius: var(--raio-borda-lg);
+    background: rgba(19, 20, 28, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+}
+
+.rotulo {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--cor-texto-secundario);
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+.titulo {
+    margin: 0.35rem 0 0.2rem;
+    color: var(--cor-texto-principal);
+}
+
+.subtitulo {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+}
+
+.label {
+    font-weight: 600;
+    color: var(--cor-texto-principal);
+}
+
+.input {
+    width: 100%;
+    padding: 0.85rem;
+    border-radius: var(--raio-borda-md);
+    border: 1px solid var(--cor-borda);
+    background: var(--cor-fundo);
+    color: var(--cor-texto-principal);
+    font-size: 1rem;
+}
+
+.input:focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 3px rgba(255, 75, 95, 0.18);
+}
+
+.botao {
+    margin-top: 0.5rem;
+}

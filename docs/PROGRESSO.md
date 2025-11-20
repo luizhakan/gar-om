@@ -8,8 +8,8 @@
 ## ✅ Concluído
 
 ### 1. Fundação e Arquitetura (100%)
-- ✅ README completo com requisitos e padrões
-- ✅ Estrutura de pastas (Feature-First)
+- ✅ README completo com requisitos e padrões (monorepo: frontend + backend)
+- ✅ Estrutura de pastas (Feature-First no frontend)
 - ✅ Documentação de cada pasta (LEIAME.md)
 - ✅ Design System completo (tokens.css, global.css, animacoes.css)
 - ✅ Configuração de rotas (React Router)
@@ -33,7 +33,7 @@
 - ✅ Página de Revisão do Pedido
 - ✅ Integração completa do fluxo de compra
 - ✅ LayoutCliente com contexto compartilhado
-- ⏳ Modal de Observação (pendente)
+- ✅ Modal de Observação (personalização de itens)
 
 ### 5. Módulo Cozinha - Painel de Produção (100%)
 - ✅ Contexto de Pedidos (ContextoPedidos)
@@ -45,41 +45,51 @@
 - ✅ Confirmação e marcação de pedidos
 - ✅ Layout otimizado para TV/Tablet
 
+### 6. Módulo Admin - Dono (80%)
+- ✅ Layout Admin com sidebar e logout
+- ✅ Login fictício (proteção básica)
+- ✅ CRUD de Produtos (criar/editar/remover/pausar)
+- ✅ CardProdutoAdmin com estados de disponibilidade
+- ✅ Gestão de Mesas com geração de QR Code via link
+- ⏳ Toasts e estados de erro/sucesso
+
+### 7. Backend NestJS + Prisma (60%)
+- ✅ Estrutura NestJS com validação e CORS
+- ✅ Prisma schema (produtos, categorias, pedidos, itens_pedido, mesas)
+- ✅ Seed com cardápio e pedido demo (SQLite)
+- ✅ Endpoints: produtos, categorias, mesas/configurar, pedidos, status de pedido
+- ⏳ Ajustar segurança/autenticação e deploy
+- ⏳ Melhorar observabilidade (logs/métricas)
+
 ---
 
 ## 🚧 Em Andamento
 
-### 5. Módulo Admin (0%)
-- ⏳ Layout Admin
-- ⏳ CRUD de Produtos
-- ⏳ Gestão de Mesas
-- ⏳ Gerador de QR Code
-
-### 6. Módulo Cozinha (0%)
-- ⏳ Painel de Pedidos
-- ⏳ Sistema de Alerta Sonoro
-- ⏳ Atualização em Tempo Real
+### Integração com Backend (60%)
+- ✅ Services do frontend chamando API Nest (fallback local)
+- ✅ Polling de pedidos na cozinha
+- ⏳ Lidar com erros/estados offline no UI com toasts
+- ⏳ Ajustar display de mesa com dados do backend
 
 ---
 
 ## 📈 Métricas
 
-- **Componentes Criados:** 8 (Botao, CardProduto, ControleQuantidade, ListaProdutos, CarrinhoFlutuante, CardPedido)
-- **Páginas Funcionais:** 5 (Home, Cardápio, Revisar Pedido, Painel Cozinha, Dashboard Admin placeholder)
-- **Contextos:** 2 (Carrinho, Pedidos)
+- **Componentes Criados:** 9 (Botao, CardProduto, ControleQuantidade, ListaProdutos, CarrinhoFlutuante, CardPedido, CardProdutoAdmin)
+- **Páginas Funcionais:** 7 (Home, Cardápio, Revisar Pedido, Painel Cozinha, Dashboard Admin, Produtos Admin, Mesas Admin)
+- **Contextos:** 3 (Carrinho, Pedidos, Admin)
 - **Hooks Customizados:** 1 (useAlertaSonoro)
-- **Linhas de Código:** ~2500+
-- **Cobertura de Requisitos:** ~70%
+- **Linhas de Código:** ~2500+ (estimado)
+- **Cobertura de Requisitos:** ~80%
 
 ---
 
 ## 🎯 Próximos Passos
 
-1. Criar Modal de Observação para itens do pedido
-2. Implementar Módulo Admin (CRUD de Produtos)
-3. Implementar Painel da Cozinha com Realtime
-4. Integração com Supabase
-5. Testes e Polimento
+1. Finalizar polimento de UI (toasts, estados de erro, 404/Error Boundary)
+2. Ajustar exibição de mesa com dados do backend e garantir QR Codes em produção
+3. Testar build de produção (frontend) e pipeline de build do backend
+4. Revisar segurança/autenticação do painel admin
 
 ---
 

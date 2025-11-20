@@ -1,0 +1,82 @@
+.card {
+    background: rgba(28, 30, 38, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--raio-borda-lg);
+    padding: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.categoria {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.nome {
+    margin: 0.15rem 0 0;
+    color: var(--cor-texto-principal);
+}
+
+.tagDisponivel,
+.tagIndisponivel {
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.tagDisponivel {
+    background: rgba(64, 195, 129, 0.16);
+    color: #8be5b6;
+    border: 1px solid rgba(139, 229, 182, 0.3);
+}
+
+.tagIndisponivel {
+    background: rgba(255, 75, 95, 0.12);
+    color: #ff9fad;
+    border: 1px solid rgba(255, 75, 95, 0.25);
+}
+
+.descricao {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+    line-height: 1.5;
+}
+
+.footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.precoRotulo {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+}
+
+.preco {
+    margin: 0.1rem 0 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.acoes {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
