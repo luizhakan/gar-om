@@ -1,35 +1,66 @@
-import { PrismaClient } from '@prisma/client';
-import { execSync } from 'child_process';
+import { INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { AppModule } from '../../src/app.module';
+import { PrismaService } from '../../src/prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+export async function criarApp(): Promise<INestApplication> {
+  const moduleFixture = await Test.createTestingModule({
+    imports: [AppModule],
+  }).compile();
 
-export async function setupTestDatabase() {
-    try {
-        execSync('npx prisma migrate deploy', {
-            env: { ...process.env, DATABASE_URL: process.env.DATABASE_URL },
-            stdio: 'inherit',
+  const app = moduleFixture.createNestApplication();
+  return app;
+}
+
+export async function limparBancoDeDados(app: INestApplication): Promise<void> {
+  const prisma = app.get(PrismaService);
+  await prisma.itemPedido.deleteMany();
+  await prisma.pedido.deleteMany();
+  await prisma.mesa.deleteMany();
+  await prisma.produto.deleteMany();
+  await prisma.categoria.deleteMany();
+  await prisma.usuarioCozinha.deleteMany();
+  await prisma.admin.deleteMany();
+  await prisma.restaurante.deleteMany();
+}
+
+export async function popularBancoDeDados(app: INestApplication): Promise<void> {
+    const prisma = app.get(PrismaService);
+
+    const restaurante = await prisma.restaurante.create({
+        data: {
+            nome: 'Restaurante Teste',
+        },
+    });
+
+    const senhaHash = await bcrypt.hash('senha123', 10);
+
+    await prisma.admin.create({
+        data: {
+            nome: 'Admin Teste',
+            email: 'admin@teste.com',
+            cpf: '12345678901',
+            senhaHash,
+            restauranteId: restaurante.id,
+        },
+    });
+
+    await prisma.usuarioCozinha.create({
+        data: {
+            email: 'cozinha@teste.com',
+            senhaHash,
+            restauranteId: restaurante.id,
+        },
+    });
+
+    for (let i = 1; i <= 3; i++) {
+        await prisma.mesa.create({
+            data: {
+                numero: i,
+                codigoQr: `http://localhost:5173/mesa/${i}?restauranteId=${restaurante.id}`,
+                restauranteId: restaurante.id,
+            },
         });
-    } catch (error) {
-        console.error('Failed to setup test database:', error);
-        throw error;
     }
 }
-
-export async function cleanDatabase() {
-    await prisma.$transaction([
-        prisma.itemPedido.deleteMany(),
-        prisma.pedido.deleteMany(),
-        prisma.mesa.deleteMany(),
-        prisma.produto.deleteMany(),
-        prisma.categoria.deleteMany(),
-        prisma.usuarioCozinha.deleteMany(),
-        prisma.admin.deleteMany(),
-        prisma.restaurante.deleteMany(),
-    ]);
-}
-
-export async function closeDatabase() {
-    await prisma.$disconnect();
-}
-
-export { prisma };

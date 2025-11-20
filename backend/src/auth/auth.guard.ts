@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { validarToken, type AuthTokenPayload } from './token.util';
 
@@ -29,4 +29,4 @@ export class AuthGuard implements CanActivate {
     }
 }
 
-export const Roles = (...roles: AuthTokenPayload['role'][]) => Reflect.metadata(META_ROLES, roles);
+export const Roles = (...roles: AuthTokenPayload['role'][]) => SetMetadata(META_ROLES, roles);

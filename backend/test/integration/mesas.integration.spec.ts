@@ -1,93 +1,136 @@
-import { MesasService } from '../../src/mesas/mesas.service';
-import { PrismaService } from '../../src/prisma/prisma.service';
-import { cleanDatabase, closeDatabase, prisma } from './setup';
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { INestApplication } from '@nestjs/common';
+import * as request from 'supertest';
+import { criarApp, limparBancoDeDados, popularBancoDeDados } from './setup';
+import { obterTokenAdmin, obterTokenCozinha } from './auth.util';
 
-describe('MesasService (Integration)', () => {
-    let service: MesasService;
-    let prismaService: PrismaService;
-    let restauranteId: string;
+describe('MesasController (integration)', () => {
+  let app: INestApplication;
+  let tokenAdmin: string;
+  let tokenCozinha: string;
 
-    beforeAll(async () => {
-        prismaService = new PrismaService();
-        await prismaService.$connect();
-        service = new MesasService(prismaService);
+  beforeAll(async () => {
+    app = await criarApp();
+    await app.init();
+    await limparBancoDeDados(app);
+    await popularBancoDeDados(app);
+    tokenAdmin = await obterTokenAdmin(app);
+    tokenCozinha = await obterTokenCozinha(app);
+  });
+
+  afterAll(async () => {
+    await app.close();
+  });
+
+  describe('GET /mesas', () => {
+    it('deve listar as mesas para o admin', async () => {
+      const { status, body } = await request(app.getHttpServer())
+        .get('/mesas')
+        .set('Authorization', `Bearer ${tokenAdmin}`);
+
+      expect(status).toBe(200);
+      expect(body).toBeInstanceOf(Array);
     });
 
-    afterAll(async () => {
-        await closeDatabase();
-        await prismaService.$disconnect();
+    it('deve listar as mesas para a cozinha', async () => {
+      const { status, body } = await request(app.getHttpServer())
+        .get('/mesas')
+        .set('Authorization', `Bearer ${tokenCozinha}`);
+
+      expect(status).toBe(200);
+      expect(body).toBeInstanceOf(Array);
     });
 
-    beforeEach(async () => {
-        await cleanDatabase();
-        const restaurante = await prisma.restaurante.create({
-            data: { nome: 'Restaurante Teste' },
-        });
-        restauranteId = restaurante.id;
+    it('deve retornar erro para token inválido', async () => {
+      const { status } = await request(app.getHttpServer())
+        .get('/mesas')
+        .set('Authorization', 'Bearer tokeninvalido');
+
+      expect(status).toBe(401);
+    });
+  });
+
+  describe('POST /mesas', () => {
+    it('deve adicionar uma nova mesa', async () => {
+      const numeroMesa = 999;
+      const { status, body } = await request(app.getHttpServer())
+        .post('/mesas')
+        .set('Authorization', `Bearer ${tokenAdmin}`)
+        .send({ numero: numeroMesa });
+
+      expect(status).toBe(201);
+      expect(body.numero).toBe(numeroMesa);
     });
 
-    it('lista mesas do restaurante', async () => {
-        await prisma.mesa.create({
-            data: {
-                id: 'mesa-1',
-                numero: 1,
-                codigoQr: 'http://test.com/mesa/1',
-                restauranteId,
-            },
-        });
+    it('não deve adicionar mesa com número duplicado', async () => {
+      const numeroMesa = 1; // Mesa já existe
+      const { status } = await request(app.getHttpServer())
+        .post('/mesas')
+        .set('Authorization', `Bearer ${tokenAdmin}`)
+        .send({ numero: numeroMesa });
 
-        const mesas = await service.listar(restauranteId);
-        expect(mesas).toHaveLength(1);
-        expect(mesas[0].numero).toBe(1);
+      expect(status).toBe(400);
     });
 
-    it('falha ao listar se restaurante não existe', async () => {
-        await expect(service.listar('invalid-id')).rejects.toBeInstanceOf(NotFoundException);
+    it('deve retornar erro para usuário não admin', async () => {
+      const { status } = await request(app.getHttpServer())
+        .post('/mesas')
+        .set('Authorization', `Bearer ${tokenCozinha}`)
+        .send({ numero: 123 });
+
+      expect(status).toBe(403);
+    });
+  });
+
+  describe('DELETE /mesas/:id', () => {
+    it('deve excluir uma mesa', async () => {
+      // 1. Criar mesa para excluir
+      const numeroMesa = 888;
+      const res = await request(app.getHttpServer())
+        .post('/mesas')
+        .set('Authorization', `Bearer ${tokenAdmin}`)
+        .send({ numero: numeroMesa });
+      
+      const mesaId = res.body.id;
+
+      // 2. Excluir a mesa
+      const { status } = await request(app.getHttpServer())
+        .delete(`/mesas/${mesaId}`)
+        .set('Authorization', `Bearer ${tokenAdmin}`);
+
+      expect(status).toBe(200);
+
+      // 3. Verificar se foi excluída
+      const { body: mesas } = await request(app.getHttpServer())
+        .get('/mesas')
+        .set('Authorization', `Bearer ${tokenAdmin}`);
+      
+      const mesaExcluida = mesas.find((m: { id: string }) => m.id === mesaId);
+      expect(mesaExcluida).toBeUndefined();
     });
 
-    it('recusa URL base inválida', async () => {
-        await expect(service.configurar(1, 'notaurl', restauranteId)).rejects.toBeInstanceOf(BadRequestException);
-        await expect(service.configurar(1, 'ftp://host', restauranteId)).rejects.toBeInstanceOf(BadRequestException);
+    it('deve retornar erro ao excluir mesa inexistente', async () => {
+      const idInexistente = 'id-fake-123';
+      const { status } = await request(app.getHttpServer())
+        .delete(`/mesas/${idInexistente}`)
+        .set('Authorization', `Bearer ${tokenAdmin}`);
+
+      expect(status).toBe(404);
     });
 
-    it('configura mesas gerando QR com restauranteId', async () => {
-        const resultado = await service.configurar(2, 'http://app.test', restauranteId);
-
-        expect(resultado).toHaveLength(2);
-        expect(resultado[0].codigoQr).toBe(`http://app.test/mesa/1?restauranteId=${restauranteId}`);
-        expect(resultado[1].codigoQr).toBe(`http://app.test/mesa/2?restauranteId=${restauranteId}`);
-    });
-
-    it('DEVE FALHAR: deleta mesas mesmo com pedidos associados (foreign key constraint)', async () => {
-        await prisma.mesa.create({
-            data: {
-                id: 'mesa-1',
-                numero: 1,
-                codigoQr: 'http://test.com/mesa/1',
-                restauranteId,
-            },
-        });
-
-        await prisma.pedido.create({
-            data: {
-                id: 'pedido-1',
-                idMesa: 'mesa-1',
-                restauranteId,
-                status: 'pendente',
-            },
-        });
-
-        await expect(service.configurar(3, 'http://app.test', restauranteId))
-            .rejects
-            .toThrow(/Foreign key constraint|Pedido_idMesa_fkey/);
-    });
-
-    it('reconfigura mesas sem pedidos associados', async () => {
-        await service.configurar(2, 'http://app.test', restauranteId);
+    it('deve retornar erro para usuário não admin', async () => {
+        const numeroMesa = 777;
+        const res = await request(app.getHttpServer())
+            .post('/mesas')
+            .set('Authorization', `Bearer ${tokenAdmin}`)
+            .send({ numero: numeroMesa });
         
-        const resultado = await service.configurar(3, 'http://app.test', restauranteId);
-        
-        expect(resultado).toHaveLength(3);
+        const mesaId = res.body.id;
+
+        const { status } = await request(app.getHttpServer())
+            .delete(`/mesas/${mesaId}`)
+            .set('Authorization', `Bearer ${tokenCozinha}`);
+
+      expect(status).toBe(403);
     });
+  });
 });

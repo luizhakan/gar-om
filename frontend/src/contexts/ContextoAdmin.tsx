@@ -128,10 +128,16 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         return `${base}/mesa/${String(numeroMesa)}`;
     }
 
-    async function definirNumeroMesas(total: number) {
-        const mesasNovas = await ServicoMesas.configurar(total);
-        setMesas(mesasNovas);
-        notificar('Mesas atualizadas com sucesso', 'sucesso');
+    async function adicionarMesa(numero: number) {
+        const novaMesa = await ServicoMesas.adicionarMesa(numero);
+        setMesas(lista => [...lista, novaMesa]);
+        notificar('Mesa adicionada com sucesso', 'sucesso');
+    }
+
+    async function excluirMesa(id: string) {
+        await ServicoMesas.excluirMesa(id);
+        setMesas(lista => lista.filter(mesa => mesa.id !== id));
+        notificar('Mesa excluída com sucesso', 'aviso');
     }
 
     return (
@@ -147,7 +153,8 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 removerProduto,
                 alternarDisponibilidade,
                 mesas,
-                definirNumeroMesas,
+                adicionarMesa,
+                excluirMesa,
                 gerarLinkMesa,
                 restauranteId,
                 adminEmail,
