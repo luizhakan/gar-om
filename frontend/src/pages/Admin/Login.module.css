@@ -73,3 +73,14 @@
     color: #ff9fad;
     font-weight: 600;
 }
+
+.linkAlternativo {
+    margin-top: 0.75rem;
+    background: none;
+    border: none;
+    color: var(--cor-texto-secundario);
+    text-decoration: underline;
+    cursor: pointer;
+    align-self: flex-start;
+    padding: 0;
+}

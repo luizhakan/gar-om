@@ -1,0 +1,95 @@
+.container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 9999;
+  max-width: min(340px, 90vw);
+}
+
+.toast {
+  position: relative;
+  padding: 0.9rem 1rem 1.1rem;
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(4px);
+  color: #0f172a;
+  background: linear-gradient(145deg, #ffffff, #f3f4f6);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  animation: aparecer 160ms ease-out;
+}
+
+.texto {
+  display: block;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.botaoFechar {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.5rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.barra {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  background: currentColor;
+  animation-name: barra;
+  animation-timing-function: linear;
+  width: 100%;
+}
+
+.sucesso {
+  color: #065f46;
+  border-color: #a7f3d0;
+  background: linear-gradient(135deg, #ecfdf3, #d1fae5);
+}
+
+.erro {
+  color: #991b1b;
+  border-color: #fecdd3;
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+}
+
+.info {
+  color: #0b5394;
+  border-color: #bfdbfe;
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+}
+
+.aviso {
+  color: #92400e;
+  border-color: #fde68a;
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+}
+
+@keyframes barra {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

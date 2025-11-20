@@ -1,4 +1,5 @@
-import { FormEvent, useMemo, useState } from 'react';
+import type { FormEvent } from 'react';
+import { useMemo, useState } from 'react';
 import { useAdmin } from '../../contexts/ContextoAdmin';
 import { CardProdutoAdmin } from '../../components/CardProdutoAdmin';
 import { Botao } from '../../components/Botao';

@@ -1,4 +1,5 @@
-import { FormEvent, useState } from 'react';
+import type { FormEvent } from 'react';
+import { useState } from 'react';
 import { useAdmin } from '../../contexts/ContextoAdmin';
 import { Botao } from '../../components/Botao';
 import styles from './Mesas.module.css';

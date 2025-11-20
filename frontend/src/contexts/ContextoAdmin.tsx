@@ -8,6 +8,7 @@ import { ServicoProdutos } from '../services/ServicoProdutos';
 import { ServicoMesas } from '../services/ServicoMesas';
 import { ServicoAuth } from '../services/ServicoAuth';
 import { definirSessao, limparSessao, obterRestauranteId } from '../utils/sessao';
+import { useToast } from './ContextoToast';
 
 interface DadosContextoAdmin {
     autenticado: boolean;
@@ -48,6 +49,7 @@ function lerStorage<T>(chave: string, fallback: T): T {
 }
 
 export function ProvedorAdmin({ children }: ProvedorAdminProps) {
+    const { notificar } = useToast();
     const [autenticado, setAutenticado] = useState<boolean>(() => {
         return lerStorage<boolean>(CHAVE_STORAGE_AUTH, false);
     });
@@ -68,6 +70,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
             .then(setProdutos)
             .catch((erro) => {
                 console.error('[ContextoAdmin] Erro ao carregar produtos:', erro);
+                notificar('Não foi possível carregar os produtos', 'erro');
             });
     }, [restauranteId]);
 
@@ -76,15 +79,23 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
             .then(setMesas)
             .catch((erro) => {
                 console.error('[ContextoAdmin] Erro ao carregar mesas:', erro);
+                notificar('Não foi possível carregar as mesas', 'erro');
             });
     }, [restauranteId]);
 
     async function login(email: string, senha: string) {
-        const resp = await ServicoAuth.loginAdmin(email, senha);
-        setAutenticado(true);
-        setRestauranteId(resp.admin.restauranteId);
-        setAdminEmail(resp.admin.email);
-        definirSessao(resp.admin.restauranteId, 'admin');
+        try {
+            const resp = await ServicoAuth.loginAdmin(email, senha);
+            setAutenticado(true);
+            setRestauranteId(resp.admin.restauranteId);
+            setAdminEmail(resp.admin.email);
+            definirSessao(resp.admin.restauranteId, 'admin');
+            notificar(`Bem-vindo, ${resp.admin.nome}`, 'sucesso');
+        } catch (erro) {
+            console.error('[ContextoAdmin] Falha no login', erro);
+            notificar('Falha no login. Verifique email/senha.', 'erro');
+            throw erro;
+        }
     }
 
     function logout() {
@@ -92,11 +103,13 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         setRestauranteId(undefined);
         setAdminEmail(undefined);
         limparSessao();
+        notificar('Sessão encerrada', 'info');
     }
 
     async function criarProduto(produto: Omit<Produto, 'id'>) {
         const criado = await ServicoProdutos.criar(produto);
         setProdutos(lista => [...lista, criado]);
+        notificar('Produto criado com sucesso', 'sucesso');
     }
 
     async function atualizarProduto(produto: Produto) {
@@ -104,11 +117,13 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         setProdutos(lista =>
             lista.map(item => item.id === atualizado.id ? atualizado : item)
         );
+        notificar('Produto atualizado', 'info');
     }
 
     async function removerProduto(idProduto: string) {
         await ServicoProdutos.remover(idProduto);
         setProdutos(lista => lista.filter(item => item.id !== idProduto));
+        notificar('Produto removido', 'aviso');
     }
 
     async function alternarDisponibilidade(idProduto: string) {
@@ -118,6 +133,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         setProdutos(lista =>
             lista.map(item => item.id === atualizado.id ? atualizado : item)
         );
+        notificar(`Produto ${atualizado.disponivel ? 'disponível' : 'indisponível'}`, 'info');
     }
 
     function gerarLinkMesa(numeroMesa: number) {
@@ -133,6 +149,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
     async function definirNumeroMesas(total: number) {
         const mesasNovas = await ServicoMesas.configurar(total);
         setMesas(mesasNovas);
+        notificar('Mesas atualizadas com sucesso', 'sucesso');
     }
 
     return (

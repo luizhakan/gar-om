@@ -6,8 +6,10 @@ function ConteudoLayoutAdmin() {
     const location = useLocation();
     const { autenticado, logout } = useAdmin();
     const estaNaRotaLogin = location.pathname === '/admin/login';
+    const estaNaRotaRegistro = location.pathname === '/admin/registro';
+    const rotaPublica = estaNaRotaLogin || estaNaRotaRegistro;
 
-    if (!autenticado && !estaNaRotaLogin) {
+    if (!autenticado && !rotaPublica) {
         return <Navigate to="/admin/login" replace />;
     }
 
@@ -17,7 +19,7 @@ function ConteudoLayoutAdmin() {
 
     return (
         <div className={styles.shell}>
-            {!estaNaRotaLogin && (
+            {!rotaPublica && (
                 <aside className={styles.sidebar}>
                     <div className={styles.logo}>
                         <span role="img" aria-label="garçom">🧾</span>

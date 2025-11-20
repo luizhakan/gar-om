@@ -1,0 +1,64 @@
+.container {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 25%, rgba(248, 180, 0, 0.08), transparent 35%),
+    radial-gradient(circle at 80% 15%, rgba(59, 130, 246, 0.12), transparent 30%),
+    #0c0d12;
+  padding: 1.5rem;
+}
+
+.card {
+  width: min(560px, 100%);
+  padding: 2.4rem;
+  border-radius: var(--raio-borda-lg);
+  background: rgba(19, 20, 28, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+}
+
+.rotulo {
+  color: #faca15;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.titulo {
+  margin: 0.4rem 0 0.3rem;
+  color: var(--cor-texto-principal);
+}
+
+.subtitulo {
+  margin: 0;
+  color: var(--cor-texto-secundario);
+}
+
+.acoes {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.botaoPrimario,
+.botaoSecundario {
+  border-radius: var(--raio-borda-md);
+  padding: 0.75rem 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+}
+
+.botaoPrimario {
+  background: linear-gradient(135deg, #f97316, #fb923c);
+  color: #0f172a;
+  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.35);
+}
+
+.botaoSecundario {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: var(--cor-texto-principal);
+}

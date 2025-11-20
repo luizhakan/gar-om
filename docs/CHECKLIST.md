@@ -71,9 +71,9 @@ Marque com `[x]` as tarefas concluídas.
     - [x] `GET/POST /pedidos`
     - [x] `PATCH /pedidos/:id/status`
     - [x] Toggle de disponibilidade de produto
-- [ ] **Auth/Admin/Cozinha**: Cadastro/login admin (email/CPF/senha), login cozinha, vincular restaurante
+- [x] **Auth/Admin/Cozinha**: Cadastro/login admin (email/CPF/senha), login cozinha, vincular restaurante
 
 ## 7. Polimento & Entrega
-- [ ] **Feedback Visual**: Toasts de sucesso/erro.
-- [ ] **Tratamento de Erros**: Telas de 404 e Error Boundary.
+- [x] **Feedback Visual**: Toasts de sucesso/erro.
+- [x] **Tratamento de Erros**: Telas de 404 e Error Boundary.
 - [ ] **Build & Deploy**: Testar build de produção.
