@@ -4,18 +4,18 @@ import { validarCpf } from '../cpf.util';
 export class AdminRegisterDto {
     @IsNotEmpty()
     @IsString()
-    nome: string;
+    nome!: string;
 
     @IsEmail()
-    email: string;
+    email!: string;
 
     @IsString()
     @IsNotEmpty()
-    cpf: string;
+    cpf!: string;
 
     @IsString()
     @MinLength(6)
-    senha: string;
+    senha!: string;
 }
 
 export function cpfValidoOuErro(cpf: string) {

@@ -16,15 +16,19 @@ export class MesasService {
     }
 
     async configurar(total: number, baseUrl: string, restauranteId?: string) {
-        const restaurantePadrao = restauranteId
+        let restaurantePadrao = restauranteId
             ? await this.prisma.restaurante.upsert({
                 where: { id: restauranteId },
                 update: {},
                 create: { id: restauranteId, nome: 'Restaurante Default' },
             })
-            : await (this.prisma.restaurante.findFirst() ?? this.prisma.restaurante.create({
+            : await this.prisma.restaurante.findFirst();
+
+        if (!restaurantePadrao) {
+            restaurantePadrao = await this.prisma.restaurante.create({
                 data: { id: 'restaurante-default', nome: 'Restaurante Default' },
-            }));
+            });
+        }
 
         await this.prisma.mesa.deleteMany({ where: { restauranteId: restaurantePadrao.id } });
 

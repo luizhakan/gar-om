@@ -87,12 +87,9 @@ async function main() {
     await prisma.pedido.create({
         data: {
             id: 'pedido-demo',
-            idMesa: 'mesa-1',
-            restauranteId: restaurante.id,
             status: PedidoStatus.pendente,
-            mesa: {
-                connect: { id: 'mesa-1' },
-            },
+            mesa: { connect: { id: 'mesa-1' } },
+            restaurante: { connect: { id: restaurante.id } },
             itens: {
                 create: [
                     {

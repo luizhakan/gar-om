@@ -101,7 +101,7 @@ export function useAlertaSonoro(devTocar: boolean) {
             tocarBeepSintetico();
         } else {
             console.log('[DEBUG][useAlertaSonoro] Tentando tocar MP3');
-            audioRef.current?.play().catch(error => {
+            audioRef.current?.play().catch((error: unknown) => {
                 console.warn('[DEBUG][useAlertaSonoro] Erro ao tocar MP3:', error);
                 // Só faz fallback para beep se NÃO for erro de permissão (autoplay bloqueado)
                 if (error instanceof Error && error.name !== 'NotAllowedError') {

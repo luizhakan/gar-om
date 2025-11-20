@@ -5,7 +5,7 @@ import { ItemPedidoDto } from './item-pedido.dto';
 export class CriarPedidoDto {
     @IsString()
     @IsNotEmpty()
-    idMesa: string;
+    idMesa!: string;
 
     @IsOptional()
     @IsString()
@@ -14,5 +14,5 @@ export class CriarPedidoDto {
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => ItemPedidoDto)
-    itens: ItemPedidoDto[];
+    itens!: ItemPedidoDto[];
 }

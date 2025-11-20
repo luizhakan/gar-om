@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
 import { CategoriasService } from './categorias.service';
 import { CriarCategoriaDto } from './dto/criar-categoria.dto';
 
@@ -12,11 +12,11 @@ export class CategoriasController {
     }
 
     @Post()
-    criar(@Body() dto: CriarCategoriaDto) {
+    criar(@Body() dto: CriarCategoriaDto, @Headers('x-restaurante-id') restauranteId?: string) {
         return this.categoriasService.criar({
             id: dto.id,
             nome: dto.nome,
             ordem: dto.ordem,
-        });
+        }, restauranteId);
     }
 }

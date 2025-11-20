@@ -7,18 +7,18 @@ export class CriarProdutoDto {
 
     @IsString()
     @IsNotEmpty()
-    nome: string;
+    nome!: string;
 
     @IsOptional()
     @IsString()
     descricao?: string;
 
     @IsNumber()
-    preco: number;
+    preco!: number;
 
     @IsString()
     @IsNotEmpty()
-    idCategoria: string;
+    idCategoria!: string;
 
     @IsOptional()
     @IsBoolean()

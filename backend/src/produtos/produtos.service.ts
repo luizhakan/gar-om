@@ -16,16 +16,28 @@ export class ProdutosService {
         });
     }
 
-    async criar(dados: Prisma.ProdutoCreateInput, restauranteId?: string) {
+    async criar(
+        dados: Omit<Prisma.ProdutoCreateInput, 'restaurante' | 'categoria'> & { idCategoria: string },
+        restauranteId?: string,
+    ) {
         const restaurante = restauranteId
             ? await this.prisma.restaurante.findUnique({ where: { id: restauranteId } })
             : await this.prisma.restaurante.findFirst();
+
+        const restauranteDestino =
+            restaurante ??
+            (await this.prisma.restaurante.create({
+                data: { id: 'restaurante-default', nome: 'Restaurante Default' },
+            })) ??
+            { id: restauranteId ?? 'restaurante-default' };
+
+        const { idCategoria, ...resto } = dados;
+
         return this.prisma.produto.create({
             data: {
-                ...dados,
-                restaurante: restaurante
-                    ? { connect: { id: restaurante.id } }
-                    : { create: { nome: 'Restaurante Default' } },
+                ...resto,
+                restaurante: { connect: { id: restauranteDestino.id } },
+                categoria: { connect: { id: idCategoria } },
             },
         });
     }

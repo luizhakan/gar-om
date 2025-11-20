@@ -7,8 +7,8 @@ export class CriarCategoriaDto {
 
     @IsString()
     @IsNotEmpty()
-    nome: string;
+    nome!: string;
 
     @IsInt()
-    ordem: number;
+    ordem!: number;
 }

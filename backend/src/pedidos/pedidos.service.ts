@@ -47,15 +47,19 @@ export class PedidosService {
 
         if (mesaExistente) return mesaExistente;
 
-        const restaurante = restauranteId
+        let restaurante = restauranteId
             ? await this.prisma.restaurante.upsert({
                 where: { id: restauranteId },
                 update: {},
                 create: { id: restauranteId, nome: 'Restaurante Default' },
             })
-            : await (this.prisma.restaurante.findFirst() ?? this.prisma.restaurante.create({
+            : await this.prisma.restaurante.findFirst();
+
+        if (!restaurante) {
+            restaurante = await this.prisma.restaurante.create({
                 data: { id: 'restaurante-default', nome: 'Restaurante Default' },
-            }));
+            });
+        }
 
         const numeroParaCriar = Number.isInteger(numeroMesa)
             ? numeroMesa

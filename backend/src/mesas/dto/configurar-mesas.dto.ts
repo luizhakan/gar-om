@@ -4,7 +4,7 @@ export class ConfigurarMesasDto {
     @IsInt()
     @Min(1)
     @Max(200)
-    total: number;
+    total!: number;
 
     @IsOptional()
     @IsString()
