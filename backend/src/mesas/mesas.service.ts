@@ -5,14 +5,28 @@ import { PrismaService } from '../prisma/prisma.service';
 export class MesasService {
     constructor(private prisma: PrismaService) {}
 
-    listar() {
+    async listar(restauranteId?: string) {
+        const restaurante = restauranteId
+            ? await this.prisma.restaurante.findUnique({ where: { id: restauranteId } })
+            : await this.prisma.restaurante.findFirst();
         return this.prisma.mesa.findMany({
+            where: restaurante ? { restauranteId: restaurante.id } : undefined,
             orderBy: { numero: 'asc' },
         });
     }
 
-    async configurar(total: number, baseUrl: string) {
-        await this.prisma.mesa.deleteMany();
+    async configurar(total: number, baseUrl: string, restauranteId?: string) {
+        const restaurantePadrao = restauranteId
+            ? await this.prisma.restaurante.upsert({
+                where: { id: restauranteId },
+                update: {},
+                create: { id: restauranteId, nome: 'Restaurante Default' },
+            })
+            : await (this.prisma.restaurante.findFirst() ?? this.prisma.restaurante.create({
+                data: { id: 'restaurante-default', nome: 'Restaurante Default' },
+            }));
+
+        await this.prisma.mesa.deleteMany({ where: { restauranteId: restaurantePadrao.id } });
 
         const payload = Array.from({ length: total }, (_, index) => {
             const numero = index + 1;
@@ -21,6 +35,7 @@ export class MesasService {
                 numero,
                 codigoQr: `${baseUrl}/mesa/${numero}`,
                 ocupada: false,
+                restauranteId: restaurantePadrao.id,
             };
         });
 

@@ -69,6 +69,21 @@
     color: var(--cor-texto-secundario);
 }
 
+.inputLogin {
+    width: 100%;
+    padding: 0.85rem;
+    margin-top: 0.5rem;
+    border-radius: var(--raio-md);
+    border: 1px solid var(--cor-borda);
+    background: var(--cor-fundo);
+    color: var(--cor-texto-primario);
+}
+
+.erroLogin {
+    color: #ff9fad;
+    margin: 0.5rem 0;
+}
+
 /* Cabeçalho */
 .cabecalho {
     background: linear-gradient(135deg, var(--cor-superficie) 0%, var(--cor-fundo) 100%);

@@ -4,10 +4,12 @@ import { CategoriasModule } from './categorias/categorias.module';
 import { MesasModule } from './mesas/mesas.module';
 import { PedidosModule } from './pedidos/pedidos.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
     imports: [
         PrismaModule,
+        AuthModule,
         ProdutosModule,
         CategoriasModule,
         MesasModule,

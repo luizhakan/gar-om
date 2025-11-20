@@ -6,14 +6,28 @@ import { PrismaService } from '../prisma/prisma.service';
 export class ProdutosService {
     constructor(private prisma: PrismaService) {}
 
-    listar() {
+    async listar(restauranteId?: string) {
+        const restaurante = restauranteId
+            ? await this.prisma.restaurante.findUnique({ where: { id: restauranteId } })
+            : await this.prisma.restaurante.findFirst();
         return this.prisma.produto.findMany({
+            where: restaurante ? { restauranteId: restaurante.id } : undefined,
             orderBy: { nome: 'asc' },
         });
     }
 
-    async criar(dados: Prisma.ProdutoCreateInput) {
-        return this.prisma.produto.create({ data: dados });
+    async criar(dados: Prisma.ProdutoCreateInput, restauranteId?: string) {
+        const restaurante = restauranteId
+            ? await this.prisma.restaurante.findUnique({ where: { id: restauranteId } })
+            : await this.prisma.restaurante.findFirst();
+        return this.prisma.produto.create({
+            data: {
+                ...dados,
+                restaurante: restaurante
+                    ? { connect: { id: restaurante.id } }
+                    : { create: { nome: 'Restaurante Default' } },
+            },
+        });
     }
 
     async atualizar(id: string, dados: Prisma.ProdutoUpdateInput) {

@@ -1,6 +1,7 @@
 import type { Mesa } from '../types/Mesa';
 import { env } from '../config/env';
 import { gerarIdAleatorio } from '../utils/formatadores';
+import { obterRestauranteId } from '../utils/sessao';
 
 const CHAVE_STORAGE = 'garcom_mesas';
 const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
@@ -11,8 +12,13 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
         throw new Error('API não configurada');
     }
 
+    const restauranteId = obterRestauranteId();
+
     const resposta = await fetch(`${API_BASE}${path}`, {
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+            'Content-Type': 'application/json',
+            ...(restauranteId ? { 'x-restaurante-id': restauranteId } : {}),
+        },
         ...init,
     });
 

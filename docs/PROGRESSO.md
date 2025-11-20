@@ -60,6 +60,7 @@
 - ✅ Endpoints: produtos, categorias, mesas/configurar, pedidos, status de pedido
 - ⏳ Ajustar segurança/autenticação e deploy
 - ⏳ Melhorar observabilidade (logs/métricas)
+- ⏳ Auth de Admin/Cozinha com CPF e restaurante vinculado
 
 ---
 

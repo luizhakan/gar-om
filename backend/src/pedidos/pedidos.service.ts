@@ -34,7 +34,7 @@ export class PedidosService {
         };
     }
 
-    private async garantirMesa(idMesaRecebido: string) {
+    private async garantirMesa(idMesaRecebido: string, restauranteId?: string) {
         const numeroMesa = Number(idMesaRecebido);
         const mesaExistente = await this.prisma.mesa.findFirst({
             where: {
@@ -47,9 +47,19 @@ export class PedidosService {
 
         if (mesaExistente) return mesaExistente;
 
+        const restaurante = restauranteId
+            ? await this.prisma.restaurante.upsert({
+                where: { id: restauranteId },
+                update: {},
+                create: { id: restauranteId, nome: 'Restaurante Default' },
+            })
+            : await (this.prisma.restaurante.findFirst() ?? this.prisma.restaurante.create({
+                data: { id: 'restaurante-default', nome: 'Restaurante Default' },
+            }));
+
         const numeroParaCriar = Number.isInteger(numeroMesa)
             ? numeroMesa
-            : await this.prisma.mesa.count() + 1;
+            : await this.prisma.mesa.count({ where: { restauranteId: restaurante.id } }) + 1;
 
         return this.prisma.mesa.create({
             data: {
@@ -57,12 +67,14 @@ export class PedidosService {
                 numero: numeroParaCriar,
                 codigoQr: `http://localhost:5173/mesa/${numeroParaCriar}`,
                 ocupada: false,
+                restauranteId: restaurante.id,
             },
         });
     }
 
-    async listar() {
+    async listar(restauranteId?: string) {
         const pedidos = await this.prisma.pedido.findMany({
+            where: restauranteId ? { restauranteId } : undefined,
             orderBy: { dataCriacao: 'desc' },
             include: {
                 mesa: true,
@@ -75,8 +87,8 @@ export class PedidosService {
         return pedidos.map(p => this.formatarPedido(p));
     }
 
-    async criar(dto: CriarPedidoDto) {
-        const mesa = await this.garantirMesa(dto.idMesa);
+    async criar(dto: CriarPedidoDto, restauranteId?: string) {
+        const mesa = await this.garantirMesa(dto.idMesa, restauranteId);
 
         const itensPreparados = [];
         for (const item of dto.itens) {
@@ -99,6 +111,7 @@ export class PedidosService {
         const pedidoCriado = await this.prisma.pedido.create({
             data: {
                 idMesa: mesa.id,
+                restauranteId: mesa.restauranteId,
                 status: (dto.status as PedidoStatus) || PedidoStatus.pendente,
                 itens: {
                     create: itensPreparados,

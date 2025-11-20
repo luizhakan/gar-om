@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, Param, Patch, Post } from '@nestjs/common';
 import { ProdutosService } from './produtos.service';
 import { CriarProdutoDto } from './dto/criar-produto.dto';
 import { AtualizarProdutoDto } from './dto/atualizar-produto.dto';
@@ -8,13 +8,13 @@ export class ProdutosController {
     constructor(private readonly produtosService: ProdutosService) {}
 
     @Get()
-    listar() {
-        return this.produtosService.listar();
+    listar(@Headers('x-restaurante-id') restauranteId?: string) {
+        return this.produtosService.listar(restauranteId);
     }
 
     @Post()
-    criar(@Body() dto: CriarProdutoDto) {
-        return this.produtosService.criar(dto);
+    criar(@Body() dto: CriarProdutoDto, @Headers('x-restaurante-id') restauranteId?: string) {
+        return this.produtosService.criar(dto, restauranteId);
     }
 
     @Patch(':id')

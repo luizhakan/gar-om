@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Patch, Post } from '@nestjs/common';
 import { PedidosService } from './pedidos.service';
 import { CriarPedidoDto } from './dto/criar-pedido.dto';
 import { AtualizarStatusDto } from './dto/atualizar-status.dto';
@@ -8,13 +8,13 @@ export class PedidosController {
     constructor(private readonly pedidosService: PedidosService) {}
 
     @Get()
-    listar() {
-        return this.pedidosService.listar();
+    listar(@Headers('x-restaurante-id') restauranteId?: string) {
+        return this.pedidosService.listar(restauranteId);
     }
 
     @Post()
-    criar(@Body() dto: CriarPedidoDto) {
-        return this.pedidosService.criar(dto);
+    criar(@Body() dto: CriarPedidoDto, @Headers('x-restaurante-id') restauranteId?: string) {
+        return this.pedidosService.criar(dto, restauranteId);
     }
 
     @Patch(':id/status')

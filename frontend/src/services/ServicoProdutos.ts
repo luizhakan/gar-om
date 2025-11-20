@@ -2,6 +2,7 @@ import type { Produto } from '../types/Produto';
 import { produtosMock } from '../mocks/cardapio';
 import { gerarIdAleatorio } from '../utils/formatadores';
 import { env } from '../config/env';
+import { obterRestauranteId } from '../utils/sessao';
 
 const CHAVE_STORAGE = 'garcom_produtos';
 const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
@@ -12,9 +13,12 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
         throw new Error('API não configurada');
     }
 
+    const restauranteId = obterRestauranteId();
+
     const resposta = await fetch(`${API_BASE}${path}`, {
         headers: {
             'Content-Type': 'application/json',
+            ...(restauranteId ? { 'x-restaurante-id': restauranteId } : {}),
         },
         ...init,
     });

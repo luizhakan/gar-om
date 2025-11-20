@@ -28,7 +28,12 @@ Este repositório agora está organizado em duas pastas:
 - `GET /categorias` | `POST /categorias`
 - `GET /mesas` | `PUT /mesas/configurar`
 - `GET /pedidos` | `POST /pedidos` | `PATCH /pedidos/:id/status`
+- Auth:
+  - `POST /auth/admin/register` (nome, email, cpf, senha) — cria admin e restaurante vinculado (CPF validado pelo algoritmo oficial)
+  - `POST /auth/admin/login` (email, senha) — retorna admin + restauranteId
+  - `POST /auth/cozinha/login` (email, senha) — retorna usuário de cozinha + restauranteId
 
 ## Notas
 - O frontend espera a API em `http://localhost:3001` (ajuste com `VITE_API_URL`).
 - Se a API não estiver rodando, os services do frontend usam fallback em `localStorage` + mocks.
+- As requisições enviam `x-restaurante-id` (quando logado) para isolar dados de cada restaurante.

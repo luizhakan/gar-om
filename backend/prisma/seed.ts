@@ -1,4 +1,5 @@
 import { PrismaClient, PedidoStatus } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -8,13 +9,43 @@ async function main() {
     await prisma.produto.deleteMany();
     await prisma.categoria.deleteMany();
     await prisma.mesa.deleteMany();
+    await prisma.admin.deleteMany();
+    await prisma.usuarioCozinha.deleteMany();
+    await prisma.restaurante.deleteMany();
+
+    const restaurante = await prisma.restaurante.create({
+        data: {
+            id: 'restaurante-demo',
+            nome: 'Restaurante Demo',
+        },
+    });
+
+    const senhaPadrao = await bcrypt.hash('senha123', 10);
+
+    await prisma.admin.create({
+        data: {
+            nome: 'Admin Demo',
+            email: 'admin@demo.com',
+            cpf: '14538220620',
+            senhaHash: senhaPadrao,
+            restauranteId: restaurante.id,
+        },
+    });
+
+    await prisma.usuarioCozinha.create({
+        data: {
+            email: 'cozinha@demo.com',
+            senhaHash: senhaPadrao,
+            restauranteId: restaurante.id,
+        },
+    });
 
     const categorias = await prisma.categoria.createMany({
         data: [
-            { id: '1', nome: 'Bebidas', ordem: 1 },
-            { id: '2', nome: 'Lanches', ordem: 2 },
-            { id: '3', nome: 'Porções', ordem: 3 },
-            { id: '4', nome: 'Sobremesas', ordem: 4 },
+            { id: '1', nome: 'Bebidas', ordem: 1, restauranteId: restaurante.id },
+            { id: '2', nome: 'Lanches', ordem: 2, restauranteId: restaurante.id },
+            { id: '3', nome: 'Porções', ordem: 3, restauranteId: restaurante.id },
+            { id: '4', nome: 'Sobremesas', ordem: 4, restauranteId: restaurante.id },
         ],
     });
 
@@ -22,17 +53,17 @@ async function main() {
 
     const produtos = await prisma.produto.createMany({
         data: [
-            { id: '1', nome: 'Coca-Cola Lata', descricao: 'Refrigerante 350ml gelado', preco: 5.0, idCategoria: '1' },
-            { id: '2', nome: 'Suco de Laranja Natural', descricao: 'Suco fresco 500ml', preco: 8.0, idCategoria: '1' },
-            { id: '3', nome: 'Cerveja Heineken Long Neck', descricao: 'Cerveja importada 330ml', preco: 12.0, idCategoria: '1' },
-            { id: '4', nome: 'X-Burger Clássico', descricao: 'Hambúrguer artesanal 180g, queijo, alface, tomate e molho especial', preco: 25.0, idCategoria: '2' },
-            { id: '5', nome: 'X-Bacon', descricao: 'Hambúrguer 180g, bacon crocante, queijo cheddar e cebola caramelizada', preco: 28.0, idCategoria: '2' },
-            { id: '6', nome: 'X-Salada', descricao: 'Hambúrguer 180g, queijo, alface, tomate, milho e batata palha', preco: 22.0, idCategoria: '2' },
-            { id: '7', nome: 'Batata Frita Grande', descricao: 'Porção de batata frita crocante (500g)', preco: 18.0, idCategoria: '3' },
-            { id: '8', nome: 'Onion Rings', descricao: 'Anéis de cebola empanados (300g)', preco: 20.0, idCategoria: '3' },
-            { id: '9', nome: 'Frango à Passarinho', descricao: 'Frango frito temperado com alho (400g)', preco: 32.0, idCategoria: '3' },
-            { id: '10', nome: 'Petit Gateau', descricao: 'Bolo de chocolate quente com sorvete de baunilha', preco: 15.0, idCategoria: '4' },
-            { id: '11', nome: 'Brownie com Sorvete', descricao: 'Brownie caseiro com sorvete e calda de chocolate', preco: 14.0, idCategoria: '4' },
+            { id: '1', nome: 'Coca-Cola Lata', descricao: 'Refrigerante 350ml gelado', preco: 5.0, idCategoria: '1', restauranteId: restaurante.id },
+            { id: '2', nome: 'Suco de Laranja Natural', descricao: 'Suco fresco 500ml', preco: 8.0, idCategoria: '1', restauranteId: restaurante.id },
+            { id: '3', nome: 'Cerveja Heineken Long Neck', descricao: 'Cerveja importada 330ml', preco: 12.0, idCategoria: '1', restauranteId: restaurante.id },
+            { id: '4', nome: 'X-Burger Clássico', descricao: 'Hambúrguer artesanal 180g, queijo, alface, tomate e molho especial', preco: 25.0, idCategoria: '2', restauranteId: restaurante.id },
+            { id: '5', nome: 'X-Bacon', descricao: 'Hambúrguer 180g, bacon crocante, queijo cheddar e cebola caramelizada', preco: 28.0, idCategoria: '2', restauranteId: restaurante.id },
+            { id: '6', nome: 'X-Salada', descricao: 'Hambúrguer 180g, queijo, alface, tomate, milho e batata palha', preco: 22.0, idCategoria: '2', restauranteId: restaurante.id },
+            { id: '7', nome: 'Batata Frita Grande', descricao: 'Porção de batata frita crocante (500g)', preco: 18.0, idCategoria: '3', restauranteId: restaurante.id },
+            { id: '8', nome: 'Onion Rings', descricao: 'Anéis de cebola empanados (300g)', preco: 20.0, idCategoria: '3', restauranteId: restaurante.id },
+            { id: '9', nome: 'Frango à Passarinho', descricao: 'Frango frito temperado com alho (400g)', preco: 32.0, idCategoria: '3', restauranteId: restaurante.id },
+            { id: '10', nome: 'Petit Gateau', descricao: 'Bolo de chocolate quente com sorvete de baunilha', preco: 15.0, idCategoria: '4', restauranteId: restaurante.id },
+            { id: '11', nome: 'Brownie com Sorvete', descricao: 'Brownie caseiro com sorvete e calda de chocolate', preco: 14.0, idCategoria: '4', restauranteId: restaurante.id },
         ],
     });
 
@@ -46,6 +77,7 @@ async function main() {
                 id: `mesa-${numero}`,
                 numero,
                 codigoQr: `${baseUrl}/mesa/${numero}`,
+                restauranteId: restaurante.id,
             };
         }),
     });
@@ -56,7 +88,11 @@ async function main() {
         data: {
             id: 'pedido-demo',
             idMesa: 'mesa-1',
+            restauranteId: restaurante.id,
             status: PedidoStatus.pendente,
+            mesa: {
+                connect: { id: 'mesa-1' },
+            },
             itens: {
                 create: [
                     {

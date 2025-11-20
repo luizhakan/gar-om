@@ -7,7 +7,9 @@ import styles from './Login.module.css';
 export function LoginAdmin() {
     const { autenticado, login } = useAdmin();
     const navigate = useNavigate();
+    const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
+    const [erro, setErro] = useState('');
 
     useEffect(() => {
         if (autenticado) {
@@ -15,9 +17,15 @@ export function LoginAdmin() {
         }
     }, [autenticado, navigate]);
 
-    function handleSubmit(event: FormEvent) {
+    async function handleSubmit(event: FormEvent) {
         event.preventDefault();
-        login(senha);
+        try {
+            setErro('');
+            await login(email, senha);
+        } catch (e) {
+            setErro('Falha no login. Verifique email/senha.');
+            console.error(e);
+        }
     }
 
     return (
@@ -25,9 +33,20 @@ export function LoginAdmin() {
             <div className={styles.card}>
                 <p className={styles.rotulo}>Acesso restrito</p>
                 <h1 className={styles.titulo}>Painel do Dono</h1>
-                <p className={styles.subtitulo}>Use a senha combinada com a equipe para entrar.</p>
+                <p className={styles.subtitulo}>Entre com seu email e senha cadastrados.</p>
 
                 <form className={styles.form} onSubmit={handleSubmit}>
+                    <label className={styles.label} htmlFor="email">Email</label>
+                    <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(event) => setEmail(event.target.value)}
+                        className={styles.input}
+                        placeholder="seuemail@restaurante.com"
+                        required
+                    />
+
                     <label className={styles.label} htmlFor="senha">Senha</label>
                     <input
                         id="senha"
@@ -36,7 +55,10 @@ export function LoginAdmin() {
                         onChange={(event) => setSenha(event.target.value)}
                         className={styles.input}
                         placeholder="Digite a senha"
+                        required
                     />
+
+                    {erro && <p className={styles.erro}>{erro}</p>}
 
                     <Botao type="submit" variante="primario" tamanho="grande" className={styles.botao}>
                         Entrar

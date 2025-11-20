@@ -6,10 +6,12 @@ import type { Mesa } from '../types/Mesa';
 import { categoriasMock } from '../mocks/cardapio';
 import { ServicoProdutos } from '../services/ServicoProdutos';
 import { ServicoMesas } from '../services/ServicoMesas';
+import { ServicoAuth } from '../services/ServicoAuth';
+import { definirSessao, limparSessao, obterRestauranteId } from '../utils/sessao';
 
 interface DadosContextoAdmin {
     autenticado: boolean;
-    login: (senha: string) => void;
+    login: (email: string, senha: string) => Promise<void>;
     logout: () => void;
     categorias: Categoria[];
     produtos: Produto[];
@@ -20,6 +22,8 @@ interface DadosContextoAdmin {
     mesas: Mesa[];
     definirNumeroMesas: (total: number) => Promise<void>;
     gerarLinkMesa: (numeroMesa: number) => string;
+    restauranteId?: string;
+    adminEmail?: string;
 }
 
 const CHAVE_STORAGE_AUTH = 'garcom_admin_auth';
@@ -47,6 +51,8 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
     const [autenticado, setAutenticado] = useState<boolean>(() => {
         return lerStorage<boolean>(CHAVE_STORAGE_AUTH, false);
     });
+    const [restauranteId, setRestauranteId] = useState<string | undefined>(() => obterRestauranteId());
+    const [adminEmail, setAdminEmail] = useState<string | undefined>(undefined);
     const [produtos, setProdutos] = useState<Produto[]>([]);
     const [mesas, setMesas] = useState<Mesa[]>([]);
 
@@ -63,7 +69,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
             .catch((erro) => {
                 console.error('[ContextoAdmin] Erro ao carregar produtos:', erro);
             });
-    }, []);
+    }, [restauranteId]);
 
     useEffect(() => {
         ServicoMesas.listar()
@@ -71,17 +77,21 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
             .catch((erro) => {
                 console.error('[ContextoAdmin] Erro ao carregar mesas:', erro);
             });
-    }, []);
+    }, [restauranteId]);
 
-    function login(senha: string) {
-        // Login fictício: qualquer senha não vazia autoriza.
-        if (senha.trim().length > 0) {
-            setAutenticado(true);
-        }
+    async function login(email: string, senha: string) {
+        const resp = await ServicoAuth.loginAdmin(email, senha);
+        setAutenticado(true);
+        setRestauranteId(resp.admin.restauranteId);
+        setAdminEmail(resp.admin.email);
+        definirSessao(resp.admin.restauranteId, 'admin');
     }
 
     function logout() {
         setAutenticado(false);
+        setRestauranteId(undefined);
+        setAdminEmail(undefined);
+        limparSessao();
     }
 
     async function criarProduto(produto: Omit<Produto, 'id'>) {
@@ -139,7 +149,9 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 alternarDisponibilidade,
                 mesas,
                 definirNumeroMesas,
-                gerarLinkMesa
+                gerarLinkMesa,
+                restauranteId,
+                adminEmail,
             }}
         >
             {children}
