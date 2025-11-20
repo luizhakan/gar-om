@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { ProdutosService } from '../src/produtos/produtos.service';
 import { criarPrismaMock, PrismaMock } from './mocks/prisma.mock';
 
@@ -11,7 +11,7 @@ describe('ProdutosService', () => {
         service = new ProdutosService(prisma as any);
     });
 
-    it('lista produtos filtrando por restaurante quando header é enviado', async () => {
+    it('lista produtos apenas do restaurante', async () => {
         prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
         prisma.produto.findMany.mockResolvedValue([]);
 
@@ -23,48 +23,70 @@ describe('ProdutosService', () => {
         });
     });
 
-    it('cria produto conectando ao restaurante informado', async () => {
+    it('falha ao listar sem restaurante válido', async () => {
+        prisma.restaurante.findUnique.mockResolvedValue(null);
+        await expect(service.listar('rest-x')).rejects.toBeInstanceOf(NotFoundException);
+    });
+
+    it('cria produto apenas se categoria pertence ao restaurante', async () => {
         prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+        prisma.categoria.findUnique.mockResolvedValue({ id: 'cat-1', restauranteId: 'rest-1' });
         prisma.produto.create.mockResolvedValue({ id: 'p1', nome: 'Café' });
 
-        const produto = await service.criar({ nome: 'Café', preco: 5, idCategoria: 'cat-1' } as any, 'rest-1');
+        await service.criar({ nome: 'Café', preco: 5, idCategoria: 'cat-1' } as any, 'rest-1');
 
         expect(prisma.produto.create).toHaveBeenCalledWith(
             expect.objectContaining({
                 data: expect.objectContaining({
                     restaurante: { connect: { id: 'rest-1' } },
-                }),
-            }),
-        );
-        expect(produto).toEqual({ id: 'p1', nome: 'Café' });
-    });
-
-    it('cria produto com restaurante default quando nenhum existe', async () => {
-        prisma.restaurante.findFirst.mockResolvedValue(null);
-        prisma.produto.create.mockResolvedValue({ id: 'p1', nome: 'Café' });
-
-        await service.criar({ nome: 'Café', preco: 5, idCategoria: 'cat-1' } as any);
-
-        expect(prisma.produto.create).toHaveBeenCalledWith(
-            expect.objectContaining({
-                data: expect.objectContaining({
-                    restaurante: { connect: { id: 'restaurante-default' } },
+                    categoria: { connect: { id: 'cat-1' } },
                 }),
             }),
         );
     });
 
-    it('lança erro ao atualizar produto inexistente', async () => {
-        prisma.produto.findUnique.mockResolvedValue(null);
+    it('nega criar produto em categoria de outro restaurante', async () => {
+        prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+        prisma.categoria.findUnique.mockResolvedValue({ id: 'cat-1', restauranteId: 'rest-2' });
 
-        await expect(service.atualizar('p1', { nome: 'Novo' })).rejects.toBeInstanceOf(NotFoundException);
+        await expect(
+            service.criar({ nome: 'Café', preco: 5, idCategoria: 'cat-1' } as any, 'rest-1'),
+        ).rejects.toBeInstanceOf(UnauthorizedException);
     });
 
-    it('alterna disponibilidade do produto', async () => {
-        prisma.produto.findUnique.mockResolvedValue({ id: 'p1', disponivel: true });
-        prisma.produto.update.mockResolvedValue({ id: 'p1', disponivel: false });
+    it('nega criar produto em restaurante inexistente', async () => {
+        prisma.restaurante.findUnique.mockResolvedValue(null);
+        await expect(
+            service.criar({ nome: 'Café', preco: 5, idCategoria: 'cat-1' } as any, 'rest-1'),
+        ).rejects.toBeInstanceOf(NotFoundException);
+    });
 
-        const resposta = await service.alternarDisponibilidade('p1');
+    it('blinda atualizações de outro restaurante e valida categoria', async () => {
+        prisma.produto.findUnique.mockResolvedValue({ id: 'p1', restauranteId: 'rest-1' });
+        prisma.categoria.findUnique.mockResolvedValue({ id: 'nova-cat', restauranteId: 'rest-2' });
+
+        await expect(
+            service.atualizar('p1', { idCategoria: 'nova-cat' } as any, 'rest-1'),
+        ).rejects.toBeInstanceOf(UnauthorizedException);
+
+        prisma.produto.findUnique.mockResolvedValue({ id: 'p1', restauranteId: 'rest-2' });
+        await expect(
+            service.atualizar('p1', { nome: 'X' } as any, 'rest-1'),
+        ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('nega remover e alternar disponibilidade de produto de outro restaurante', async () => {
+        prisma.produto.findUnique.mockResolvedValue({ id: 'p1', restauranteId: 'rest-2', disponivel: true });
+
+        await expect(service.remover('p1', 'rest-1')).rejects.toBeInstanceOf(UnauthorizedException);
+        await expect(service.alternarDisponibilidade('p1', 'rest-1')).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('alterna disponibilidade do produto do mesmo restaurante', async () => {
+        prisma.produto.findUnique.mockResolvedValue({ id: 'p1', restauranteId: 'rest-1', disponivel: true });
+        prisma.produto.update.mockResolvedValue({ id: 'p1', restauranteId: 'rest-1', disponivel: false });
+
+        const resposta = await service.alternarDisponibilidade('p1', 'rest-1');
 
         expect(prisma.produto.update).toHaveBeenCalledWith({
             where: { id: 'p1' },

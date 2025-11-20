@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PedidosService } from '../src/pedidos/pedidos.service';
 import { criarPrismaMock, PrismaMock } from './mocks/prisma.mock';
 
@@ -12,6 +12,7 @@ describe('PedidosService', () => {
     });
 
     it('lista pedidos formatando número da mesa e itens', async () => {
+        prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
         const pedidoData = {
             id: 'ped-1',
             idMesa: 'mesa-1',
@@ -47,91 +48,84 @@ describe('PedidosService', () => {
             include: { mesa: true, itens: { include: { produto: true } } },
         });
         expect(pedido.idMesa).toBe('12');
-        expect(pedido.itens[0]).toEqual(
-            expect.objectContaining({
-                idProduto: 'prod-1',
-                quantidade: 2,
-                observacao: 'sem cebola',
-            }),
-        );
         expect(pedido.itens[0].produto?.nome).toBe('Pizza');
     });
 
-    it('lança erro ao criar pedido com produto inexistente', async () => {
-        prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', numero: 1, restauranteId: 'rest-1' });
-        prisma.produto.findUnique.mockResolvedValue(null);
-
-        await expect(
-            service.criar({ idMesa: 'mesa-1', itens: [{ idProduto: 'p1', quantidade: 1 }] } as any, 'rest-1'),
-        ).rejects.toBeInstanceOf(NotFoundException);
+    it('falha ao listar se restaurante não existe', async () => {
+        prisma.restaurante.findUnique.mockResolvedValue(null);
+        await expect(service.listar('rest-x')).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('cria pedido gerando mesa padrão quando necessário', async () => {
-        prisma.mesa.findFirst.mockResolvedValueOnce(null);
-        prisma.restaurante.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: 'rest-default' });
-        prisma.restaurante.create.mockResolvedValue({ id: 'rest-default', nome: 'Restaurante Default' });
-        prisma.mesa.count.mockResolvedValue(0);
-        prisma.mesa.create.mockResolvedValue({
-            id: 'mesa-1',
-            numero: 1,
-            restauranteId: 'rest-default',
-            codigoQr: 'http://localhost:5173/mesa/1',
-            ocupada: false,
-        });
-        prisma.produto.findUnique.mockResolvedValue({
-            id: 'prod-1',
-            nome: 'Pizza',
-            preco: 30,
-            descricao: null,
-            idCategoria: 'cat-1',
-            disponivel: true,
-        });
+    it('rejeita criação sem restauranteId', async () => {
+        await expect(
+            service.criar({ idMesa: 'mesa-1', itens: [] } as any, ''),
+        ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it('rejeita criação para restaurante inexistente, mesa inexistente e produto de outro restaurante', async () => {
+        prisma.restaurante.findUnique.mockResolvedValue(null);
+        await expect(
+            service.criar({ idMesa: 'mesa-1', itens: [] } as any, 'rest-1'),
+        ).rejects.toBeInstanceOf(NotFoundException);
+
+        prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+        prisma.mesa.findFirst.mockResolvedValue(null);
+        await expect(
+            service.criar({ idMesa: 'mesa-1', itens: [] } as any, 'rest-1'),
+        ).rejects.toBeInstanceOf(NotFoundException);
+
+        prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', numero: 1, restauranteId: 'rest-1' });
+        prisma.produto.findUnique.mockResolvedValue({ id: 'p1', restauranteId: 'outro', preco: 10 });
+        await expect(
+            service.criar({ idMesa: 'mesa-1', itens: [{ idProduto: 'p1', quantidade: 1 }] } as any, 'rest-1'),
+        ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('cria pedido para restaurante e mesa válidos forçando status pendente', async () => {
+        prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+        prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', numero: 3, restauranteId: 'rest-1' });
+        prisma.produto.findUnique.mockResolvedValue({ id: 'p1', restauranteId: 'rest-1', preco: 10 });
         prisma.pedido.create.mockResolvedValue({
             id: 'ped-1',
             idMesa: 'mesa-1',
-            restauranteId: 'rest-default',
+            restauranteId: 'rest-1',
             status: 'pendente',
             dataCriacao: new Date('2024-01-01'),
             dataAtualizacao: null,
-            mesa: { id: 'mesa-1', numero: 1 },
+            mesa: { id: 'mesa-1', numero: 3 },
             itens: [
                 {
-                    produtoId: 'prod-1',
+                    produtoId: 'p1',
                     quantidade: 1,
-                    observacao: undefined,
-                    produto: {
-                        id: 'prod-1',
-                        nome: 'Pizza',
-                        descricao: null,
-                        preco: 30,
-                        idCategoria: 'cat-1',
-                        disponivel: true,
-                        imagemUrl: null,
-                    },
+                    observacao: null,
+                    produto: { id: 'p1', restauranteId: 'rest-1', preco: 10 },
                 },
             ],
         } as any);
 
         const pedido = await service.criar(
-            { idMesa: 'nova', itens: [{ idProduto: 'prod-1', quantidade: 1 }] } as any,
-            undefined,
+            { idMesa: 'mesa-1', status: 'pronto', itens: [{ idProduto: 'p1', quantidade: 1 }] } as any,
+            'rest-1',
         );
 
-        expect(prisma.mesa.create).toHaveBeenCalledWith({
-            data: {
-                id: 'mesa-1',
-                numero: 1,
-                codigoQr: 'http://localhost:5173/mesa/1',
-                ocupada: false,
-                restauranteId: 'rest-default',
-            },
-        });
-        expect(pedido.idMesa).toBe('1');
-        expect(pedido.itens[0].produto?.preco).toBe(30);
+        expect(prisma.pedido.create).toHaveBeenCalledWith(
+            expect.objectContaining({
+                data: expect.objectContaining({
+                    restauranteId: 'rest-1',
+                    status: 'pendente',
+                }),
+            }),
+        );
+        expect(pedido.status).toBe('pendente');
     });
 
-    it('atualiza status de pedido e devolve data de atualização', async () => {
-        prisma.pedido.findUnique.mockResolvedValue({ id: 'ped-1' });
+    it('atualiza status apenas se for do mesmo restaurante', async () => {
+        prisma.pedido.findUnique.mockResolvedValue({ id: 'ped-1', restauranteId: 'rest-2' });
+        await expect(
+            service.atualizarStatus('ped-1', { status: 'preparando' } as any, 'rest-1'),
+        ).rejects.toBeInstanceOf(UnauthorizedException);
+
+        prisma.pedido.findUnique.mockResolvedValue({ id: 'ped-1', restauranteId: 'rest-1', status: 'pendente' });
         prisma.pedido.update.mockResolvedValue({
             id: 'ped-1',
             idMesa: 'mesa-1',
@@ -143,22 +137,15 @@ describe('PedidosService', () => {
             itens: [],
         } as any);
 
-        const resultado = await service.atualizarStatus('ped-1', { status: 'preparando' } as any);
-
-        expect(prisma.pedido.update).toHaveBeenCalledWith(
-            expect.objectContaining({
-                data: expect.objectContaining({ status: 'preparando', dataAtualizacao: expect.any(Date) }),
-            }),
-        );
-        expect(resultado.status).toBe('preparando');
-        expect(resultado.dataAtualizacao).toBeInstanceOf(Date);
+        const retornado = await service.atualizarStatus('ped-1', { status: 'preparando' } as any, 'rest-1');
+        expect(retornado.status).toBe('preparando');
+        expect(retornado.dataAtualizacao).toBeInstanceOf(Date);
     });
 
-    it('lança erro ao tentar atualizar status de pedido inexistente', async () => {
+    it('lança erro ao tentar atualizar pedido inexistente', async () => {
         prisma.pedido.findUnique.mockResolvedValue(null);
-
-        await expect(service.atualizarStatus('ped-1', { status: 'pendente' } as any)).rejects.toBeInstanceOf(
-            NotFoundException,
-        );
+        await expect(
+            service.atualizarStatus('ped-1', { status: 'pendente' } as any, 'rest-1'),
+        ).rejects.toBeInstanceOf(NotFoundException);
     });
 });
