@@ -3,12 +3,12 @@ import type { ReactNode } from 'react';
 import type { Produto } from '../types/Produto';
 import type { Categoria } from '../types/Categoria';
 import type { Mesa } from '../types/Mesa';
-import { categoriasMock } from '../mocks/cardapio';
-import { ServicoProdutos } from '../services/ServicoProdutos';
+import { ServicoProdutos, type ProdutoNovo } from '../services/ServicoProdutos';
 import { ServicoMesas } from '../services/ServicoMesas';
 import { ServicoAuth } from '../services/ServicoAuth';
 import { definirSessao, limparSessao, obterEmailSessao, obterRestauranteId, obterToken } from '../utils/sessao';
 import { useToast } from './ContextoToast';
+import { ServicoCategorias } from '../services/ServicoCategorias';
 
 interface DadosContextoAdmin {
     autenticado: boolean;
@@ -16,7 +16,7 @@ interface DadosContextoAdmin {
     logout: () => void;
     categorias: Categoria[];
     produtos: Produto[];
-    criarProduto: (produto: Omit<Produto, 'id'>) => Promise<void>;
+    criarProduto: (produto: ProdutoNovo) => Promise<void>;
     atualizarProduto: (produto: Produto) => Promise<void>;
     removerProduto: (idProduto: string) => Promise<void>;
     alternarDisponibilidade: (idProduto: string) => Promise<void>;
@@ -47,7 +47,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
     const [produtos, setProdutos] = useState<Produto[]>([]);
     const [mesas, setMesas] = useState<Mesa[]>([]);
 
-    const categorias = useMemo(() => categoriasMock, []);
+    const [categorias, setCategorias] = useState<Categoria[]>([]);
 
     useEffect(() => {
         if (!autenticado || !restauranteId) return;
@@ -58,7 +58,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 console.error('[ContextoAdmin] Erro ao carregar produtos:', erro);
                 notificar('Não foi possível carregar os produtos', 'erro');
             });
-    }, [autenticado, restauranteId]);
+    }, [autenticado, restauranteId, notificar]);
 
     useEffect(() => {
         if (!autenticado || !restauranteId) return;
@@ -69,7 +69,17 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 console.error('[ContextoAdmin] Erro ao carregar mesas:', erro);
                 notificar('Não foi possível carregar as mesas', 'erro');
             });
-    }, [autenticado, restauranteId]);
+    }, [autenticado, restauranteId, notificar]);
+
+    useEffect(() => {
+        if (!restauranteId) return;
+        ServicoCategorias.listar()
+            .then(setCategorias)
+            .catch((erro) => {
+                console.error('[ContextoAdmin] Erro ao carregar categorias:', erro);
+                notificar('Não foi possível carregar as categorias', 'erro');
+            });
+    }, [restauranteId, notificar]);
 
     async function login(email: string, senha: string) {
         try {
@@ -96,7 +106,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         notificar('Sessão encerrada', 'info');
     }
 
-    async function criarProduto(produto: Omit<Produto, 'id'>) {
+    async function criarProduto(produto: ProdutoNovo) {
         const criado = await ServicoProdutos.criar(produto);
         setProdutos(lista => [...lista, criado]);
         notificar('Produto criado com sucesso', 'sucesso');

@@ -1,7 +1,33 @@
-import type { Pedido } from '../types/Pedido';
+import type { Pedido, StatusPedido } from '../types/Pedido';
 import { gerarIdAleatorio } from '../utils/formatadores';
 import { env } from '../config/env';
 import { obterRestauranteId, obterToken } from '../utils/sessao';
+
+type PedidoApi = {
+    id: string;
+    idMesa: string;
+    restauranteId: string;
+    status: StatusPedido;
+    dataCriacao: string;
+    dataAtualizacao?: string | null;
+    itens: ItemPedidoApi[];
+};
+
+type ItemPedidoApi = {
+    produtoId: string;
+    quantidade: number;
+    observacao?: string | null;
+    produto?: {
+        id: string;
+        nome: string;
+        descricao?: string | null;
+        preco: number;
+        idCategoria: string;
+        disponivel: boolean;
+        imagemUrl?: string | null;
+        restauranteId: string;
+    };
+};
 
 const CHAVE_STORAGE = 'garom_pedidos';
 const EVENTO_ATUALIZACAO = 'pedidos-atualizados';
@@ -14,16 +40,16 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     }
 
     const restauranteId = obterRestauranteId();
-    if (!restauranteId) {
-        throw new Error('Restaurante não definido na sessão');
-    }
     const token = obterToken();
+    if (!restauranteId || !token) {
+        throw new Error('Sessão de restaurante não definida');
+    }
 
     const resposta = await fetch(`${API_BASE}${path}`, {
         headers: {
             'Content-Type': 'application/json',
-            ...(restauranteId ? { 'x-restaurante-id': restauranteId } : {}),
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            'x-restaurante-id': restauranteId,
+            Authorization: `Bearer ${token}`,
         },
         ...init,
     });
@@ -57,9 +83,9 @@ function salvarPedidosStorage(pedidos: Pedido[]) {
     window.dispatchEvent(new Event(EVENTO_ATUALIZACAO));
 }
 
-function mapearPedidoApi(payload: any): Pedido {
-    const itens = (payload.itens ?? []).map((item: any) => ({
-        idProduto: item.idProduto ?? item.produtoId,
+function mapearPedidoApi(payload: PedidoApi): Pedido {
+    const itens = (payload.itens ?? []).map((item) => ({
+        idProduto: item.produtoId,
         quantidade: item.quantidade,
         observacao: item.observacao ?? undefined,
         produto: item.produto
@@ -71,33 +97,27 @@ function mapearPedidoApi(payload: any): Pedido {
                 idCategoria: item.produto.idCategoria,
                 disponivel: item.produto.disponivel,
                 imagemUrl: item.produto.imagemUrl ?? undefined,
+                restauranteId: item.produto.restauranteId,
             }
             : undefined,
     }));
 
     return {
         id: payload.id,
-        idMesa: payload.idMesa ?? payload.id_mesa,
+        idMesa: payload.idMesa,
+        restauranteId: payload.restauranteId,
         status: payload.status,
         itens,
-        dataCriacao: payload.dataCriacao ?? payload.data_criacao ?? new Date().toISOString(),
-        dataAtualizacao: payload.dataAtualizacao ?? payload.data_atualizacao,
+        dataCriacao: payload.dataCriacao,
+        dataAtualizacao: payload.dataAtualizacao ?? undefined,
     };
 }
 
 export const ServicoPedidos = {
     async listar(): Promise<Pedido[]> {
         if (usarApi) {
-            const token = obterToken();
-            try {
-                const data = await requestApi<any[]>('/pedidos');
-                return data.map(mapearPedidoApi);
-            } catch (error) {
-                if (token) {
-                    throw error;
-                }
-                console.warn('[ServicoPedidos] Falha ao listar via API, fallback local.', error);
-            }
+            const data = await requestApi<PedidoApi[]>('/pedidos');
+            return data.map(mapearPedidoApi);
         }
 
         return obterPedidosStorage();
@@ -105,23 +125,25 @@ export const ServicoPedidos = {
 
     async criar(pedido: Omit<Pedido, 'id' | 'status' | 'dataCriacao'>): Promise<Pedido> {
         const dataCriacao = new Date().toISOString();
+        const restauranteId = obterRestauranteId();
 
         if (usarApi) {
-            try {
-                const data = await requestApi<any>('/pedidos', {
-                    method: 'POST',
-                    body: JSON.stringify(pedido),
-                });
-                return mapearPedidoApi(data);
-            } catch (error) {
-                console.warn('[ServicoPedidos] Falha ao criar via API, salvando local.', error);
-            }
+            const data = await requestApi<PedidoApi>('/pedidos', {
+                method: 'POST',
+                body: JSON.stringify(pedido),
+            });
+            return mapearPedidoApi(data);
+        }
+
+        if (!restauranteId) {
+            throw new Error('Restaurante não definido na sessão');
         }
 
         const pedidosAtuais = obterPedidosStorage();
 
         const novoPedido: Pedido = {
             ...pedido,
+            restauranteId,
             id: gerarIdAleatorio(),
             status: 'pendente',
             dataCriacao,
@@ -132,7 +154,7 @@ export const ServicoPedidos = {
         return novoPedido;
     },
 
-    async atualizarStatus(idPedido: string, status: Pedido['status']): Promise<Pedido[]> {
+    async atualizarStatus(idPedido: string, status: StatusPedido): Promise<Pedido[]> {
         const dataAtualizacao = new Date().toISOString();
 
         if (!usarApi) {
@@ -190,5 +212,5 @@ export const ServicoPedidos = {
             window.removeEventListener('storage', handler);
             window.removeEventListener(EVENTO_ATUALIZACAO, handler);
         };
-    }
+    },
 };

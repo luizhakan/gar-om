@@ -1,8 +1,6 @@
 import { Link } from 'react-router-dom';
 import { obterRestauranteId } from '../utils/sessao';
-import { CardProduto } from '../components/CardProduto';
 import { Botao } from '../components/Botao';
-import { produtosMock } from '../mocks/cardapio';
 
 export function Home() {
     const restauranteId = obterRestauranteId();
@@ -37,24 +35,6 @@ export function Home() {
                 </Link>
             </nav>
 
-            <section>
-                <h2 style={{ marginBottom: '1rem' }}>Preview de Componentes</h2>
-
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-                    gap: '1rem'
-                }}>
-                    {produtosMock.slice(0, 6).map(produto => (
-                        <CardProduto
-                            key={produto.id}
-                            produto={produto}
-                            exibirBotaoAdicionar
-                            aoClicar={(p) => console.log('Clicou em:', p.nome)}
-                        />
-                    ))}
-                </div>
-            </section>
         </div>
     );
 }

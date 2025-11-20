@@ -2,6 +2,14 @@ import type { Mesa } from '../types/Mesa';
 import { env } from '../config/env';
 import { obterRestauranteId, obterToken } from '../utils/sessao';
 
+interface MesaApi {
+    id: string;
+    numero: number;
+    codigoQr: string;
+    ocupada: boolean;
+    restauranteId: string;
+}
+
 const CHAVE_STORAGE = 'garcom_mesas';
 const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
 const usarApi = Boolean(API_BASE);
@@ -20,7 +28,7 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     const resposta = await fetch(`${API_BASE}${path}`, {
         headers: {
             'Content-Type': 'application/json',
-            ...(restauranteId ? { 'x-restaurante-id': restauranteId } : {}),
+            'x-restaurante-id': restauranteId,
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         ...init,
@@ -32,13 +40,6 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     }
 
     return resposta.json() as Promise<T>;
-}
-
-function gerarLinkMesa(numeroMesa: number) {
-    const base = typeof window !== 'undefined'
-        ? window.location.origin
-        : 'http://localhost:5173';
-    return `${base}/mesa/${numeroMesa}`;
 }
 
 function obterStorage(): Mesa[] {
@@ -53,24 +54,21 @@ function obterStorage(): Mesa[] {
     }
 }
 
-function mapearMesaApi(payload: any): Mesa {
+function mapearMesaApi(payload: MesaApi): Mesa {
     return {
         id: payload.id,
         numero: payload.numero,
-        codigoQr: payload.codigoQr ?? payload.codigo_qr ?? gerarLinkMesa(payload.numero),
-        ocupada: payload.ocupada ?? false,
+        codigoQr: payload.codigoQr,
+        ocupada: payload.ocupada,
+        restauranteId: payload.restauranteId,
     };
 }
 
 export const ServicoMesas = {
     async listar(): Promise<Mesa[]> {
         if (usarApi) {
-            try {
-                const data = await requestApi<any[]>('/mesas');
-                return data.map(mapearMesaApi);
-            } catch (error) {
-                console.warn('[ServicoMesas] Falha ao listar via API, fallback local.', error);
-            }
+            const data = await requestApi<MesaApi[]>('/mesas');
+            return data.map(mapearMesaApi);
         }
         return obterStorage();
     },
@@ -78,14 +76,13 @@ export const ServicoMesas = {
     async configurar(total: number): Promise<Mesa[]> {
         if (!usarApi) throw new Error('API não configurada');
 
-        const data = await requestApi<any>('/mesas/configurar', {
+        const data = await requestApi<MesaApi[]>('/mesas/configurar', {
             method: 'PUT',
             body: JSON.stringify({
                 total,
                 baseUrl: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173',
             }),
         });
-        const mesasCriadas = (data as any[]).map(mapearMesaApi);
-        return mesasCriadas;
-    }
+        return data.map(mapearMesaApi);
+    },
 };

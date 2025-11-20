@@ -4,9 +4,11 @@ import { useCarrinho } from '../../contexts/ContextoCarrinho';
 import { ListaProdutos } from '../../components/ListaProdutos';
 import { CarrinhoFlutuante } from '../../components/CarrinhoFlutuante';
 import { ModalObservacao } from '../../components/ModalObservacao';
-import { produtosMock, categoriasMock } from '../../mocks/cardapio';
 import type { Produto } from '../../types/Produto';
+import type { Categoria } from '../../types/Categoria';
 import { definirSessao } from '../../utils/sessao';
+import { ServicoProdutos } from '../../services/ServicoProdutos';
+import { ServicoCategorias } from '../../services/ServicoCategorias';
 import styles from './styles.module.css';
 
 export function CardapioCliente() {
@@ -16,12 +18,44 @@ export function CardapioCliente() {
     const { adicionarItem } = useCarrinho();
 
     const [produtoSelecionado, setProdutoSelecionado] = useState<Produto | null>(null);
+    const [produtos, setProdutos] = useState<Produto[]>([]);
+    const [categorias, setCategorias] = useState<Categoria[]>([]);
+    const [erro, setErro] = useState<string | null>(null);
+    const [carregando, setCarregando] = useState(true);
 
     useEffect(() => {
         const restauranteId = searchParams.get('restauranteId');
         if (restauranteId) {
             definirSessao(restauranteId, 'cliente');
         }
+    }, [searchParams]);
+
+    useEffect(() => {
+        const restauranteId = searchParams.get('restauranteId');
+        if (!restauranteId) {
+            setErro('Restaurante não informado no QRCode.');
+            setCarregando(false);
+            return;
+        }
+
+        const carregar = async () => {
+            try {
+                const [cats, prods] = await Promise.all([
+                    ServicoCategorias.listar(),
+                    ServicoProdutos.listar(),
+                ]);
+                setCategorias(cats);
+                setProdutos(prods.filter(p => p.disponivel));
+                setErro(null);
+            } catch (e) {
+                console.error('[Cardapio] Erro ao carregar', e);
+                setErro('Não foi possível carregar o cardápio.');
+            } finally {
+                setCarregando(false);
+            }
+        };
+
+        void carregar();
     }, [searchParams]);
 
     const handleSelecionarProduto = (produto: Produto) => {
@@ -44,6 +78,27 @@ export function CardapioCliente() {
         navigate(`/mesa/${idMesa}/revisar${sufixoBusca ? `?${sufixoBusca}` : ''}`);
     };
 
+    if (carregando) {
+        return (
+            <div className={styles.container}>
+                <div className="container" style={{ paddingTop: '3rem' }}>
+                    <p>Carregando cardápio...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (erro) {
+        return (
+            <div className={styles.container}>
+                <div className="container" style={{ paddingTop: '3rem' }}>
+                    <h1>Ops</h1>
+                    <p>{erro}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.container}>
             <header className={styles.cabecalho}>
@@ -55,8 +110,8 @@ export function CardapioCliente() {
 
             <main className={`container ${styles.conteudoPrincipal}`}>
                 <ListaProdutos
-                    produtos={produtosMock}
-                    categorias={categoriasMock}
+                    produtos={produtos}
+                    categorias={categorias}
                     aoClicarProduto={handleSelecionarProduto}
                 />
             </main>

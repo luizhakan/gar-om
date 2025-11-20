@@ -1,7 +1,6 @@
 import type { Pedido } from '../../types/Pedido';
 import { calcularTempoDecorrido } from '../../utils/formatadores';
 import { Botao } from '../Botao';
-import { produtosMock } from '../../mocks/cardapio';
 import styles from './styles.module.css';
 
 interface PropsCardPedido {
@@ -15,10 +14,9 @@ export function CardPedido({ pedido, aoConfirmar, aoMarcarPronto }: PropsCardPed
     const isPendente = pedido.status === 'pendente';
     const isPreparando = pedido.status === 'preparando';
 
-    // Enriquecer itens com dados do produto
     const itensEnriquecidos = pedido.itens.map(item => ({
         ...item,
-        produto: produtosMock.find(p => p.id === item.idProduto),
+        produto: item.produto,
     }));
 
     return (

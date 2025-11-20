@@ -5,5 +5,8 @@ export interface Produto {
     preco: number;
     idCategoria: string;
     disponivel: boolean;
-    imagemUrl?: string; // Opcional, caso queiramos adicionar no futuro
+    imagemUrl?: string;
+    restauranteId: string;
+    createdAt?: string;
+    updatedAt?: string;
 }

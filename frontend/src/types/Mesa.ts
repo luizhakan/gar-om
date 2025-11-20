@@ -1,6 +1,9 @@
 export interface Mesa {
     id: string;
     numero: number;
-    codigoQr: string; // URL ou hash do QR Code
+    codigoQr: string;
     ocupada: boolean;
+    restauranteId: string;
+    createdAt?: string;
+    updatedAt?: string;
 }

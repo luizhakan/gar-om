@@ -1,9 +1,20 @@
 import type { Produto } from '../types/Produto';
-import { produtosMock } from '../mocks/cardapio';
 import { env } from '../config/env';
 import { obterRestauranteId, obterToken } from '../utils/sessao';
 
-const CHAVE_STORAGE = 'garcom_produtos';
+interface ProdutoApi {
+    id: string;
+    nome: string;
+    descricao?: string | null;
+    preco: number;
+    idCategoria: string;
+    disponivel: boolean;
+    imagemUrl?: string | null;
+    restauranteId: string;
+}
+
+export type ProdutoNovo = Omit<Produto, 'id' | 'restauranteId' | 'createdAt' | 'updatedAt'>;
+
 const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
 const usarApi = Boolean(API_BASE);
 
@@ -21,7 +32,7 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     const resposta = await fetch(`${API_BASE}${path}`, {
         headers: {
             'Content-Type': 'application/json',
-            ...(restauranteId ? { 'x-restaurante-id': restauranteId } : {}),
+            'x-restaurante-id': restauranteId,
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         ...init,
@@ -35,51 +46,37 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     return resposta.json() as Promise<T>;
 }
 
-function obterProdutosStorage(): Produto[] {
-    const dados = typeof window !== 'undefined'
-        ? window.localStorage.getItem(CHAVE_STORAGE)
-        : null;
-
-    if (!dados) return produtosMock;
-
-    try {
-        const parsed = JSON.parse(dados) as Produto[];
-        return Array.isArray(parsed) ? parsed : produtosMock;
-    } catch {
-        return produtosMock;
+function mapearProdutoApi(payload: ProdutoApi): Produto {
+    const preco = Number(payload.preco);
+    if (Number.isNaN(preco)) {
+        throw new Error('Resposta de produto com preço inválido');
     }
-}
 
-function mapearProdutoApi(payload: any): Produto {
     return {
         id: payload.id,
         nome: payload.nome,
-        descricao: payload.descricao ?? '',
-        preco: Number(payload.preco) || 0,
-        idCategoria: payload.idCategoria ?? payload.id_categoria ?? '',
-        disponivel: payload.disponivel ?? true,
-        imagemUrl: payload.imagemUrl ?? payload.imagem_url,
+        descricao: payload.descricao ?? undefined,
+        preco,
+        idCategoria: payload.idCategoria,
+        disponivel: payload.disponivel,
+        imagemUrl: payload.imagemUrl ?? undefined,
+        restauranteId: payload.restauranteId,
     };
 }
 
 export const ServicoProdutos = {
     async listar(): Promise<Produto[]> {
-        if (usarApi) {
-            try {
-                const data = await requestApi<any[]>('/produtos');
-                return data.map(mapearProdutoApi);
-            } catch (error) {
-                console.warn('[ServicoProdutos] Falha ao listar via API, fallback local.', error);
-            }
+        if (!usarApi) {
+            throw new Error('API não configurada');
         }
-
-        return obterProdutosStorage();
+        const data = await requestApi<ProdutoApi[]>('/produtos');
+        return data.map(mapearProdutoApi);
     },
 
-    async criar(produto: Omit<Produto, 'id'>): Promise<Produto> {
+    async criar(produto: ProdutoNovo): Promise<Produto> {
         if (!usarApi) throw new Error('API não configurada');
 
-        const criado = await requestApi<any>('/produtos', {
+        const criado = await requestApi<ProdutoApi>('/produtos', {
             method: 'POST',
             body: JSON.stringify(produto),
         });
@@ -89,7 +86,7 @@ export const ServicoProdutos = {
     async atualizar(produto: Produto): Promise<Produto> {
         if (!usarApi) throw new Error('API não configurada');
 
-        const atualizado = await requestApi<any>(`/produtos/${produto.id}`, {
+        const atualizado = await requestApi<ProdutoApi>(`/produtos/${produto.id}`, {
             method: 'PATCH',
             body: JSON.stringify(produto),
         });
@@ -101,12 +98,12 @@ export const ServicoProdutos = {
         await requestApi<void>(`/produtos/${idProduto}`, { method: 'DELETE' });
     },
 
-    async alternarDisponibilidade(idProduto: string): Promise<Produto | null> {
+    async alternarDisponibilidade(idProduto: string): Promise<Produto> {
         if (!usarApi) throw new Error('API não configurada');
 
-        const atualizado = await requestApi<any>(`/produtos/${idProduto}/disponibilidade`, {
+        const atualizado = await requestApi<ProdutoApi>(`/produtos/${idProduto}/disponibilidade`, {
             method: 'PATCH',
         });
         return mapearProdutoApi(atualizado);
-    }
+    },
 };

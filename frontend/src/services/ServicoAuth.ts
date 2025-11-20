@@ -2,7 +2,10 @@ import { env } from '../config/env';
 
 const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
 
-async function request<T>(path: string, body: any): Promise<T> {
+async function request<TResponse>(
+    path: string,
+    body: Record<string, unknown>,
+): Promise<TResponse> {
     if (!API_BASE) {
         throw new Error('API não configurada');
     }
@@ -18,7 +21,7 @@ async function request<T>(path: string, body: any): Promise<T> {
         throw new Error(texto || 'Falha na requisição do auth');
     }
 
-    return resp.json() as Promise<T>;
+    return resp.json() as Promise<TResponse>;
 }
 
 type DadosAdmin = { id: string; nome: string; email: string; restauranteId: string };

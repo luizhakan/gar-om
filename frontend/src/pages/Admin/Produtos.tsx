@@ -23,7 +23,7 @@ const estadoInicial: EstadoFormulario = {
 };
 
 export function ProdutosAdmin() {
-    const { produtos, categorias, criarProduto, atualizarProduto, removerProduto, alternarDisponibilidade } = useAdmin();
+    const { produtos, categorias, criarProduto, atualizarProduto, removerProduto, alternarDisponibilidade, restauranteId } = useAdmin();
     const [form, setForm] = useState<EstadoFormulario>(estadoInicial);
 
     const categoriasOrdenadas = useMemo(
@@ -41,6 +41,7 @@ export function ProdutosAdmin() {
 
         const precoNumber = Number(form.preco.replace(',', '.'));
         if (Number.isNaN(precoNumber)) return;
+        if (!restauranteId) return;
 
         try {
             if (form.id) {
@@ -51,6 +52,7 @@ export function ProdutosAdmin() {
                     preco: precoNumber,
                     idCategoria: form.idCategoria,
                     disponivel: form.disponivel,
+                    restauranteId,
                 });
             } else {
                 await criarProduto({
