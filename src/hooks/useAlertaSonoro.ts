@@ -10,6 +10,7 @@ export function useAlertaSonoro(devTocar: boolean) {
     const audioContextRef = useRef<AudioContext | null>(null);
     const intervaloRef = useRef<number | null>(null);
     const [usarBeepSintetico, setUsarBeepSintetico] = useState(false);
+    const [audioPermitido, setAudioPermitido] = useState(false);
 
     // Inicializar áudio
     useEffect(() => {
@@ -82,21 +83,7 @@ export function useAlertaSonoro(devTocar: boolean) {
 
     // Tocar/parar áudio
     useEffect(() => {
-        if (devTocar) {
-            if (usarBeepSintetico) {
-                console.log('[DEBUG][useAlertaSonoro] Usando beep sintético');
-                tocarBeepSintetico();
-            } else {
-                console.log('[DEBUG][useAlertaSonoro] Tentando tocar MP3');
-                audioRef.current?.play().catch(error => {
-                    console.warn('[DEBUG][useAlertaSonoro] Erro ao tocar MP3:', error);
-                    // Só faz fallback para beep se NÃO for erro de permissão (autoplay bloqueado)
-                    if (error instanceof Error && error.name !== 'NotAllowedError') {
-                        setUsarBeepSintetico(true);
-                    }
-                });
-            }
-        } else {
+        if (!devTocar || !audioPermitido) {
             if (audioRef.current) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
@@ -106,8 +93,23 @@ export function useAlertaSonoro(devTocar: boolean) {
                 clearInterval(intervaloRef.current);
                 intervaloRef.current = null;
             }
+            return;
         }
-    }, [devTocar, usarBeepSintetico]);
+
+        if (usarBeepSintetico) {
+            console.log('[DEBUG][useAlertaSonoro] Usando beep sintético');
+            tocarBeepSintetico();
+        } else {
+            console.log('[DEBUG][useAlertaSonoro] Tentando tocar MP3');
+            audioRef.current?.play().catch(error => {
+                console.warn('[DEBUG][useAlertaSonoro] Erro ao tocar MP3:', error);
+                // Só faz fallback para beep se NÃO for erro de permissão (autoplay bloqueado)
+                if (error instanceof Error && error.name !== 'NotAllowedError') {
+                    setUsarBeepSintetico(true);
+                }
+            });
+        }
+    }, [devTocar, usarBeepSintetico, audioPermitido]);
 
     // Cleanup
     useEffect(() => {
@@ -145,13 +147,18 @@ export function useAlertaSonoro(devTocar: boolean) {
                 }
             }
 
-            if (usarBeepSintetico) {
+            if (usarBeepSintetico && audioContextRef.current?.state === 'running') {
+                setAudioPermitido(true);
                 console.log('[DEBUG][useAlertaSonoro] Áudio ativado (beep)');
-            } else if (audioRef.current) {
+                return;
+            }
+
+            if (audioRef.current) {
                 try {
                     await audioRef.current.play();
                     audioRef.current.pause();
                     audioRef.current.currentTime = 0;
+                    setAudioPermitido(true);
                     console.log('[DEBUG][useAlertaSonoro] Áudio ativado (MP3)');
                 } catch (error) {
                     console.warn('[DEBUG][useAlertaSonoro] Falha ao ativar MP3:', error);
@@ -163,6 +170,7 @@ export function useAlertaSonoro(devTocar: boolean) {
                     
                     // Se for outro erro (ex: arquivo corrompido), tenta fallback
                     setUsarBeepSintetico(true);
+                    setAudioPermitido(true);
                 }
             }
         }
