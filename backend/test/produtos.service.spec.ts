@@ -48,7 +48,7 @@ describe('ProdutosService', () => {
         expect(prisma.produto.create).toHaveBeenCalledWith(
             expect.objectContaining({
                 data: expect.objectContaining({
-                    restaurante: { create: { nome: 'Restaurante Default' } },
+                    restaurante: { connect: { id: 'restaurante-default' } },
                 }),
             }),
         );

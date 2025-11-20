@@ -23,7 +23,13 @@ describe('CategoriasService', () => {
 
         const categoria = await service.criar({ nome: 'Bebidas', ordem: 1 } as any);
 
-        expect(prisma.categoria.create).toHaveBeenCalledWith({ data: { nome: 'Bebidas', ordem: 1 } });
+        expect(prisma.categoria.create).toHaveBeenCalledWith({
+            data: {
+                nome: 'Bebidas',
+                ordem: 1,
+                restaurante: { connect: { id: 'restaurante-default' } },
+            },
+        });
         expect(categoria.nome).toBe('Bebidas');
     });
 });
