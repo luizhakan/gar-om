@@ -1,6 +1,6 @@
 import { env } from '../config/env';
 
-const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
+const API_BASE = env.apiBaseUrl.replace(/\/$/, '');
 
 async function request<TResponse>(
     path: string,
@@ -24,8 +24,8 @@ async function request<TResponse>(
     return resp.json() as Promise<TResponse>;
 }
 
-type DadosAdmin = { id: string; nome: string; email: string; restauranteId: string };
-type DadosCozinha = { id: string; email: string; restauranteId: string };
+interface DadosAdmin { id: string; nome: string; email: string; restauranteId: string }
+interface DadosCozinha { id: string; email: string; restauranteId: string }
 
 export const ServicoAuth = {
     async loginAdmin(email: string, senha: string) {

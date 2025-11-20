@@ -18,7 +18,7 @@ export function ToastStack({ toasts, onFechar }: ToastStackProps) {
     const primeiroToast = useRef<string | null>(null);
 
     useEffect(() => {
-        if (toasts.length > 0 && !primeiroToast.current) {
+        if (toasts.length > 0 && primeiroToast.current === null) {
             primeiroToast.current = toasts[0].id;
         } else if (toasts.length === 0) {
             primeiroToast.current = null;
@@ -35,10 +35,16 @@ export function ToastStack({ toasts, onFechar }: ToastStackProps) {
                     aria-label={toast.tipo}
                 >
                     <span className={styles.texto}>{toast.mensagem}</span>
-                    <button className={styles.botaoFechar} onClick={() => onFechar(toast.id)} aria-label="Fechar toast">
+                    <button
+                        className={styles.botaoFechar}
+                        onClick={() => {
+                            onFechar(toast.id);
+                        }}
+                        aria-label="Fechar toast"
+                    >
                         ×
                     </button>
-                    <div className={styles.barra} style={{ animationDuration: `${toast.duracaoMs}ms` }} />
+                    <div className={styles.barra} style={{ animationDuration: `${String(toast.duracaoMs)}ms` }} />
                 </div>
             ))}
         </div>

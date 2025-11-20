@@ -3,7 +3,7 @@
 Este repositório agora está organizado em duas pastas:
 
 - `frontend/`: app React + Vite (cardápio, cozinha e admin).
-- `backend/`: API NestJS com Prisma (SQLite por padrão).
+- `backend/`: API NestJS com Prisma (PostgreSQL).
 
 ## Como rodar
 
@@ -22,6 +22,37 @@ Este repositório agora está organizado em duas pastas:
 7. `npm run prisma:seed` (dados de exemplo: cardápio, mesas, pedido demo)
 8. `npm run start:dev` (API em http://localhost:3001)
 
+### Testes
+
+#### Rodar todos os testes (unitários + integração)
+```bash
+# Da raiz do projeto
+./test.sh
+```
+Este script:
+- Inicia o container do banco de testes automaticamente
+- Roda migrations
+- Executa todos os testes
+- Remove o container ao finalizar
+
+#### Rodar testes manualmente
+```bash
+cd backend
+
+# Apenas testes unitários (rápidos, com mocks)
+npm run test:unit
+
+# Apenas testes de integração (com banco real)
+docker-compose up -d db-test
+DATABASE_URL="postgresql://admin:admin@localhost:5433/garcom_test?schema=public" npx prisma migrate deploy
+npm run test:integration
+
+# Todos os testes
+npm test
+```
+
+Veja mais detalhes em `backend/test/integration/README.md`.
+
 ## Endpoints principais
 - `GET /produtos` | `POST /produtos` | `PATCH /produtos/:id` | `DELETE /produtos/:id`
 - `PATCH /produtos/:id/disponibilidade`
@@ -37,3 +68,4 @@ Este repositório agora está organizado em duas pastas:
 - O frontend espera a API em `http://localhost:3001` (ajuste com `VITE_API_URL`).
 - Se a API não estiver rodando, os services do frontend usam fallback em `localStorage` + mocks.
 - As requisições enviam `x-restaurante-id` (quando logado) para isolar dados de cada restaurante.
+- Testes de integração usam banco PostgreSQL real (porta 5433) para validar constraints de banco.

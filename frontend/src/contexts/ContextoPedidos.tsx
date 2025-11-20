@@ -1,19 +1,8 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { Pedido } from '../types/Pedido';
 import { ServicoPedidos } from '../services/ServicoPedidos';
-
-interface DadosContextoPedidos {
-    pedidos: Pedido[];
-    pedidosPendentes: Pedido[];
-    adicionarPedido: (pedido: Omit<Pedido, 'id' | 'dataCriacao' | 'status'>) => void;
-    confirmarPedido: (idPedido: string) => void;
-    marcarComoPronto: (idPedido: string) => void;
-    novoPedidoRecebido: boolean;
-    limparNotificacao: () => void;
-}
-
-const ContextoPedidos = createContext<DadosContextoPedidos>({} as DadosContextoPedidos);
+import { ContextoPedidos } from './pedidos-context';
 
 interface ProvedorPedidosProps {
     children: ReactNode;
@@ -25,9 +14,9 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
     const [versaoSessao, setVersaoSessao] = useState(0);
 
     useEffect(() => {
-        const handler = () => setVersaoSessao((valor) => valor + 1);
+        const handler = () => { setVersaoSessao((valor) => valor + 1); };
         window.addEventListener('sessao-atualizada', handler);
-        return () => window.removeEventListener('sessao-atualizada', handler);
+        return () => { window.removeEventListener('sessao-atualizada', handler); };
     }, []);
 
     useEffect(() => {
@@ -43,7 +32,7 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
                 return novosPedidos;
             });
         });
-        return () => descadastrar();
+        return () => { descadastrar(); };
     }, [versaoSessao]);
 
     async function adicionarPedido(pedidoNovo: Omit<Pedido, 'id' | 'dataCriacao' | 'status'>) {
@@ -96,15 +85,4 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
     );
 }
 
-/**
- * Hook para acessar o contexto de pedidos.
- */
-export function usePedidos() {
-    const contexto = useContext(ContextoPedidos);
 
-    if (!contexto) {
-        throw new Error('usePedidos deve ser usado dentro de um ProvedorPedidos');
-    }
-
-    return contexto;
-}

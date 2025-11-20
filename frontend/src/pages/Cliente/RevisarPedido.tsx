@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useCarrinho } from '../../contexts/ContextoCarrinho';
+import { useCarrinho } from '../../hooks/useCarrinho';
 import { ControleQuantidade } from '../../components/ControleQuantidade';
 import { Botao } from '../../components/Botao';
 import { formatarMoeda } from '../../utils/formatadores';
@@ -23,14 +23,14 @@ export function RevisarPedido() {
 
     useEffect(() => {
         const restauranteId = searchParams.get('restauranteId');
-        if (restauranteId) {
+        if (restauranteId !== null && restauranteId !== '') {
             definirSessao(restauranteId, 'cliente');
         }
     }, [searchParams]);
 
     const handleVoltarCardapio = () => {
         const sufixoBusca = searchParams.toString();
-        navigate(`/mesa/${idMesa}${sufixoBusca ? `?${sufixoBusca}` : ''}`);
+        void navigate(`/mesa/${idMesa ?? ''}${sufixoBusca ? `?${sufixoBusca}` : ''}`);
     };
 
     const handleEnviarPedido = async () => {
@@ -49,7 +49,7 @@ export function RevisarPedido() {
             setMensagemSucesso('Pedido enviado para a cozinha! 🎉');
             limparCarrinho();
             const sufixoBusca = searchParams.toString();
-            setTimeout(() => navigate(`/mesa/${idMesa}${sufixoBusca ? `?${sufixoBusca}` : ''}`), 600);
+            setTimeout(() => { void navigate(`/mesa/${idMesa ?? ''}${sufixoBusca ? `?${sufixoBusca}` : ''}`); }, 600);
         } catch (erro) {
             console.error('[RevisarPedido] Falha ao enviar pedido', erro);
         }
@@ -89,7 +89,7 @@ export function RevisarPedido() {
                         <div key={item.idProduto} className={styles.itemPedido}>
                             <div className={styles.infoItem}>
                                 <h3 className={styles.nomeItem}>{item.produto.nome}</h3>
-                                {item.observacao && (
+                                {(item.observacao ?? '') !== '' && (
                                     <p className={styles.observacao}>Obs: {item.observacao}</p>
                                 )}
                                 <p className={styles.precoUnitario}>
@@ -100,13 +100,13 @@ export function RevisarPedido() {
                             <div className={styles.acoesItem}>
                                 <ControleQuantidade
                                     quantidade={item.quantidade}
-                                    aoAlterar={(novaQtd) => atualizarQuantidade(item.idProduto, novaQtd)}
+                                    aoAlterar={(novaQtd) => { atualizarQuantidade(item.idProduto, novaQtd); }}
                                     minimo={0}
                                 />
 
                                 <button
                                     className={styles.botaoRemover}
-                                    onClick={() => removerItem(item.idProduto)}
+                                    onClick={() => { removerItem(item.idProduto); }}
                                     aria-label="Remover item"
                                 >
                                     🗑️
@@ -133,7 +133,7 @@ export function RevisarPedido() {
                     <Botao
                         variante="primario"
                         tamanho="grande"
-                        onClick={handleEnviarPedido}
+                        onClick={() => { void handleEnviarPedido(); }}
                         className={styles.botaoEnviar}
                     >
                         Enviar para Cozinha 🍳

@@ -1,22 +1,22 @@
 type TipoSessao = 'admin' | 'cozinha' | 'cliente';
 
-type DadosSessao = {
+interface DadosSessao {
     restauranteId: string;
     tipo: TipoSessao;
     token?: string;
     email?: string;
-};
+}
 
 const CHAVE_SESSAO = 'garcom_sessao';
 
 function lerSessao(): DadosSessao | undefined {
     if (typeof window === 'undefined') return undefined;
     const bruto = window.localStorage.getItem(CHAVE_SESSAO);
-    if (!bruto) return undefined;
+    if ((bruto ?? '') === '') return undefined;
     try {
-        const parsed = JSON.parse(bruto) as DadosSessao;
-        if (!parsed?.restauranteId || !parsed?.tipo) return undefined;
-        return parsed;
+        const parsed = JSON.parse(bruto ?? '') as Partial<DadosSessao>;
+        if ((parsed.restauranteId ?? '') === '' || (parsed.tipo ?? '') === '') return undefined;
+        return parsed as DadosSessao;
     } catch {
         return undefined;
     }

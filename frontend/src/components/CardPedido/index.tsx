@@ -41,9 +41,9 @@ export function CardPedido({ pedido, aoConfirmar, aoMarcarPronto }: PropsCardPed
                         <div className={styles.quantidadeBadge}>{item.quantidade}x</div>
                         <div className={styles.infoItem}>
                             <span className={styles.nomeItem}>
-                                {item.produto?.nome || 'Produto não encontrado'}
+                                {item.produto?.nome ?? 'Produto não encontrado'}
                             </span>
-                            {item.observacao && (
+                            {(item.observacao ?? '').trim() !== '' && (
                                 <span className={styles.observacao}>
                                     ⚠️ {item.observacao}
                                 </span>
@@ -59,7 +59,7 @@ export function CardPedido({ pedido, aoConfirmar, aoMarcarPronto }: PropsCardPed
                     <Botao
                         variante="primario"
                         tamanho="grande"
-                        onClick={() => aoConfirmar(pedido.id)}
+                        onClick={() => { aoConfirmar(pedido.id); }}
                         className={styles.botaoAcao}
                     >
                         ✓ Confirmar Recebimento
@@ -70,7 +70,7 @@ export function CardPedido({ pedido, aoConfirmar, aoMarcarPronto }: PropsCardPed
                     <Botao
                         variante="primario"
                         tamanho="grande"
-                        onClick={() => aoMarcarPronto(pedido.id)}
+                        onClick={() => { aoMarcarPronto(pedido.id); }}
                         className={styles.botaoAcao}
                     >
                         ✓ Marcar como Pronto

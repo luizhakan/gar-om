@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ProvedorPedidos, usePedidos } from '../../contexts/ContextoPedidos';
+import { ProvedorPedidos } from '../../contexts/ContextoPedidos';
+import { usePedidos } from '../../hooks/usePedidos';
 import { CardPedido } from '../../components/CardPedido';
 import { useAlertaSonoro } from '../../hooks/useAlertaSonoro';
 import { Botao } from '../../components/Botao';
@@ -30,7 +31,7 @@ function ConteudoPainelCozinha() {
     const { ativarAudio } = useAlertaSonoro(devTocarAlerta);
 
     const handleConfirmar = (idPedido: string) => {
-        confirmarPedido(idPedido);
+        void confirmarPedido(idPedido);
         limparNotificacao();
     };
 
@@ -64,10 +65,10 @@ function ConteudoPainelCozinha() {
                 setMostrarModalSom(true);
             }
         };
-        tentarAtivar();
-    }, []);
+        void tentarAtivar();
+    }, [ativarAudio]);
 
-    if (!restauranteId || !token) {
+    if ((restauranteId ?? '') === '' || (token ?? '') === '') {
         return (
             <div className={styles.container}>
                 <div className={styles.modalOverlay}>
@@ -82,17 +83,17 @@ function ConteudoPainelCozinha() {
                             type="email"
                             placeholder="email@cozinha.com"
                             value={email}
-                            onChange={(e) => setEmail(e.target.value)}
+                            onChange={(e) => { setEmail(e.target.value); }}
                         />
                         <input
                             className={styles.inputLogin}
                             type="password"
                             placeholder="senha"
                             value={senha}
-                            onChange={(e) => setSenha(e.target.value)}
+                            onChange={(e) => { setSenha(e.target.value); }}
                         />
                         {erroLogin && <p className={styles.erroLogin}>{erroLogin}</p>}
-                        <Botao variante="primario" tamanho="grande" onClick={handleLoginCozinha}>
+                        <Botao variante="primario" tamanho="grande" onClick={() => { void handleLoginCozinha(); }}>
                             Entrar
                         </Botao>
                     </div>
@@ -112,10 +113,10 @@ function ConteudoPainelCozinha() {
                         <p className={styles.modalTexto}>
                             Clique para ativar notificações sonoras quando novos pedidos chegarem.
                         </p>
-                        <Botao variante="primario" tamanho="grande" onClick={handleAtivarSom}>
+                        <Botao variante="primario" tamanho="grande" onClick={() => { void handleAtivarSom(); }}>
                             🔊 Ativar Som Agora
                         </Botao>
-                        <button className={styles.botaoFechar} onClick={() => setMostrarModalSom(false)}>
+                        <button className={styles.botaoFechar} onClick={() => { setMostrarModalSom(false); }}>
                             Continuar sem som
                         </button>
                     </div>
@@ -127,7 +128,7 @@ function ConteudoPainelCozinha() {
                     <h1 className={styles.titulo}>👨‍🍳 Painel da Cozinha</h1>
                     <div className={styles.estatisticas}>
                         {!audioAtivado && (
-                            <Botao variante="secundario" tamanho="pequeno" onClick={handleAtivarSom}>
+                            <Botao variante="secundario" tamanho="pequeno" onClick={() => { void handleAtivarSom(); }}>
                                 🔊 Ativar Som
                             </Botao>
                         )}
@@ -157,7 +158,7 @@ function ConteudoPainelCozinha() {
                                 key={pedido.id}
                                 pedido={pedido}
                                 aoConfirmar={handleConfirmar}
-                                aoMarcarPronto={marcarComoPronto}
+                                aoMarcarPronto={(id) => { void marcarComoPronto(id); }}
                             />
                         ))}
                     </div>

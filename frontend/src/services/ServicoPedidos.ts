@@ -3,7 +3,7 @@ import { gerarIdAleatorio } from '../utils/formatadores';
 import { env } from '../config/env';
 import { obterRestauranteId, obterToken } from '../utils/sessao';
 
-type PedidoApi = {
+interface PedidoApi {
     id: string;
     idMesa: string;
     restauranteId: string;
@@ -11,9 +11,9 @@ type PedidoApi = {
     dataCriacao: string;
     dataAtualizacao?: string | null;
     itens: ItemPedidoApi[];
-};
+}
 
-type ItemPedidoApi = {
+interface ItemPedidoApi {
     produtoId: string;
     quantidade: number;
     observacao?: string | null;
@@ -27,11 +27,11 @@ type ItemPedidoApi = {
         imagemUrl?: string | null;
         restauranteId: string;
     };
-};
+}
 
 const CHAVE_STORAGE = 'garom_pedidos';
 const EVENTO_ATUALIZACAO = 'pedidos-atualizados';
-const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
+const API_BASE = env.apiBaseUrl.replace(/\/$/, '');
 const usarApi = Boolean(API_BASE);
 
 async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
@@ -41,15 +41,15 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
 
     const restauranteId = obterRestauranteId();
     const token = obterToken();
-    if (!restauranteId || !token) {
+    if ((restauranteId ?? '') === '' || (token ?? '') === '') {
         throw new Error('Sessão de restaurante não definida');
     }
 
     const resposta = await fetch(`${API_BASE}${path}`, {
         headers: {
             'Content-Type': 'application/json',
-            'x-restaurante-id': restauranteId,
-            Authorization: `Bearer ${token}`,
+            'x-restaurante-id': restauranteId ?? '',
+            Authorization: `Bearer ${token ?? ''}`,
         },
         ...init,
     });
@@ -66,10 +66,10 @@ function obterPedidosStorage(): Pedido[] {
     if (typeof window === 'undefined') return [];
 
     const dados = window.localStorage.getItem(CHAVE_STORAGE);
-    if (!dados) return [];
+    if ((dados ?? '') === '') return [];
 
     try {
-        const parsed = JSON.parse(dados) as Pedido[];
+        const parsed = JSON.parse(dados ?? '') as Pedido[];
         return Array.isArray(parsed) ? parsed : [];
     } catch {
         return [];
@@ -84,7 +84,7 @@ function salvarPedidosStorage(pedidos: Pedido[]) {
 }
 
 function mapearPedidoApi(payload: PedidoApi): Pedido {
-    const itens = (payload.itens ?? []).map((item) => ({
+    const itens = payload.itens.map((item) => ({
         idProduto: item.produtoId,
         quantidade: item.quantidade,
         observacao: item.observacao ?? undefined,
@@ -93,7 +93,7 @@ function mapearPedidoApi(payload: PedidoApi): Pedido {
                 id: item.produto.id,
                 nome: item.produto.nome,
                 descricao: item.produto.descricao ?? undefined,
-                preco: Number(item.produto.preco) || 0,
+                preco: item.produto.preco || 0,
                 idCategoria: item.produto.idCategoria,
                 disponivel: item.produto.disponivel,
                 imagemUrl: item.produto.imagemUrl ?? undefined,
@@ -135,7 +135,7 @@ export const ServicoPedidos = {
             return mapearPedidoApi(data);
         }
 
-        if (!restauranteId) {
+        if ((restauranteId ?? '') === '') {
             throw new Error('Restaurante não definido na sessão');
         }
 
@@ -180,15 +180,15 @@ export const ServicoPedidos = {
         const restauranteId = obterRestauranteId();
         const token = obterToken();
 
-        if (usarApi && (!restauranteId || !token)) {
+        if (usarApi && ((restauranteId ?? '') === '' || (token ?? '') === '')) {
             console.warn('[ServicoPedidos] Sessão ausente para assinar mudanças');
-            return () => {};
+            return () => { /* no-op */ };
         }
 
         const carregar = () => {
             ServicoPedidos.listar()
                 .then((lista) => { if (ativo) callback(lista); })
-                .catch((erro) => console.error('[ServicoPedidos] Erro ao carregar pedidos', erro));
+                .catch((erro: unknown) => { console.error('[ServicoPedidos] Erro ao carregar pedidos', erro); });
         };
 
         if (usarApi) {
@@ -200,7 +200,7 @@ export const ServicoPedidos = {
             };
         }
 
-        const handler = () => callback(obterPedidosStorage());
+        const handler = () => { callback(obterPedidosStorage()); };
 
         window.addEventListener('storage', handler);
         window.addEventListener(EVENTO_ATUALIZACAO, handler);

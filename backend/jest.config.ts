@@ -8,6 +8,7 @@ const config: Config = {
     transform: {
         '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.jest.json' }],
     },
+    setupFilesAfterEnv: ['<rootDir>/test/integration/jest-setup.ts'],
     collectCoverageFrom: ['src/**/*.ts', '!src/main.ts'],
     coveragePathIgnorePatterns: ['/node_modules/', '/dist/'],
     clearMocks: true,

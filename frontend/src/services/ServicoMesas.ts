@@ -11,7 +11,7 @@ interface MesaApi {
 }
 
 const CHAVE_STORAGE = 'garcom_mesas';
-const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
+const API_BASE = env.apiBaseUrl.replace(/\/$/, '');
 const usarApi = Boolean(API_BASE);
 
 async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
@@ -20,17 +20,22 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     }
 
     const restauranteId = obterRestauranteId();
-    if (!restauranteId) {
+    if (restauranteId === undefined || restauranteId === '') {
         throw new Error('Restaurante não definido na sessão');
     }
     const token = obterToken();
+    
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'x-restaurante-id': restauranteId,
+    };
+
+    if (token !== undefined && token !== '') {
+        headers.Authorization = `Bearer ${token}`;
+    }
 
     const resposta = await fetch(`${API_BASE}${path}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-restaurante-id': restauranteId,
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers,
         ...init,
     });
 
@@ -45,7 +50,7 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
 function obterStorage(): Mesa[] {
     if (typeof window === 'undefined') return [];
     const dados = window.localStorage.getItem(CHAVE_STORAGE);
-    if (!dados) return [];
+    if (dados === null || dados === '') return [];
     try {
         const parsed = JSON.parse(dados) as Mesa[];
         return Array.isArray(parsed) ? parsed : [];

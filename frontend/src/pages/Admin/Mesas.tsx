@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react';
 import { useState } from 'react';
-import { useAdmin } from '../../contexts/ContextoAdmin';
+import { useAdmin } from '../../hooks/useAdmin';
 import { Botao } from '../../components/Botao';
 import styles from './Mesas.module.css';
 
@@ -13,18 +13,18 @@ export function MesasAdmin() {
         event.preventDefault();
         try {
             await definirNumeroMesas(quantidade);
-            setMensagem(`Geramos QR Codes para ${quantidade} mesa(s).`);
+            setMensagem(`Geramos QR Codes para ${quantidade.toString()} mesa(s).`);
         } catch (erro) {
             console.error('[MesasAdmin] Falha ao configurar mesas', erro);
             setMensagem('Erro ao gerar mesas. Tente novamente.');
         }
-        setTimeout(() => setMensagem(''), 2200);
+        setTimeout(() => { setMensagem(''); }, 2200);
     }
 
     function copiarLink(link: string) {
-        navigator.clipboard?.writeText(link);
+        void navigator.clipboard.writeText(link);
         setMensagem('Link copiado para a área de transferência.');
-        setTimeout(() => setMensagem(''), 2200);
+        setTimeout(() => { setMensagem(''); }, 2200);
     }
 
     return (
@@ -42,7 +42,12 @@ export function MesasAdmin() {
                     <p className={styles.sectionLabel}>Configuração</p>
                     <h2 className={styles.sectionTitle}>Quantas mesas estão ativas?</h2>
                 </div>
-                <form className={styles.form} onSubmit={handleSubmit}>
+                <form
+                    className={styles.form}
+                    onSubmit={(event) => {
+                        void handleSubmit(event);
+                    }}
+                >
                     <label className={styles.label} htmlFor="mesas">
                         Número de mesas
                     </label>
@@ -52,7 +57,7 @@ export function MesasAdmin() {
                         min={1}
                         max={50}
                         value={quantidade}
-                        onChange={e => setQuantidade(Number(e.target.value))}
+                        onChange={e => { setQuantidade(Number(e.target.value)); }}
                         className={styles.input}
                     />
                     <Botao type="submit" variante="primario" tamanho="grande">
@@ -75,7 +80,7 @@ export function MesasAdmin() {
                             return (
                                 <div key={mesa.id} className={styles.card}>
                                     <div className={styles.qrWrapper}>
-                                        <img src={imgSrc} alt={`QR Code mesa ${mesa.numero}`} />
+                                        <img src={imgSrc} alt={`QR Code mesa ${String(mesa.numero)}`} />
                                     </div>
                                     <p className={styles.mesaLabel}>Mesa {mesa.numero}</p>
                                     <p className={styles.link}>{link}</p>
@@ -83,7 +88,7 @@ export function MesasAdmin() {
                                         <Botao
                                             variante="secundario"
                                             tamanho="pequeno"
-                                            onClick={() => copiarLink(link)}
+                                            onClick={() => { copiarLink(link); }}
                                         >
                                             Copiar link
                                         </Botao>

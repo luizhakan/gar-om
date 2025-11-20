@@ -10,13 +10,41 @@ API REST em NestJS que serve o app Garçom (Admin, Cozinha e Cliente). Toda a co
 5. `npm run prisma:migrate`
 6. `npm run prisma:seed`
 7. `npm run start:dev` (http://localhost:3001)
-8. `npm test` para rodar os testes unitários com mocks do Prisma
+
+## Testes
+
+### Testes unitários (com mocks)
+```bash
+npm run test:unit
+```
+Usam mocks do Prisma, não validam constraints do banco.
+
+### Testes de integração (com banco real)
+```bash
+# Iniciar container do banco de testes
+docker-compose up -d db-test
+
+# Rodar migrations
+DATABASE_URL="postgresql://admin:admin@localhost:5433/garcom_test?schema=public" npx prisma migrate deploy
+
+# Rodar testes
+npm run test:integration
+```
+Usam banco PostgreSQL real (porta 5433), pegam erros de foreign key, unique constraints, etc.
+
+### Todos os testes
+```bash
+npm test
+```
+
+Veja mais detalhes em `test/integration/README.md`.
 
 ## Stack e padrões
 - NestJS 11 com DTOs validados (ValidationPipe global)
 - Prisma Client (Postgres) com serviço global para injeção
 - `class-validator` + `class-transformer` em todos os DTOs
-- Testes em Jest + ts-jest (mockando Prisma; nada de I/O real nos testes)
+- Testes unitários em Jest + ts-jest (mockando Prisma)
+- Testes de integração com banco PostgreSQL real
 - Código, docs e mensagens em PT-BR
 
 ## Mapa rápido de pastas
@@ -32,4 +60,8 @@ src/
 prisma/
 ├── schema.prisma     # Modelo do domínio
 └── migrations/       # Histórico de migrações
+
+test/
+├── *.spec.ts         # Testes unitários (com mocks)
+└── integration/      # Testes de integração (banco real)
 ```

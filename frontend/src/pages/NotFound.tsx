@@ -11,8 +11,8 @@ export function Pagina404() {
                 <h1 className={styles.titulo}>Ops, não encontrei essa rota</h1>
                 <p className={styles.subtitulo}>O endereço digitado não existe. Volte para o início ou escolha um módulo.</p>
                 <div className={styles.acoes}>
-                    <button className={styles.botaoPrimario} onClick={() => navigate('/')}>Página inicial</button>
-                    <button className={styles.botaoSecundario} onClick={() => navigate(-1)}>Voltar</button>
+                    <button className={styles.botaoPrimario} onClick={() => { void navigate('/'); }}>Página inicial</button>
+                    <button className={styles.botaoSecundario} onClick={() => { void navigate(-1); }}>Voltar</button>
                 </div>
             </div>
         </div>

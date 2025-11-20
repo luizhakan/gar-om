@@ -1,6 +1,6 @@
 import type { FormEvent } from 'react';
 import { useMemo, useState } from 'react';
-import { useAdmin } from '../../contexts/ContextoAdmin';
+import { useAdmin } from '../../hooks/useAdmin';
 import { CardProdutoAdmin } from '../../components/CardProdutoAdmin';
 import { Botao } from '../../components/Botao';
 import styles from './Produtos.module.css';
@@ -37,29 +37,32 @@ export function ProdutosAdmin() {
 
     async function handleSubmit(event: FormEvent) {
         event.preventDefault();
-        if (!form.nome.trim() || !form.preco || !form.idCategoria) return;
+        const nome = form.nome.trim();
+        const precoTexto = form.preco.trim();
+        const categoriaId = form.idCategoria.trim();
+        if (nome === '' || precoTexto === '' || categoriaId === '') return;
 
-        const precoNumber = Number(form.preco.replace(',', '.'));
+        const precoNumber = Number(precoTexto.replace(',', '.'));
         if (Number.isNaN(precoNumber)) return;
-        if (!restauranteId) return;
+        if (restauranteId === undefined || restauranteId === '') return;
 
         try {
-            if (form.id) {
+            if (form.id !== undefined && form.id !== '') {
                 await atualizarProduto({
                     id: form.id,
-                    nome: form.nome.trim(),
+                    nome,
                     descricao: form.descricao.trim(),
                     preco: precoNumber,
-                    idCategoria: form.idCategoria,
+                    idCategoria: categoriaId,
                     disponivel: form.disponivel,
                     restauranteId,
                 });
             } else {
                 await criarProduto({
-                    nome: form.nome.trim(),
+                    nome,
                     descricao: form.descricao.trim(),
                     preco: precoNumber,
-                    idCategoria: form.idCategoria,
+                    idCategoria: categoriaId,
                     disponivel: form.disponivel,
                 });
             }
@@ -72,7 +75,7 @@ export function ProdutosAdmin() {
 
     function handleEditar(idProduto: string) {
         const produto = produtos.find(p => p.id === idProduto);
-        if (!produto) return;
+        if (produto === undefined) return;
 
         setForm({
             id: produto.id,
@@ -106,16 +109,21 @@ export function ProdutosAdmin() {
 
             <section className={styles.formCard}>
                 <div>
-                    <p className={styles.sectionLabel}>{form.id ? 'Editar produto' : 'Novo produto'}</p>
-                    <h2 className={styles.sectionTitle}>{form.id ? 'Atualize os dados' : 'Preencha para adicionar'}</h2>
+                    <p className={styles.sectionLabel}>{(form.id ?? '') !== '' ? 'Editar produto' : 'Novo produto'}</p>
+                    <h2 className={styles.sectionTitle}>{(form.id ?? '') !== '' ? 'Atualize os dados' : 'Preencha para adicionar'}</h2>
                 </div>
-                <form className={styles.form} onSubmit={handleSubmit}>
+                <form
+                    className={styles.form}
+                    onSubmit={(event) => {
+                        void handleSubmit(event);
+                    }}
+                >
                     <div className={styles.col2}>
                         <div className={styles.campo}>
                             <label>Nome</label>
                             <input
                                 value={form.nome}
-                                onChange={e => setForm(f => ({ ...f, nome: e.target.value }))}
+                                onChange={e => { setForm(f => ({ ...f, nome: e.target.value })); }}
                                 placeholder="Ex: X-Burger Clássico"
                                 required
                             />
@@ -125,7 +133,7 @@ export function ProdutosAdmin() {
                             <label>Preço (R$)</label>
                             <input
                                 value={form.preco}
-                                onChange={e => setForm(f => ({ ...f, preco: e.target.value }))}
+                                onChange={e => { setForm(f => ({ ...f, preco: e.target.value })); }}
                                 type="number"
                                 step="0.01"
                                 min="0"
@@ -139,7 +147,7 @@ export function ProdutosAdmin() {
                         <label>Categoria</label>
                         <select
                             value={form.idCategoria}
-                            onChange={e => setForm(f => ({ ...f, idCategoria: e.target.value }))}
+                            onChange={e => { setForm(f => ({ ...f, idCategoria: e.target.value })); }}
                             required
                         >
                             <option value="">Selecione</option>
@@ -153,7 +161,7 @@ export function ProdutosAdmin() {
                         <label>Descrição</label>
                         <textarea
                             value={form.descricao}
-                            onChange={e => setForm(f => ({ ...f, descricao: e.target.value }))}
+                            onChange={e => { setForm(f => ({ ...f, descricao: e.target.value })); }}
                             rows={3}
                             placeholder="Detalhes para a cozinha ou cliente"
                         />
@@ -164,19 +172,19 @@ export function ProdutosAdmin() {
                             id="disponivel"
                             type="checkbox"
                             checked={form.disponivel}
-                            onChange={e => setForm(f => ({ ...f, disponivel: e.target.checked }))}
+                            onChange={e => { setForm(f => ({ ...f, disponivel: e.target.checked })); }}
                         />
                         <label htmlFor="disponivel">Produto disponível imediatamente</label>
                     </div>
 
                     <div className={styles.acoesForm}>
-                        {form.id && (
+                        {form.id !== undefined && form.id !== '' ? (
                             <Botao variante="secundario" onClick={limparFormulario}>
                                 Cancelar edição
                             </Botao>
-                        )}
+                        ) : null}
                         <Botao type="submit">
-                            {form.id ? 'Salvar alterações' : 'Adicionar produto'}
+                            {(form.id ?? '') !== '' ? 'Salvar alterações' : 'Adicionar produto'}
                         </Botao>
                     </div>
                 </form>
@@ -195,11 +203,11 @@ export function ProdutosAdmin() {
                                     key={produto.id}
                                     produto={produto}
                                     categoria={categoria?.nome ?? 'Sem categoria'}
-                                    onEditar={() => handleEditar(produto.id)}
-                                    onRemover={() => handleRemover(produto.id)}
+                                    onEditar={() => { handleEditar(produto.id); }}
+                                    onRemover={() => { void handleRemover(produto.id); }}
                                     onAlternarDisponivel={() => {
-                                        alternarDisponibilidade(produto.id)
-                                            .catch((erro) => console.error('[ProdutosAdmin] Falha ao alternar', erro));
+                                        void alternarDisponibilidade(produto.id)
+                                            .catch((erro: unknown) => { console.error('[ProdutosAdmin] Falha ao alternar', erro); });
                                     }}
                                 />
                             );

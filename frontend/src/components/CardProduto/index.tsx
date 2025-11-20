@@ -29,7 +29,7 @@ export function CardProduto({
             <div className={styles.conteudo}>
                 <h3 className={styles.nome}>{produto.nome}</h3>
 
-                {produto.descricao && (
+                {(produto.descricao ?? '').trim().length > 0 && (
                     <p className={styles.descricao}>{produto.descricao}</p>
                 )}
 

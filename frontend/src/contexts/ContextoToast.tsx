@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ToastStack } from '../components/Toast';
 
@@ -18,7 +18,9 @@ interface ContextoToastDados {
 const ContextoToast = createContext<ContextoToastDados | undefined>(undefined);
 
 function gerarId() {
-    return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2, 10);
+    return typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2, 10);
 }
 
 interface ProvedorToastProps {
@@ -35,19 +37,18 @@ export function ProvedorToast({ children }: ProvedorToastProps) {
     function notificar(mensagem: string, tipo: TipoToast = 'info', duracaoMs = 4000) {
         const toast: Toast = { id: gerarId(), mensagem, tipo, duracaoMs };
         setToasts(lista => [...lista, toast]);
-        window.setTimeout(() => remover(toast.id), duracaoMs);
+        window.setTimeout(() => { remover(toast.id); }, duracaoMs);
     }
 
-    const valor = useMemo(() => ({ notificar }), []);
-
     return (
-        <ContextoToast.Provider value={valor}>
+        <ContextoToast.Provider value={{ notificar }}>
             {children}
             <ToastStack toasts={toasts} onFechar={remover} />
         </ContextoToast.Provider>
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast() {
     const contexto = useContext(ContextoToast);
     if (!contexto) {

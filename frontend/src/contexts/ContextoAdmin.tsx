@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Produto } from '../types/Produto';
 import type { Categoria } from '../types/Categoria';
@@ -9,25 +9,7 @@ import { ServicoAuth } from '../services/ServicoAuth';
 import { definirSessao, limparSessao, obterEmailSessao, obterRestauranteId, obterToken } from '../utils/sessao';
 import { useToast } from './ContextoToast';
 import { ServicoCategorias } from '../services/ServicoCategorias';
-
-interface DadosContextoAdmin {
-    autenticado: boolean;
-    login: (email: string, senha: string) => Promise<void>;
-    logout: () => void;
-    categorias: Categoria[];
-    produtos: Produto[];
-    criarProduto: (produto: ProdutoNovo) => Promise<void>;
-    atualizarProduto: (produto: Produto) => Promise<void>;
-    removerProduto: (idProduto: string) => Promise<void>;
-    alternarDisponibilidade: (idProduto: string) => Promise<void>;
-    mesas: Mesa[];
-    definirNumeroMesas: (total: number) => Promise<void>;
-    gerarLinkMesa: (numeroMesa: number) => string;
-    restauranteId?: string;
-    adminEmail?: string;
-}
-
-const ContextoAdmin = createContext<DadosContextoAdmin>({} as DadosContextoAdmin);
+import { ContextoAdmin } from './admin-context';
 
 interface ProvedorAdminProps {
     children: ReactNode;
@@ -50,32 +32,32 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
 
     useEffect(() => {
-        if (!autenticado || !restauranteId) return;
+        if (!autenticado || restauranteId === undefined) return;
 
         ServicoProdutos.listar()
             .then(setProdutos)
-            .catch((erro) => {
+            .catch((erro: unknown) => {
                 console.error('[ContextoAdmin] Erro ao carregar produtos:', erro);
                 notificar('Não foi possível carregar os produtos', 'erro');
             });
     }, [autenticado, restauranteId, notificar]);
 
     useEffect(() => {
-        if (!autenticado || !restauranteId) return;
+        if (!autenticado || restauranteId === undefined) return;
 
         ServicoMesas.listar()
             .then(setMesas)
-            .catch((erro) => {
+            .catch((erro: unknown) => {
                 console.error('[ContextoAdmin] Erro ao carregar mesas:', erro);
                 notificar('Não foi possível carregar as mesas', 'erro');
             });
     }, [autenticado, restauranteId, notificar]);
 
     useEffect(() => {
-        if (!restauranteId) return;
+        if (restauranteId === undefined) return;
         ServicoCategorias.listar()
             .then(setCategorias)
-            .catch((erro) => {
+            .catch((erro: unknown) => {
                 console.error('[ContextoAdmin] Erro ao carregar categorias:', erro);
                 notificar('Não foi possível carregar as categorias', 'erro');
             });
@@ -128,22 +110,22 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
 
     async function alternarDisponibilidade(idProduto: string) {
         const atualizado = await ServicoProdutos.alternarDisponibilidade(idProduto);
-        if (!atualizado) return;
 
-        setProdutos(lista =>
-            lista.map(item => item.id === atualizado.id ? atualizado : item)
-        );
+        setProdutos(lista => lista.map(item => (item.id === atualizado.id ? atualizado : item)));
         notificar(`Produto ${atualizado.disponivel ? 'disponível' : 'indisponível'}`, 'info');
     }
 
     function gerarLinkMesa(numeroMesa: number) {
         const mesa = mesas.find(m => m.numero === numeroMesa);
-        if (mesa?.codigoQr) return mesa.codigoQr;
+        const codigoQr = mesa?.codigoQr;
+        if (codigoQr !== undefined && codigoQr !== '') {
+            return codigoQr;
+        }
 
         const base = typeof window !== 'undefined'
             ? window.location.origin
             : 'http://localhost:5173';
-        return `${base}/mesa/${numeroMesa}`;
+        return `${base}/mesa/${String(numeroMesa)}`;
     }
 
     async function definirNumeroMesas(total: number) {
@@ -176,12 +158,4 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
     );
 }
 
-export function useAdmin() {
-    const contexto = useContext(ContextoAdmin);
 
-    if (!contexto) {
-        throw new Error('useAdmin deve ser usado dentro de um ProvedorAdmin');
-    }
-
-    return contexto;
-}

@@ -4,7 +4,7 @@ import { Botao } from '../components/Botao';
 
 export function Home() {
     const restauranteId = obterRestauranteId();
-    const rotaMesaDemo = restauranteId ? `/mesa/1?restauranteId=${restauranteId}` : '/mesa/1';
+    const rotaMesaDemo = (restauranteId ?? '') !== '' ? `/mesa/1?restauranteId=${restauranteId ?? ''}` : '/mesa/1';
 
     return (
         <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>

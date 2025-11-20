@@ -1,4 +1,4 @@
-import { useAdmin } from '../../contexts/ContextoAdmin';
+import { useAdmin } from '../../hooks/useAdmin';
 import styles from './Dashboard.module.css';
 
 export function DashboardAdmin() {

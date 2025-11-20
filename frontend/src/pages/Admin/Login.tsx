@@ -1,7 +1,7 @@
 import type { FormEvent } from 'react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAdmin } from '../../contexts/ContextoAdmin';
+import { useAdmin } from '../../hooks/useAdmin';
 import { Botao } from '../../components/Botao';
 import styles from './Login.module.css';
 
@@ -14,7 +14,7 @@ export function LoginAdmin() {
 
     useEffect(() => {
         if (autenticado) {
-            navigate('/admin', { replace: true });
+            void navigate('/admin', { replace: true });
         }
     }, [autenticado, navigate]);
 
@@ -36,13 +36,18 @@ export function LoginAdmin() {
                 <h1 className={styles.titulo}>Painel do Dono</h1>
                 <p className={styles.subtitulo}>Entre com seu email e senha cadastrados.</p>
 
-                <form className={styles.form} onSubmit={handleSubmit}>
+                <form
+                    className={styles.form}
+                    onSubmit={(event) => {
+                        void handleSubmit(event);
+                    }}
+                >
                     <label className={styles.label} htmlFor="email">Email</label>
                     <input
                         id="email"
                         type="email"
                         value={email}
-                        onChange={(event) => setEmail(event.target.value)}
+                        onChange={(event) => { setEmail(event.target.value); }}
                         className={styles.input}
                         placeholder="seuemail@restaurante.com"
                         required
@@ -53,7 +58,7 @@ export function LoginAdmin() {
                         id="senha"
                         type="password"
                         value={senha}
-                        onChange={(event) => setSenha(event.target.value)}
+                        onChange={(event) => { setSenha(event.target.value); }}
                         className={styles.input}
                         placeholder="Digite a senha"
                         required

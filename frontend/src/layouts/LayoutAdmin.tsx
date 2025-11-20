@@ -1,5 +1,6 @@
 import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
-import { ProvedorAdmin, useAdmin } from '../contexts/ContextoAdmin';
+import { ProvedorAdmin } from '../contexts/ContextoAdmin';
+import { useAdmin } from '../hooks/useAdmin';
 import styles from './layoutAdmin.module.css';
 
 function ConteudoLayoutAdmin() {

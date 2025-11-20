@@ -23,7 +23,7 @@ export function RegistrarAdmin() {
             const resp = await ServicoAuth.registrarAdmin(nome, email, cpf, senha);
             definirSessao(resp.admin.restauranteId, 'admin', resp.token, resp.admin.email);
             notificar('Cadastro concluído! Você já pode acessar o painel.', 'sucesso');
-            navigate('/admin/login', { replace: true });
+            void navigate('/admin/login', { replace: true });
         } catch (erro) {
             console.error('[RegistrarAdmin] Erro ao criar conta', erro);
             notificar('Não foi possível registrar. Verifique os dados.', 'erro');
@@ -39,13 +39,18 @@ export function RegistrarAdmin() {
                 <h1 className={styles.titulo}>Criar conta de Admin</h1>
                 <p className={styles.subtitulo}>Um cadastro cria também o restaurante vinculado.</p>
 
-                <form className={styles.form} onSubmit={handleSubmit}>
+                <form
+                    className={styles.form}
+                    onSubmit={(event) => {
+                        void handleSubmit(event);
+                    }}
+                >
                     <label className={styles.label} htmlFor="nome">Nome completo</label>
                     <input
                         id="nome"
                         type="text"
                         value={nome}
-                        onChange={(event) => setNome(event.target.value)}
+                        onChange={(event) => { setNome(event.target.value); }}
                         className={styles.input}
                         placeholder="Maria Souza"
                         required
@@ -56,7 +61,7 @@ export function RegistrarAdmin() {
                         id="email"
                         type="email"
                         value={email}
-                        onChange={(event) => setEmail(event.target.value)}
+                        onChange={(event) => { setEmail(event.target.value); }}
                         className={styles.input}
                         placeholder="seuemail@restaurante.com"
                         required
@@ -67,7 +72,7 @@ export function RegistrarAdmin() {
                         id="cpf"
                         type="text"
                         value={cpf}
-                        onChange={(event) => setCpf(event.target.value)}
+                        onChange={(event) => { setCpf(event.target.value); }}
                         className={styles.input}
                         placeholder="000.000.000-00"
                         required
@@ -78,7 +83,7 @@ export function RegistrarAdmin() {
                         id="senha"
                         type="password"
                         value={senha}
-                        onChange={(event) => setSenha(event.target.value)}
+                        onChange={(event) => { setSenha(event.target.value); }}
                         className={styles.input}
                         placeholder="Mínimo 6 caracteres"
                         minLength={6}
@@ -88,7 +93,7 @@ export function RegistrarAdmin() {
                     <Botao type="submit" variante="primario" tamanho="grande" className={styles.botao} disabled={carregando}>
                         {carregando ? 'Criando conta...' : 'Cadastrar'}
                     </Botao>
-                    <button type="button" className={styles.linkAlternativo} onClick={() => navigate('/admin/login')}>
+                    <button type="button" className={styles.linkAlternativo} onClick={() => { void navigate('/admin/login'); }}>
                         Já tenho conta
                     </button>
                 </form>

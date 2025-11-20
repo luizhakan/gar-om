@@ -1,4 +1,4 @@
-import { useCarrinho } from '../../contexts/ContextoCarrinho';
+import { useCarrinho } from '../../hooks/useCarrinho';
 import { formatarMoeda } from '../../utils/formatadores';
 import styles from './styles.module.css';
 

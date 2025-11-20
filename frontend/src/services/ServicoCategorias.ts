@@ -9,15 +9,15 @@ interface CategoriaApi {
     restauranteId: string;
 }
 
-const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
+const API_BASE = env.apiBaseUrl.replace(/\/$/, '');
 
 function garantirBase() {
-    if (!API_BASE) throw new Error('API não configurada');
+    if (API_BASE === '') throw new Error('API não configurada');
 }
 
 function garantirRestauranteId() {
     const restauranteId = obterRestauranteId();
-    if (!restauranteId) throw new Error('Restaurante não definido na sessão');
+    if (restauranteId === undefined || restauranteId === '') throw new Error('Restaurante não definido na sessão');
     return restauranteId;
 }
 
@@ -26,13 +26,18 @@ export const ServicoCategorias = {
         garantirBase();
         const restauranteId = garantirRestauranteId();
         const token = obterToken();
+        
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'x-restaurante-id': restauranteId,
+        };
+
+        if (token !== undefined && token !== '') {
+            headers.Authorization = `Bearer ${token}`;
+        }
 
         const resp = await fetch(`${API_BASE}/categorias`, {
-            headers: {
-                'Content-Type': 'application/json',
-                'x-restaurante-id': restauranteId,
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            },
+            headers,
         });
 
         if (!resp.ok) {

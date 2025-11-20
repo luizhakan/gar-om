@@ -14,7 +14,7 @@ export function useAlertaSonoro(devTocar: boolean) {
 
     // Inicializar áudio
     useEffect(() => {
-        if (!audioRef.current) {
+        if (audioRef.current === null) {
             audioRef.current = new Audio('/sounds/alerta.mp3');
             audioRef.current.loop = true;
             audioRef.current.volume = 0.5;
@@ -34,9 +34,9 @@ export function useAlertaSonoro(devTocar: boolean) {
             intervaloRef.current = null;
         }
 
-        if (!audioContextRef.current) {
+        if (audioContextRef.current === null) {
             try {
-                const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+                const AudioContextClass = window.AudioContext;
                 audioContextRef.current = new AudioContextClass();
                 console.log('[DEBUG][useAlertaSonoro] AudioContext criado para beep sintético');
             } catch (error) {
@@ -46,6 +46,7 @@ export function useAlertaSonoro(devTocar: boolean) {
         }
 
         const audioContext = audioContextRef.current;
+
 
         const tocarBeep = async () => {
             try {
@@ -75,16 +76,16 @@ export function useAlertaSonoro(devTocar: boolean) {
             }
         };
 
-        tocarBeep();
+        void tocarBeep();
         intervaloRef.current = window.setInterval(() => {
-            tocarBeep();
+            void tocarBeep();
         }, 1000);
     };
 
     // Tocar/parar áudio
     useEffect(() => {
         if (!devTocar || !audioPermitido) {
-            if (audioRef.current) {
+            if (audioRef.current !== null) {
                 audioRef.current.pause();
                 audioRef.current.currentTime = 0;
             }
@@ -114,15 +115,15 @@ export function useAlertaSonoro(devTocar: boolean) {
     // Cleanup
     useEffect(() => {
         return () => {
-            if (audioRef.current) {
+            if (audioRef.current !== null) {
                 audioRef.current.pause();
                 audioRef.current = null;
             }
             if (intervaloRef.current !== null) {
                 clearInterval(intervaloRef.current);
             }
-            if (audioContextRef.current) {
-                audioContextRef.current.close();
+            if (audioContextRef.current !== null) {
+                void audioContextRef.current.close();
             }
         };
     }, []);
@@ -130,16 +131,16 @@ export function useAlertaSonoro(devTocar: boolean) {
     return {
         ativarAudio: async () => {
             // Sempre inicializa/resume o AudioContext na interação do usuário para garantir que o beep funcione
-            if (!audioContextRef.current) {
+            if (audioContextRef.current === null) {
                 try {
-                    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+                    const AudioContextClass = window.AudioContext;
                     audioContextRef.current = new AudioContextClass();
                 } catch (e) {
                     console.error('[DEBUG][useAlertaSonoro] Erro ao criar AudioContext:', e);
                 }
             }
             
-            if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+            if (audioContextRef.current?.state === 'suspended') {
                 try {
                     await audioContextRef.current.resume();
                 } catch (e) {
@@ -153,7 +154,7 @@ export function useAlertaSonoro(devTocar: boolean) {
                 return;
             }
 
-            if (audioRef.current) {
+            if (audioRef.current !== null) {
                 try {
                     await audioRef.current.play();
                     audioRef.current.pause();

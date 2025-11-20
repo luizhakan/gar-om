@@ -23,14 +23,16 @@ export function ModalObservacao({
 
     useEffect(() => {
         if (aberto) {
-            setObservacao(observacaoInicial);
+            // Resetar o campo quando o modal abre novamente.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setObservacao(() => observacaoInicial);
             requestAnimationFrame(() => {
                 textareaRef.current?.focus();
             });
         }
     }, [aberto, observacaoInicial, produto?.id]);
 
-    if (!aberto || !produto) {
+    if (!aberto || produto === undefined || produto === null) {
         return null;
     }
 
@@ -45,9 +47,9 @@ export function ModalObservacao({
                     <div>
                         <p className={styles.rotulo}>Adicionar observação</p>
                         <h2 className={styles.nomeProduto}>{produto.nome}</h2>
-                        {produto.descricao && (
+                        {(produto.descricao?.trim() ?? '') !== '' ? (
                             <p className={styles.descricaoProduto}>{produto.descricao}</p>
-                        )}
+                        ) : null}
                     </div>
                     <button
                         className={styles.botaoFechar}
@@ -67,7 +69,9 @@ export function ModalObservacao({
                     className={styles.textarea}
                     placeholder="Ex: sem cebola, ponto da carne, retirar molho"
                     value={observacao}
-                    onChange={(event) => setObservacao(event.target.value)}
+                    onChange={(event) => {
+                        setObservacao(event.target.value);
+                    }}
                     rows={3}
                 />
 

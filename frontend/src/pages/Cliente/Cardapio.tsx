@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useCarrinho } from '../../contexts/ContextoCarrinho';
+import { useCarrinho } from '../../hooks/useCarrinho';
 import { ListaProdutos } from '../../components/ListaProdutos';
 import { CarrinhoFlutuante } from '../../components/CarrinhoFlutuante';
 import { ModalObservacao } from '../../components/ModalObservacao';
@@ -22,17 +22,18 @@ export function CardapioCliente() {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [erro, setErro] = useState<string | null>(null);
     const [carregando, setCarregando] = useState(true);
+    const idMesaSeguro = idMesa ?? '';
 
     useEffect(() => {
         const restauranteId = searchParams.get('restauranteId');
-        if (restauranteId) {
+        if (restauranteId !== null && restauranteId !== '') {
             definirSessao(restauranteId, 'cliente');
         }
     }, [searchParams]);
 
     useEffect(() => {
         const restauranteId = searchParams.get('restauranteId');
-        if (!restauranteId) {
+        if (restauranteId === null || restauranteId === '') {
             setErro('Restaurante não informado no QRCode.');
             setCarregando(false);
             return;
@@ -63,7 +64,7 @@ export function CardapioCliente() {
     };
 
     const handleConfirmarObservacao = (observacao: string) => {
-        if (!produtoSelecionado) return;
+        if (produtoSelecionado === null) return;
 
         adicionarItem(produtoSelecionado, observacao);
         setProdutoSelecionado(null);
@@ -75,7 +76,7 @@ export function CardapioCliente() {
 
     const handleRevisarPedido = () => {
         const sufixoBusca = searchParams.toString();
-        navigate(`/mesa/${idMesa}/revisar${sufixoBusca ? `?${sufixoBusca}` : ''}`);
+        void navigate(`/mesa/${idMesaSeguro}/revisar${sufixoBusca ? `?${sufixoBusca}` : ''}`);
     };
 
     if (carregando) {
@@ -88,7 +89,7 @@ export function CardapioCliente() {
         );
     }
 
-    if (erro) {
+    if (erro !== '') {
         return (
             <div className={styles.container}>
                 <div className="container" style={{ paddingTop: '3rem' }}>
@@ -103,7 +104,7 @@ export function CardapioCliente() {
         <div className={styles.container}>
             <header className={styles.cabecalho}>
                 <div className="container">
-                    <h1 className={styles.titulo}>Mesa {idMesa}</h1>
+                    <h1 className={styles.titulo}>Mesa {idMesaSeguro}</h1>
                     <p className={styles.subtitulo}>Escolha seus itens</p>
                 </div>
             </header>

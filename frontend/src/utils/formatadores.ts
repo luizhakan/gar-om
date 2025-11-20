@@ -46,9 +46,9 @@ export function calcularTempoDecorrido(dataISO: string): string {
 
     if (minutos < 1) return 'agora mesmo';
     if (minutos === 1) return 'há 1 minuto';
-    if (minutos < 60) return `há ${minutos} minutos`;
+    if (minutos < 60) return `há ${String(minutos)} minutos`;
 
     const horas = Math.floor(minutos / 60);
     if (horas === 1) return 'há 1 hora';
-    return `há ${horas} horas`;
+    return `há ${String(horas)} horas`;
 }

@@ -30,7 +30,7 @@ export function CardProdutoAdmin({
                 </span>
             </div>
 
-            {produto.descricao && (
+            {(produto.descricao ?? '').trim().length > 0 && (
                 <p className={styles.descricao}>{produto.descricao}</p>
             )}
 
@@ -40,13 +40,13 @@ export function CardProdutoAdmin({
                     <p className={styles.preco}>{formatarMoeda(produto.preco)}</p>
                 </div>
                 <div className={styles.acoes}>
-                    <Botao variante="secundario" tamanho="pequeno" onClick={onEditar}>
+                    <Botao variante="secundario" tamanho="pequeno" onClick={() => { onEditar(); }}>
                         ✏️ Editar
                     </Botao>
-                    <Botao variante="perigo" tamanho="pequeno" onClick={onRemover}>
+                    <Botao variante="perigo" tamanho="pequeno" onClick={() => { onRemover(); }}>
                         🗑️ Remover
                     </Botao>
-                    <Botao tamanho="pequeno" onClick={onAlternarDisponivel}>
+                    <Botao tamanho="pequeno" onClick={() => { onAlternarDisponivel(); }}>
                         {produto.disponivel ? 'Pausar' : 'Reativar'}
                     </Botao>
                 </div>

@@ -15,7 +15,7 @@ interface ProdutoApi {
 
 export type ProdutoNovo = Omit<Produto, 'id' | 'restauranteId' | 'createdAt' | 'updatedAt'>;
 
-const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
+const API_BASE = env.apiBaseUrl.replace(/\/$/, '');
 const usarApi = Boolean(API_BASE);
 
 async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
@@ -24,7 +24,7 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     }
 
     const restauranteId = obterRestauranteId();
-    if (!restauranteId) {
+    if ((restauranteId ?? '') === '') {
         throw new Error('Restaurante não definido na sessão');
     }
     const token = obterToken();
@@ -32,8 +32,8 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     const resposta = await fetch(`${API_BASE}${path}`, {
         headers: {
             'Content-Type': 'application/json',
-            'x-restaurante-id': restauranteId,
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            'x-restaurante-id': restauranteId ?? '',
+            ...((token ?? '') !== '' ? { Authorization: `Bearer ${token ?? ''}` } : {}),
         },
         ...init,
     });
@@ -47,7 +47,7 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 function mapearProdutoApi(payload: ProdutoApi): Produto {
-    const preco = Number(payload.preco);
+    const preco = payload.preco;
     if (Number.isNaN(preco)) {
         throw new Error('Resposta de produto com preço inválido');
     }
@@ -95,7 +95,7 @@ export const ServicoProdutos = {
 
     async remover(idProduto: string): Promise<void> {
         if (!usarApi) throw new Error('API não configurada');
-        await requestApi<void>(`/produtos/${idProduto}`, { method: 'DELETE' });
+        await requestApi<unknown>(`/produtos/${idProduto}`, { method: 'DELETE' });
     },
 
     async alternarDisponibilidade(idProduto: string): Promise<Produto> {
