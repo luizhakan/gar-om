@@ -21,7 +21,7 @@ export function RegistrarAdmin() {
         setCarregando(true);
         try {
             const resp = await ServicoAuth.registrarAdmin(nome, email, cpf, senha);
-            definirSessao(resp.admin.restauranteId, 'admin');
+            definirSessao(resp.admin.restauranteId, 'admin', resp.token, resp.admin.email);
             notificar('Cadastro concluído! Você já pode acessar o painel.', 'sucesso');
             navigate('/admin/login', { replace: true });
         } catch (erro) {

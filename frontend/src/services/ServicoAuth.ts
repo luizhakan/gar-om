@@ -21,23 +21,26 @@ async function request<T>(path: string, body: any): Promise<T> {
     return resp.json() as Promise<T>;
 }
 
+type DadosAdmin = { id: string; nome: string; email: string; restauranteId: string };
+type DadosCozinha = { id: string; email: string; restauranteId: string };
+
 export const ServicoAuth = {
     async loginAdmin(email: string, senha: string) {
-        return request<{ admin: { id: string; nome: string; email: string; restauranteId: string } }>(
+        return request<{ token: string; admin: DadosAdmin }>(
             '/auth/admin/login',
             { email, senha },
         );
     },
 
     async registrarAdmin(nome: string, email: string, cpf: string, senha: string) {
-        return request<{ admin: { id: string; nome: string; email: string; restauranteId: string } }>(
+        return request<{ token: string; admin: DadosAdmin }>(
             '/auth/admin/register',
             { nome, email, cpf, senha },
         );
     },
 
     async loginCozinha(email: string, senha: string) {
-        return request<{ cozinha: { id: string; email: string; restauranteId: string } }>(
+        return request<{ token: string; cozinha: DadosCozinha }>(
             '/auth/cozinha/login',
             { email, senha },
         );

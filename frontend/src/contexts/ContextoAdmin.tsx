@@ -7,7 +7,7 @@ import { categoriasMock } from '../mocks/cardapio';
 import { ServicoProdutos } from '../services/ServicoProdutos';
 import { ServicoMesas } from '../services/ServicoMesas';
 import { ServicoAuth } from '../services/ServicoAuth';
-import { definirSessao, limparSessao, obterRestauranteId } from '../utils/sessao';
+import { definirSessao, limparSessao, obterEmailSessao, obterRestauranteId, obterToken } from '../utils/sessao';
 import { useToast } from './ContextoToast';
 
 interface DadosContextoAdmin {
@@ -27,61 +27,49 @@ interface DadosContextoAdmin {
     adminEmail?: string;
 }
 
-const CHAVE_STORAGE_AUTH = 'garcom_admin_auth';
-
 const ContextoAdmin = createContext<DadosContextoAdmin>({} as DadosContextoAdmin);
 
 interface ProvedorAdminProps {
     children: ReactNode;
 }
 
-function lerStorage<T>(chave: string, fallback: T): T {
-    if (typeof window === 'undefined') return fallback;
-
-    const dados = window.localStorage.getItem(chave);
-    if (!dados) return fallback;
-
-    try {
-        return JSON.parse(dados) as T;
-    } catch {
-        return fallback;
-    }
-}
-
 export function ProvedorAdmin({ children }: ProvedorAdminProps) {
     const { notificar } = useToast();
-    const [autenticado, setAutenticado] = useState<boolean>(() => {
-        return lerStorage<boolean>(CHAVE_STORAGE_AUTH, false);
-    });
-    const [restauranteId, setRestauranteId] = useState<string | undefined>(() => obterRestauranteId());
-    const [adminEmail, setAdminEmail] = useState<string | undefined>(undefined);
+    const sessaoInicial = useMemo(() => ({
+        restauranteId: obterRestauranteId(),
+        token: obterToken(),
+        email: obterEmailSessao(),
+    }), []);
+
+    const [autenticado, setAutenticado] = useState<boolean>(() => Boolean(sessaoInicial.token));
+    const [restauranteId, setRestauranteId] = useState<string | undefined>(() => sessaoInicial.restauranteId);
+    const [adminEmail, setAdminEmail] = useState<string | undefined>(() => sessaoInicial.email);
     const [produtos, setProdutos] = useState<Produto[]>([]);
     const [mesas, setMesas] = useState<Mesa[]>([]);
 
     const categorias = useMemo(() => categoriasMock, []);
 
     useEffect(() => {
-        if (typeof window === 'undefined') return;
-        window.localStorage.setItem(CHAVE_STORAGE_AUTH, JSON.stringify(autenticado));
-    }, [autenticado]);
+        if (!autenticado || !restauranteId) return;
 
-    useEffect(() => {
         ServicoProdutos.listar()
             .then(setProdutos)
             .catch((erro) => {
                 console.error('[ContextoAdmin] Erro ao carregar produtos:', erro);
                 notificar('Não foi possível carregar os produtos', 'erro');
             });
-    }, [restauranteId]);
+    }, [autenticado, restauranteId]);
 
     useEffect(() => {
+        if (!autenticado || !restauranteId) return;
+
         ServicoMesas.listar()
             .then(setMesas)
             .catch((erro) => {
                 console.error('[ContextoAdmin] Erro ao carregar mesas:', erro);
                 notificar('Não foi possível carregar as mesas', 'erro');
             });
-    }, [restauranteId]);
+    }, [autenticado, restauranteId]);
 
     async function login(email: string, senha: string) {
         try {
@@ -89,7 +77,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
             setAutenticado(true);
             setRestauranteId(resp.admin.restauranteId);
             setAdminEmail(resp.admin.email);
-            definirSessao(resp.admin.restauranteId, 'admin');
+            definirSessao(resp.admin.restauranteId, 'admin', resp.token, resp.admin.email);
             notificar(`Bem-vindo, ${resp.admin.nome}`, 'sucesso');
         } catch (erro) {
             console.error('[ContextoAdmin] Falha no login', erro);
@@ -102,6 +90,8 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         setAutenticado(false);
         setRestauranteId(undefined);
         setAdminEmail(undefined);
+        setProdutos([]);
+        setMesas([]);
         limparSessao();
         notificar('Sessão encerrada', 'info');
     }

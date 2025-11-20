@@ -1,15 +1,17 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCarrinho } from '../../contexts/ContextoCarrinho';
 import { ControleQuantidade } from '../../components/ControleQuantidade';
 import { Botao } from '../../components/Botao';
 import { formatarMoeda } from '../../utils/formatadores';
 import { ServicoPedidos } from '../../services/ServicoPedidos';
+import { definirSessao } from '../../utils/sessao';
 import styles from './RevisarPedido.module.css';
 
 export function RevisarPedido() {
     const { idMesa } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const {
         itens,
         atualizarQuantidade,
@@ -19,8 +21,16 @@ export function RevisarPedido() {
     } = useCarrinho();
     const [mensagemSucesso, setMensagemSucesso] = useState('');
 
+    useEffect(() => {
+        const restauranteId = searchParams.get('restauranteId');
+        if (restauranteId) {
+            definirSessao(restauranteId, 'cliente');
+        }
+    }, [searchParams]);
+
     const handleVoltarCardapio = () => {
-        navigate(`/mesa/${idMesa}`);
+        const sufixoBusca = searchParams.toString();
+        navigate(`/mesa/${idMesa}${sufixoBusca ? `?${sufixoBusca}` : ''}`);
     };
 
     const handleEnviarPedido = async () => {
@@ -38,7 +48,8 @@ export function RevisarPedido() {
 
             setMensagemSucesso('Pedido enviado para a cozinha! 🎉');
             limparCarrinho();
-            setTimeout(() => navigate(`/mesa/${idMesa}`), 600);
+            const sufixoBusca = searchParams.toString();
+            setTimeout(() => navigate(`/mesa/${idMesa}${sufixoBusca ? `?${sufixoBusca}` : ''}`), 600);
         } catch (erro) {
             console.error('[RevisarPedido] Falha ao enviar pedido', erro);
         }

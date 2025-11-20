@@ -1,22 +1,33 @@
-import { Body, Controller, Get, Headers, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Post, UseGuards } from '@nestjs/common';
 import { CategoriasService } from './categorias.service';
 import { CriarCategoriaDto } from './dto/criar-categoria.dto';
+import { AuthGuard, Roles } from '../auth/auth.guard';
+import { UsuarioAutenticado } from '../auth/auth-user.decorator';
+import type { AuthTokenPayload } from '../auth/token.util';
 
 @Controller('categorias')
 export class CategoriasController {
     constructor(private readonly categoriasService: CategoriasService) {}
 
     @Get()
-    listar() {
-        return this.categoriasService.listar();
+    listar(@Headers('x-restaurante-id') restauranteId?: string) {
+        if (!restauranteId) {
+            throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
+        }
+        return this.categoriasService.listar(restauranteId);
     }
 
+    @UseGuards(AuthGuard)
+    @Roles('admin')
     @Post()
-    criar(@Body() dto: CriarCategoriaDto, @Headers('x-restaurante-id') restauranteId?: string) {
-        return this.categoriasService.criar({
-            id: dto.id,
-            nome: dto.nome,
-            ordem: dto.ordem,
-        }, restauranteId);
+    criar(@Body() dto: CriarCategoriaDto, @UsuarioAutenticado() usuario: AuthTokenPayload) {
+        return this.categoriasService.criar(
+            {
+                id: dto.id,
+                nome: dto.nome,
+                ordem: dto.ordem,
+            },
+            usuario.restauranteId,
+        );
     }
 }

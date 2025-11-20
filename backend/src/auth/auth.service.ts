@@ -3,6 +3,7 @@ import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminRegisterDto, cpfValidoOuErro } from './dto/admin-register.dto';
 import { LoginDto } from './dto/login.dto';
+import { gerarToken } from './token.util';
 
 @Injectable()
 export class AuthService {
@@ -15,6 +16,11 @@ export class AuthService {
         const existe = await this.prisma.admin.findUnique({ where: { email: dto.email } });
         if (existe) {
             throw new UnauthorizedException('Email já cadastrado');
+        }
+
+        const cpfJaExiste = await this.prisma.admin.findUnique({ where: { cpf: cpfLimpo } });
+        if (cpfJaExiste) {
+            throw new UnauthorizedException('CPF já cadastrado');
         }
 
         const senhaHash = await bcrypt.hash(dto.senha, 10);
@@ -37,12 +43,17 @@ export class AuthService {
                 id: true,
                 nome: true,
                 email: true,
-                cpf: true,
                 restauranteId: true,
             },
         });
 
-        return { admin };
+        const token = gerarToken({
+            sub: admin.id,
+            restauranteId: restaurante.id,
+            role: 'admin',
+        });
+
+        return { token, admin };
     }
 
     async loginAdmin(dto: LoginDto) {
@@ -52,8 +63,14 @@ export class AuthService {
         const ok = await bcrypt.compare(dto.senha, admin.senhaHash);
         if (!ok) throw new UnauthorizedException('Credenciais inválidas');
 
-        // Simplificado: retorna payload básico (pode trocar por JWT depois)
+        const token = gerarToken({
+            sub: admin.id,
+            restauranteId: admin.restauranteId,
+            role: 'admin',
+        });
+
         return {
+            token,
             admin: {
                 id: admin.id,
                 nome: admin.nome,
@@ -70,7 +87,14 @@ export class AuthService {
         const ok = await bcrypt.compare(dto.senha, user.senhaHash);
         if (!ok) throw new UnauthorizedException('Credenciais inválidas');
 
+        const token = gerarToken({
+            sub: user.id,
+            restauranteId: user.restauranteId,
+            role: 'cozinha',
+        });
+
         return {
+            token,
             cozinha: {
                 id: user.id,
                 email: user.email,

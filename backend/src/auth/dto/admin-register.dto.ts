@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
 import { validarCpf } from '../cpf.util';
 
@@ -20,6 +21,6 @@ export class AdminRegisterDto {
 
 export function cpfValidoOuErro(cpf: string) {
     if (!validarCpf(cpf)) {
-        throw new Error('CPF inválido');
+        throw new BadRequestException('CPF inválido');
     }
 }

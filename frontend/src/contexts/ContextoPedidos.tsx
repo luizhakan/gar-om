@@ -22,11 +22,17 @@ interface ProvedorPedidosProps {
 export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
     const [pedidos, setPedidos] = useState<Pedido[]>([]);
     const [novoPedidoRecebido, setNovoPedidoRecebido] = useState(false);
+    const [versaoSessao, setVersaoSessao] = useState(0);
+
+    useEffect(() => {
+        const handler = () => setVersaoSessao((valor) => valor + 1);
+        window.addEventListener('sessao-atualizada', handler);
+        return () => window.removeEventListener('sessao-atualizada', handler);
+    }, []);
 
     useEffect(() => {
         const descadastrar = ServicoPedidos.assinarMudancas((novosPedidos) => {
             setPedidos((pedidosAntigos) => {
-                // Detecta se há novos pedidos pendentes
                 const pedidosPendentesNovos = novosPedidos.filter(p => p.status === 'pendente');
                 const pedidosPendentesAntigos = pedidosAntigos.filter(p => p.status === 'pendente');
                 
@@ -38,7 +44,7 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
             });
         });
         return () => descadastrar();
-    }, []);
+    }, [versaoSessao]);
 
     async function adicionarPedido(pedidoNovo: Omit<Pedido, 'id' | 'dataCriacao' | 'status'>) {
         const pedidoCriado = await ServicoPedidos.criar(pedidoNovo);
@@ -47,13 +53,21 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
     }
 
     async function confirmarPedido(idPedido: string) {
-        const atualizados = await ServicoPedidos.atualizarStatus(idPedido, 'preparando');
-        setPedidos(atualizados);
+        try {
+            const atualizados = await ServicoPedidos.atualizarStatus(idPedido, 'preparando');
+            setPedidos(atualizados);
+        } catch (erro) {
+            console.error('[ContextoPedidos] Falha ao confirmar pedido', erro);
+        }
     }
 
     async function marcarComoPronto(idPedido: string) {
-        const atualizados = await ServicoPedidos.atualizarStatus(idPedido, 'pronto');
-        setPedidos(atualizados);
+        try {
+            const atualizados = await ServicoPedidos.atualizarStatus(idPedido, 'pronto');
+            setPedidos(atualizados);
+        } catch (erro) {
+            console.error('[ContextoPedidos] Falha ao marcar pedido como pronto', erro);
+        }
     }
 
     function limparNotificacao() {

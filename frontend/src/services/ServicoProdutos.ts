@@ -1,8 +1,7 @@
 import type { Produto } from '../types/Produto';
 import { produtosMock } from '../mocks/cardapio';
-import { gerarIdAleatorio } from '../utils/formatadores';
 import { env } from '../config/env';
-import { obterRestauranteId } from '../utils/sessao';
+import { obterRestauranteId, obterToken } from '../utils/sessao';
 
 const CHAVE_STORAGE = 'garcom_produtos';
 const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
@@ -14,11 +13,16 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     }
 
     const restauranteId = obterRestauranteId();
+    if (!restauranteId) {
+        throw new Error('Restaurante não definido na sessão');
+    }
+    const token = obterToken();
 
     const resposta = await fetch(`${API_BASE}${path}`, {
         headers: {
             'Content-Type': 'application/json',
             ...(restauranteId ? { 'x-restaurante-id': restauranteId } : {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         ...init,
     });
@@ -44,11 +48,6 @@ function obterProdutosStorage(): Produto[] {
     } catch {
         return produtosMock;
     }
-}
-
-function salvarProdutosStorage(produtos: Produto[]) {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(CHAVE_STORAGE, JSON.stringify(produtos));
 }
 
 function mapearProdutoApi(payload: any): Produto {
@@ -78,75 +77,36 @@ export const ServicoProdutos = {
     },
 
     async criar(produto: Omit<Produto, 'id'>): Promise<Produto> {
-        if (usarApi) {
-            try {
-                const criado = await requestApi<any>('/produtos', {
-                    method: 'POST',
-                    body: JSON.stringify(produto),
-                });
-                return mapearProdutoApi(criado);
-            } catch (error) {
-                console.warn('[ServicoProdutos] Falha ao criar via API, salvando local.', error);
-            }
-        }
+        if (!usarApi) throw new Error('API não configurada');
 
-        const produtosAtuais = obterProdutosStorage();
-        const novoProduto: Produto = { ...produto, id: gerarIdAleatorio() };
-        salvarProdutosStorage([...produtosAtuais, novoProduto]);
-        return novoProduto;
+        const criado = await requestApi<any>('/produtos', {
+            method: 'POST',
+            body: JSON.stringify(produto),
+        });
+        return mapearProdutoApi(criado);
     },
 
     async atualizar(produto: Produto): Promise<Produto> {
-        if (usarApi) {
-            try {
-                const atualizado = await requestApi<any>(`/produtos/${produto.id}`, {
-                    method: 'PATCH',
-                    body: JSON.stringify(produto),
-                });
-                return mapearProdutoApi(atualizado);
-            } catch (error) {
-                console.warn('[ServicoProdutos] Falha ao atualizar via API, salvando local.', error);
-            }
-        }
+        if (!usarApi) throw new Error('API não configurada');
 
-        const produtosAtuais = obterProdutosStorage().map(item =>
-            item.id === produto.id ? produto : item
-        );
-        salvarProdutosStorage(produtosAtuais);
-        return produto;
+        const atualizado = await requestApi<any>(`/produtos/${produto.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(produto),
+        });
+        return mapearProdutoApi(atualizado);
     },
 
     async remover(idProduto: string): Promise<void> {
-        if (usarApi) {
-            try {
-                await requestApi<void>(`/produtos/${idProduto}`, { method: 'DELETE' });
-                return;
-            } catch (error) {
-                console.warn('[ServicoProdutos] Falha ao remover via API, removendo local.', error);
-            }
-        }
-
-        const produtosAtuais = obterProdutosStorage().filter(item => item.id !== idProduto);
-        salvarProdutosStorage(produtosAtuais);
+        if (!usarApi) throw new Error('API não configurada');
+        await requestApi<void>(`/produtos/${idProduto}`, { method: 'DELETE' });
     },
 
     async alternarDisponibilidade(idProduto: string): Promise<Produto | null> {
-        if (usarApi) {
-            try {
-                const atualizado = await requestApi<any>(`/produtos/${idProduto}/disponibilidade`, {
-                    method: 'PATCH',
-                });
-                return mapearProdutoApi(atualizado);
-            } catch (error) {
-                console.warn('[ServicoProdutos] Falha ao alternar via API, fazendo local.', error);
-            }
-        }
+        if (!usarApi) throw new Error('API não configurada');
 
-        const produtosAtuais = obterProdutosStorage().map(item =>
-            item.id === idProduto ? { ...item, disponivel: !item.disponivel } : item
-        );
-        const produtoAtualizado = produtosAtuais.find(p => p.id === idProduto) ?? null;
-        salvarProdutosStorage(produtosAtuais);
-        return produtoAtualizado;
+        const atualizado = await requestApi<any>(`/produtos/${idProduto}/disponibilidade`, {
+            method: 'PATCH',
+        });
+        return mapearProdutoApi(atualizado);
     }
 };

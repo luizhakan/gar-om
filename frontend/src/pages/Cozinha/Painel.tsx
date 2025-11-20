@@ -4,7 +4,7 @@ import { CardPedido } from '../../components/CardPedido';
 import { useAlertaSonoro } from '../../hooks/useAlertaSonoro';
 import { Botao } from '../../components/Botao';
 import { ServicoAuth } from '../../services/ServicoAuth';
-import { definirSessao, obterRestauranteId } from '../../utils/sessao';
+import { definirSessao, obterRestauranteId, obterToken } from '../../utils/sessao';
 import styles from './styles.module.css';
 
 function ConteudoPainelCozinha() {
@@ -19,6 +19,7 @@ function ConteudoPainelCozinha() {
     const [audioAtivado, setAudioAtivado] = useState(false);
     const [mostrarModalSom, setMostrarModalSom] = useState(true);
     const [restauranteId, setRestauranteId] = useState<string | undefined>(() => obterRestauranteId());
+    const [token, setToken] = useState<string | undefined>(() => obterToken());
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [erroLogin, setErroLogin] = useState('');
@@ -42,8 +43,9 @@ function ConteudoPainelCozinha() {
     const handleLoginCozinha = async () => {
         try {
             const resp = await ServicoAuth.loginCozinha(email, senha);
-            definirSessao(resp.cozinha.restauranteId, 'cozinha');
+            definirSessao(resp.cozinha.restauranteId, 'cozinha', resp.token, resp.cozinha.email);
             setRestauranteId(resp.cozinha.restauranteId);
+            setToken(resp.token);
             setErroLogin('');
         } catch (error) {
             console.error(error);
@@ -65,7 +67,7 @@ function ConteudoPainelCozinha() {
         tentarAtivar();
     }, []);
 
-    if (!restauranteId) {
+    if (!restauranteId || !token) {
         return (
             <div className={styles.container}>
                 <div className={styles.modalOverlay}>

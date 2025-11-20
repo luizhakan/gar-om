@@ -1,19 +1,28 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCarrinho } from '../../contexts/ContextoCarrinho';
 import { ListaProdutos } from '../../components/ListaProdutos';
 import { CarrinhoFlutuante } from '../../components/CarrinhoFlutuante';
 import { ModalObservacao } from '../../components/ModalObservacao';
 import { produtosMock, categoriasMock } from '../../mocks/cardapio';
 import type { Produto } from '../../types/Produto';
+import { definirSessao } from '../../utils/sessao';
 import styles from './styles.module.css';
 
 export function CardapioCliente() {
     const { idMesa } = useParams();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { adicionarItem } = useCarrinho();
 
     const [produtoSelecionado, setProdutoSelecionado] = useState<Produto | null>(null);
+
+    useEffect(() => {
+        const restauranteId = searchParams.get('restauranteId');
+        if (restauranteId) {
+            definirSessao(restauranteId, 'cliente');
+        }
+    }, [searchParams]);
 
     const handleSelecionarProduto = (produto: Produto) => {
         setProdutoSelecionado(produto);
@@ -31,7 +40,8 @@ export function CardapioCliente() {
     };
 
     const handleRevisarPedido = () => {
-        navigate(`/mesa/${idMesa}/revisar`);
+        const sufixoBusca = searchParams.toString();
+        navigate(`/mesa/${idMesa}/revisar${sufixoBusca ? `?${sufixoBusca}` : ''}`);
     };
 
     return (

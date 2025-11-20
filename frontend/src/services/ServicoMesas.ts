@@ -1,7 +1,6 @@
 import type { Mesa } from '../types/Mesa';
 import { env } from '../config/env';
-import { gerarIdAleatorio } from '../utils/formatadores';
-import { obterRestauranteId } from '../utils/sessao';
+import { obterRestauranteId, obterToken } from '../utils/sessao';
 
 const CHAVE_STORAGE = 'garcom_mesas';
 const API_BASE = env.apiBaseUrl?.replace(/\/$/, '') ?? '';
@@ -13,11 +12,16 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     }
 
     const restauranteId = obterRestauranteId();
+    if (!restauranteId) {
+        throw new Error('Restaurante não definido na sessão');
+    }
+    const token = obterToken();
 
     const resposta = await fetch(`${API_BASE}${path}`, {
         headers: {
             'Content-Type': 'application/json',
             ...(restauranteId ? { 'x-restaurante-id': restauranteId } : {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         ...init,
     });
@@ -49,11 +53,6 @@ function obterStorage(): Mesa[] {
     }
 }
 
-function salvarStorage(mesas: Mesa[]) {
-    if (typeof window === 'undefined') return;
-    window.localStorage.setItem(CHAVE_STORAGE, JSON.stringify(mesas));
-}
-
 function mapearMesaApi(payload: any): Mesa {
     return {
         id: payload.id,
@@ -77,33 +76,16 @@ export const ServicoMesas = {
     },
 
     async configurar(total: number): Promise<Mesa[]> {
-        if (usarApi) {
-            try {
-                const data = await requestApi<any>('/mesas/configurar', {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        total,
-                        baseUrl: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173',
-                    }),
-                });
-                const mesasCriadas = (data as any[]).map(mapearMesaApi);
-                return mesasCriadas;
-            } catch (error) {
-                console.warn('[ServicoMesas] Falha ao configurar via API, salvando local.', error);
-            }
-        }
+        if (!usarApi) throw new Error('API não configurada');
 
-        const mesasNovas: Mesa[] = Array.from({ length: total }, (_, index) => {
-            const numero = index + 1;
-            return {
-                id: gerarIdAleatorio(),
-                numero,
-                codigoQr: gerarLinkMesa(numero),
-                ocupada: false,
-            };
+        const data = await requestApi<any>('/mesas/configurar', {
+            method: 'PUT',
+            body: JSON.stringify({
+                total,
+                baseUrl: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173',
+            }),
         });
-
-        salvarStorage(mesasNovas);
-        return mesasNovas;
+        const mesasCriadas = (data as any[]).map(mapearMesaApi);
+        return mesasCriadas;
     }
 };

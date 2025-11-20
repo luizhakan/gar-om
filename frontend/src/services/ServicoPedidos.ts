@@ -1,7 +1,7 @@
 import type { Pedido } from '../types/Pedido';
 import { gerarIdAleatorio } from '../utils/formatadores';
 import { env } from '../config/env';
-import { obterRestauranteId } from '../utils/sessao';
+import { obterRestauranteId, obterToken } from '../utils/sessao';
 
 const CHAVE_STORAGE = 'garom_pedidos';
 const EVENTO_ATUALIZACAO = 'pedidos-atualizados';
@@ -14,11 +14,16 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     }
 
     const restauranteId = obterRestauranteId();
+    if (!restauranteId) {
+        throw new Error('Restaurante não definido na sessão');
+    }
+    const token = obterToken();
 
     const resposta = await fetch(`${API_BASE}${path}`, {
         headers: {
             'Content-Type': 'application/json',
             ...(restauranteId ? { 'x-restaurante-id': restauranteId } : {}),
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         ...init,
     });
@@ -83,10 +88,14 @@ function mapearPedidoApi(payload: any): Pedido {
 export const ServicoPedidos = {
     async listar(): Promise<Pedido[]> {
         if (usarApi) {
+            const token = obterToken();
             try {
                 const data = await requestApi<any[]>('/pedidos');
                 return data.map(mapearPedidoApi);
             } catch (error) {
+                if (token) {
+                    throw error;
+                }
                 console.warn('[ServicoPedidos] Falha ao listar via API, fallback local.', error);
             }
         }
@@ -126,30 +135,33 @@ export const ServicoPedidos = {
     async atualizarStatus(idPedido: string, status: Pedido['status']): Promise<Pedido[]> {
         const dataAtualizacao = new Date().toISOString();
 
-        if (usarApi) {
-            try {
-                await requestApi(`/pedidos/${idPedido}/status`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ status }),
-                });
-                return ServicoPedidos.listar();
-            } catch (error) {
-                console.warn('[ServicoPedidos] Falha ao atualizar via API, salvando local.', error);
-            }
+        if (!usarApi) {
+            const pedidosAtualizados = obterPedidosStorage().map(pedido =>
+                pedido.id === idPedido
+                    ? { ...pedido, status, dataAtualizacao }
+                    : pedido
+            );
+
+            salvarPedidosStorage(pedidosAtualizados);
+            return pedidosAtualizados;
         }
 
-        const pedidosAtualizados = obterPedidosStorage().map(pedido =>
-            pedido.id === idPedido
-                ? { ...pedido, status, dataAtualizacao }
-                : pedido
-        );
-
-        salvarPedidosStorage(pedidosAtualizados);
-        return pedidosAtualizados;
+        await requestApi(`/pedidos/${idPedido}/status`, {
+            method: 'PATCH',
+            body: JSON.stringify({ status }),
+        });
+        return ServicoPedidos.listar();
     },
 
     assinarMudancas(callback: (pedidos: Pedido[]) => void) {
         let ativo = true;
+        const restauranteId = obterRestauranteId();
+        const token = obterToken();
+
+        if (usarApi && (!restauranteId || !token)) {
+            console.warn('[ServicoPedidos] Sessão ausente para assinar mudanças');
+            return () => {};
+        }
 
         const carregar = () => {
             ServicoPedidos.listar()

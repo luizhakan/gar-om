@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PedidoStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CriarPedidoDto } from './dto/criar-pedido.dto';
@@ -34,10 +34,11 @@ export class PedidosService {
         };
     }
 
-    private async garantirMesa(idMesaRecebido: string, restauranteId?: string) {
+    private async garantirMesa(idMesaRecebido: string, restauranteId: string) {
         const numeroMesa = Number(idMesaRecebido);
         const mesaExistente = await this.prisma.mesa.findFirst({
             where: {
+                restauranteId,
                 OR: [
                     { id: idMesaRecebido },
                     Number.isInteger(numeroMesa) ? { numero: numeroMesa } : undefined,
@@ -47,38 +48,15 @@ export class PedidosService {
 
         if (mesaExistente) return mesaExistente;
 
-        let restaurante = restauranteId
-            ? await this.prisma.restaurante.upsert({
-                where: { id: restauranteId },
-                update: {},
-                create: { id: restauranteId, nome: 'Restaurante Default' },
-            })
-            : await this.prisma.restaurante.findFirst();
-
-        if (!restaurante) {
-            restaurante = await this.prisma.restaurante.create({
-                data: { id: 'restaurante-default', nome: 'Restaurante Default' },
-            });
-        }
-
-        const numeroParaCriar = Number.isInteger(numeroMesa)
-            ? numeroMesa
-            : await this.prisma.mesa.count({ where: { restauranteId: restaurante.id } }) + 1;
-
-        return this.prisma.mesa.create({
-            data: {
-                id: `mesa-${numeroParaCriar}`,
-                numero: numeroParaCriar,
-                codigoQr: `http://localhost:5173/mesa/${numeroParaCriar}`,
-                ocupada: false,
-                restauranteId: restaurante.id,
-            },
-        });
+        throw new NotFoundException('Mesa não encontrada para o restaurante informado');
     }
 
-    async listar(restauranteId?: string) {
+    async listar(restauranteId: string) {
+        const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
+        if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
+
         const pedidos = await this.prisma.pedido.findMany({
-            where: restauranteId ? { restauranteId } : undefined,
+            where: { restauranteId },
             orderBy: { dataCriacao: 'desc' },
             include: {
                 mesa: true,
@@ -91,8 +69,15 @@ export class PedidosService {
         return pedidos.map(p => this.formatarPedido(p));
     }
 
-    async criar(dto: CriarPedidoDto, restauranteId?: string) {
-        const mesa = await this.garantirMesa(dto.idMesa, restauranteId);
+    async criar(dto: CriarPedidoDto, restauranteId: string) {
+        if (!restauranteId) {
+            throw new BadRequestException('Restaurante não informado');
+        }
+
+        const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
+        if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
+
+        const mesa = await this.garantirMesa(dto.idMesa, restaurante.id);
 
         const itensPreparados = [];
         for (const item of dto.itens) {
@@ -102,6 +87,9 @@ export class PedidosService {
 
             if (!produto) {
                 throw new NotFoundException(`Produto não encontrado: ${item.idProduto}`);
+            }
+            if (produto.restauranteId !== restaurante.id) {
+                throw new UnauthorizedException('Um ou mais produtos não pertencem ao restaurante');
             }
 
             itensPreparados.push({
@@ -115,8 +103,8 @@ export class PedidosService {
         const pedidoCriado = await this.prisma.pedido.create({
             data: {
                 idMesa: mesa.id,
-                restauranteId: mesa.restauranteId,
-                status: (dto.status as PedidoStatus) || PedidoStatus.pendente,
+                restauranteId: restaurante.id,
+                status: PedidoStatus.pendente,
                 itens: {
                     create: itensPreparados,
                 },
@@ -130,9 +118,10 @@ export class PedidosService {
         return this.formatarPedido(pedidoCriado);
     }
 
-    async atualizarStatus(id: string, dto: AtualizarStatusDto) {
+    async atualizarStatus(id: string, dto: AtualizarStatusDto, restauranteId: string) {
         const pedido = await this.prisma.pedido.findUnique({ where: { id } });
         if (!pedido) throw new NotFoundException('Pedido não encontrado');
+        if (pedido.restauranteId !== restauranteId) throw new UnauthorizedException('Pedido pertence a outro restaurante');
 
         const atualizado = await this.prisma.pedido.update({
             where: { id },
