@@ -24,7 +24,19 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
     const [novoPedidoRecebido, setNovoPedidoRecebido] = useState(false);
 
     useEffect(() => {
-        const descadastrar = ServicoPedidos.assinarMudancas(setPedidos);
+        const descadastrar = ServicoPedidos.assinarMudancas((novosPedidos) => {
+            setPedidos((pedidosAntigos) => {
+                // Detecta se há novos pedidos pendentes
+                const pedidosPendentesNovos = novosPedidos.filter(p => p.status === 'pendente');
+                const pedidosPendentesAntigos = pedidosAntigos.filter(p => p.status === 'pendente');
+                
+                if (pedidosPendentesNovos.length > pedidosPendentesAntigos.length) {
+                    setNovoPedidoRecebido(true);
+                }
+                
+                return novosPedidos;
+            });
+        });
         return () => descadastrar();
     }, []);
 

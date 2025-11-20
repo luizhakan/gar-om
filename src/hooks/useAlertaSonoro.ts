@@ -35,7 +35,8 @@ export function useAlertaSonoro(devTocar: boolean) {
 
         if (!audioContextRef.current) {
             try {
-                audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+                const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+                audioContextRef.current = new AudioContextClass();
                 console.log('[DEBUG][useAlertaSonoro] AudioContext criado para beep sintético');
             } catch (error) {
                 console.error('[DEBUG][useAlertaSonoro] Erro ao criar AudioContext:', error);
@@ -89,7 +90,10 @@ export function useAlertaSonoro(devTocar: boolean) {
                 console.log('[DEBUG][useAlertaSonoro] Tentando tocar MP3');
                 audioRef.current?.play().catch(error => {
                     console.warn('[DEBUG][useAlertaSonoro] Erro ao tocar MP3:', error);
-                    setUsarBeepSintetico(true);
+                    // Só faz fallback para beep se NÃO for erro de permissão (autoplay bloqueado)
+                    if (error instanceof Error && error.name !== 'NotAllowedError') {
+                        setUsarBeepSintetico(true);
+                    }
                 });
             }
         } else {
@@ -123,14 +127,43 @@ export function useAlertaSonoro(devTocar: boolean) {
 
     return {
         ativarAudio: async () => {
-            if (usarBeepSintetico && audioContextRef.current?.state === 'suspended') {
-                await audioContextRef.current.resume();
+            // Sempre inicializa/resume o AudioContext na interação do usuário para garantir que o beep funcione
+            if (!audioContextRef.current) {
+                try {
+                    const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+                    audioContextRef.current = new AudioContextClass();
+                } catch (e) {
+                    console.error('[DEBUG][useAlertaSonoro] Erro ao criar AudioContext:', e);
+                }
+            }
+            
+            if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
+                try {
+                    await audioContextRef.current.resume();
+                } catch (e) {
+                    console.error('[DEBUG][useAlertaSonoro] Erro ao resumir AudioContext:', e);
+                }
+            }
+
+            if (usarBeepSintetico) {
                 console.log('[DEBUG][useAlertaSonoro] Áudio ativado (beep)');
             } else if (audioRef.current) {
-                await audioRef.current.play().catch(() => { });
-                audioRef.current.pause();
-                audioRef.current.currentTime = 0;
-                console.log('[DEBUG][useAlertaSonoro] Áudio ativado (MP3)');
+                try {
+                    await audioRef.current.play();
+                    audioRef.current.pause();
+                    audioRef.current.currentTime = 0;
+                    console.log('[DEBUG][useAlertaSonoro] Áudio ativado (MP3)');
+                } catch (error) {
+                    console.warn('[DEBUG][useAlertaSonoro] Falha ao ativar MP3:', error);
+                    
+                    // Se for erro de permissão, relança para que a UI saiba que precisa de interação
+                    if (error instanceof Error && error.name === 'NotAllowedError') {
+                        throw error;
+                    }
+                    
+                    // Se for outro erro (ex: arquivo corrompido), tenta fallback
+                    setUsarBeepSintetico(true);
+                }
             }
         }
     };
