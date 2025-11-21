@@ -2,27 +2,27 @@
 
 echo "🔧 Iniciando correção geral do sistema..."
 
-# 1. Garantir Backend com Node 20
-echo "📦 Garantindo Node 20 no Backend..."
+# 1. Garantir Node 20 em ambos os serviços (Backend e Frontend)
+echo "📦 Atualizando Dockerfiles para Node 20..."
 sed -i 's/node:18-alpine/node:20-alpine/g' backend/Dockerfile
+sed -i 's/node:18-alpine/node:20-alpine/g' frontend/Dockerfile
 
 # 2. Ajustar CORS (adiciona www e non-www)
 echo "🌐 Ajustando CORS no docker-compose..."
 sed -i 's|CORS_ORIGIN: https://garcomagil.com|CORS_ORIGIN: https://garcomagil.com,https://www.garcomagil.com|g' docker-compose.yml
 
-# 3. Corrigir tsconfig.json para NodeNext (Solução do erro TS5109)
-echo "📝 Configurando TypeScript para Node 20 (NodeNext)..."
+# 3. Corrigir tsconfig.json para CommonJS (Compatível com Seed/NestJS)
+echo "📝 Revertendo TypeScript para CommonJS (Estável)..."
 cat > backend/tsconfig.json <<EOF
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "commonjs",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "ES2022",
+    "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": ".",
@@ -37,14 +37,14 @@ cat > backend/tsconfig.json <<EOF
 EOF
 
 # 4. Reconstruir e Reiniciar tudo
-echo "🏗️ Reconstruindo containers (isso pode levar 1-2 min)..."
+echo "🏗️ Reconstruindo containers (isso pode levar alguns minutos)..."
 docker-compose down
 docker-compose up -d --build
 
 # 5. Aguardar DB e rodar Seed
 echo "⏳ Aguardando banco de dados iniciar..."
-sleep 10
+sleep 15
 echo "🌱 Rodando Seed do banco..."
 docker exec gar-om_backend_1 npm run prisma:seed
 
-echo "✅ Concluído! Sistema rodando com TypeScript corrigido."
+echo "✅ Concluído! O sistema deve estar rodando corretamente."
