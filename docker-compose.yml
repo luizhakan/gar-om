@@ -72,7 +72,7 @@ services:
              fi;
              while :; do sleep 12h; nginx -s reload; done &
              exec nginx -g 'daemon off;'"
-      ports:
+    ports:
       - "80:80"
       - "443:443"
     volumes:
