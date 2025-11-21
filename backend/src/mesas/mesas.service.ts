@@ -6,6 +6,13 @@ import type { Prisma } from '@prisma/client';
 export class MesasService {
     constructor(private prisma: PrismaService) {}
 
+    // Método auxiliar de segurança para garantir a URL correta
+    private obterUrlBaseSegura(): string {
+        // Em produção, defina a variável FRONTEND_URL no .env
+        // Ex: FRONTEND_URL=https://meu-app-garcom.com
+        return process.env.FRONTEND_URL || 'http://localhost:5173';
+    }
+
     private async garantirMesa(idMesaRecebido: string, restauranteId: string) {
         const numeroMesa = Number(idMesaRecebido);
         const filtros: Prisma.MesaWhereInput[] = [{ id: idMesaRecebido }];
@@ -35,17 +42,9 @@ export class MesasService {
         });
     }
 
-    async adicionar(numero: number, baseUrl: string, restauranteId: string) {
-        let baseUrlNormalizado: URL;
-        try {
-            baseUrlNormalizado = new URL(baseUrl);
-        } catch {
-            throw new BadRequestException('URL base inválida para geração do QR Code');
-        }
-
-        if (!['http:', 'https:'].includes(baseUrlNormalizado.protocol)) {
-            throw new BadRequestException('A URL base deve usar http ou https');
-        }
+    // Correção: O parâmetro baseUrl recebido é ignorado por segurança
+    async adicionar(numero: number, _baseUrlIgnorada: string, restauranteId: string) {
+        const baseUrlSegura = this.obterUrlBaseSegura();
 
         const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
         if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
@@ -58,7 +57,7 @@ export class MesasService {
             throw new BadRequestException(`A mesa com número ${numero} já existe neste restaurante.`);
         }
 
-        const urlMesa = new URL(baseUrlNormalizado.toString());
+        const urlMesa = new URL(baseUrlSegura);
         urlMesa.pathname = `/mesa/${numero}`;
         urlMesa.searchParams.set('restauranteId', restauranteId);
 
@@ -73,17 +72,9 @@ export class MesasService {
         });
     }
 
-    async configurar(quantidade: number, baseUrl: string, restauranteId: string) {
-        let baseUrlNormalizado: URL;
-        try {
-            baseUrlNormalizado = new URL(baseUrl);
-        } catch {
-            throw new BadRequestException('URL base inválida para geração do QR Code');
-        }
-
-        if (!['http:', 'https:'].includes(baseUrlNormalizado.protocol)) {
-            throw new BadRequestException('A URL base deve usar http ou https');
-        }
+    // Correção: O parâmetro baseUrl recebido é ignorado por segurança
+    async configurar(quantidade: number, _baseUrlIgnorada: string, restauranteId: string) {
+        const baseUrlSegura = this.obterUrlBaseSegura();
 
         const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
         if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
@@ -102,9 +93,10 @@ export class MesasService {
 
         const mesas = Array.from({ length: quantidade }, (_, idx) => {
             const numero = idx + 1;
-            const urlMesa = new URL(baseUrlNormalizado.toString());
+            const urlMesa = new URL(baseUrlSegura);
             urlMesa.pathname = `/mesa/${numero}`;
             urlMesa.searchParams.set('restauranteId', restauranteId);
+            
             return {
                 numero,
                 codigoQr: urlMesa.toString(),

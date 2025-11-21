@@ -4,7 +4,7 @@ import { ThrottlerGuard, Throttle } from '@nestjs/throttler'; // Importar
 import { AdminRegisterDto } from './dto/admin-register.dto';
 import { LoginDto } from './dto/login.dto';
 
-@Controller('auth/admin')
+@Controller('auth')
 export class AuthAdminController {
     constructor(private readonly authService: AuthService) {}
 
@@ -18,5 +18,10 @@ export class AuthAdminController {
     @Post('login')
     login(@Body() dto: LoginDto) {
         return this.authService.loginAdmin(dto);
+    }
+
+    @Post('refresh')
+    async refresh(@Body('refreshToken') refreshToken: string) {
+        return this.authService.refresh(refreshToken);
     }
 }

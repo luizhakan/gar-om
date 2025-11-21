@@ -3,6 +3,12 @@ import { UnauthorizedException } from '@nestjs/common';
 
 type Role = 'admin' | 'cozinha';
 
+export interface RefreshTokenPayload {
+    sub: string;
+    role: Role;
+    tokenFamily: string; // ID único para rastrear a rotação
+}
+
 export interface AuthTokenPayload {
     sub: string;
     restauranteId: string;
@@ -40,9 +46,12 @@ function assinarBase(base: string) {
     return crypto.createHmac('sha256', getSecret()).update(base).digest('base64url');
 }
 
-export function gerarToken(payload: Omit<AuthTokenPayload, 'exp'>, ttlSegundos = 60 * 60 * 12) {
+export function gerarToken(
+    payload: object, 
+    ttlSegundos: number
+) {
     const exp = Math.floor(Date.now() / 1000) + ttlSegundos;
-    const corpo: AuthTokenPayload = { ...payload, exp };
+    const corpo = { ...payload, exp };
     const base = `${base64UrlEncode(TOKEN_HEADER)}.${base64UrlEncode(corpo)}`;
     const assinatura = assinarBase(base);
     return `${base}.${assinatura}`;

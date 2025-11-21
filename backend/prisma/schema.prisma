@@ -36,6 +36,7 @@ model Admin {
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  refreshTokens RefreshToken[]
 }
 
 model UsuarioCozinha {
@@ -46,6 +47,7 @@ model UsuarioCozinha {
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  refreshTokens RefreshToken[]
 }
 
 model Categoria {
@@ -112,4 +114,20 @@ model ItemPedido {
   precoUnitario  Float
   pedido         Pedido   @relation(fields: [pedidoId], references: [id])
   produto        Produto  @relation(fields: [produtoId], references: [id])
+}
+
+// Adicione este model no final do arquivo
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   // Guardamos apenas o hash do segredo
+  
+  // Relações
+  adminId   String?
+  admin     Admin?   @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  
+  cozinhaId String?
+  cozinha   UsuarioCozinha? @relation(fields: [cozinhaId], references: [id], onDelete: Cascade)
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
