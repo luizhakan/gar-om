@@ -10,21 +10,21 @@ export function Home() {
                     <div className={styles.heroGrid}>
                         <div className={styles.copy}>
                             <p className={styles.kicker}>Garçom Ágil • SaaS de pedidos em tempo real</p>
-                            <h1 className={styles.titulo}>Cadastre seu restaurante e rode 30 dias grátis no piloto automático</h1>
+                            <h1 className={styles.titulo}>Cadastre seu restaurante e rode 14 dias grátis no piloto automático</h1>
                             <p className={styles.subtitulo}>
-                                Monte cardápio, mapa de mesas e KDS em minutos. Trial de 30 dias sem cartão;
+                                Monte cardápio, mapa de mesas e KDS em minutos. Trial de 14 dias sem cartão;
                                 depois disso, o checkout roda pelo Mercado Pago que você já usa.
                             </p>
 
                             <div className={styles.ctas}>
                                 <Link to="/admin/registro">
-                                    <Botao variante="primario" tamanho="grande">Começar teste de 30 dias</Botao>
+                                    <Botao variante="primario" tamanho="grande">Começar teste de 14 dias</Botao>
                                 </Link>
                                 <Link to="/master/login">
                                     <Botao variante="secundario" tamanho="grande">Entrar no painel master</Botao>
                                 </Link>
                             </div>
-                            <p className={styles.trialMeta}>Sem cartão agora • Trial expira em 30 dias • Depois, cobrança via Mercado Pago</p>
+                            <p className={styles.trialMeta}>Sem cartão agora • Trial expira em 14 dias • Depois, cobrança via Mercado Pago</p>
                         </div>
 
                         <div className={styles.heroCard}>
@@ -37,7 +37,7 @@ export function Home() {
                                 <li>Painel master para ver trials e cobrar</li>
                             </ul>
                             <div className={styles.cardFooter}>
-                                <p className={styles.cardHighlight}>30 dias livres • ativa pagamento após o trial</p>
+                                <p className={styles.cardHighlight}>14 dias livres • ativa pagamento após o trial</p>
                                 <Link to="/admin/login" className={styles.linkInline}>Já tenho conta →</Link>
                             </div>
                         </div>
@@ -103,7 +103,7 @@ export function Home() {
                         <div className={styles.step}>
                             <div className={styles.stepBadge}>3</div>
                             <div>
-                                <p className={styles.stepTitle}>Use 30 dias de teste</p>
+                                <p className={styles.stepTitle}>Use 14 dias de teste</p>
                                 <p className={styles.stepText}>O modelo guarda trialStart e trialEnd para cada restaurante.</p>
                             </div>
                         </div>

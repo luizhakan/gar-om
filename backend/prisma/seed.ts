@@ -27,7 +27,7 @@ async function main() {
             trialStartedAt: agora,
             trialEndsAt: trialTerminaEm,
             subscriptionStatus: SubscriptionStatus.trialing,
-            planLabel: 'Trial 30 dias',
+            planLabel: 'Trial 14 dias',
         },
     });
 

@@ -31,7 +31,7 @@ export class MasterService {
             diasTrialRestantes,
             subscriptionStatus: restaurante.subscriptionStatus,
             statusEfetivo: this.calcularStatusEfetivo(restaurante),
-            planLabel: restaurante.planLabel ?? 'Trial 30 dias',
+            planLabel: restaurante.planLabel ?? 'Trial 14 dias',
             billingEmail: restaurante.billingEmail ?? adminPrincipal?.email,
             billingPhone: restaurante.billingPhone,
             mercadoPagoCustomerId: restaurante.mercadoPagoCustomerId,

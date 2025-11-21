@@ -73,4 +73,4 @@ Veja mais detalhes em `backend/test/integration/README.md`.
 - Se a API não estiver rodando, os services do frontend usam fallback em `localStorage` + mocks.
 - As requisições enviam `x-restaurante-id` (quando logado) para isolar dados de cada restaurante.
 - Testes de integração usam banco PostgreSQL real (porta 5433) para validar constraints de banco.
-- Cada novo admin já nasce com um restaurante em `trial` de 30 dias (campos trialStart/trialEnd e status `trialing`), pronto para ativar cobrança via Mercado Pago depois.
+- Cada novo admin já nasce com um restaurante em `trial` de 14 dias (campos trialStart/trialEnd e status `trialing`), pronto para ativar cobrança via Mercado Pago depois.
