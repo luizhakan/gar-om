@@ -1,7 +1,7 @@
-type TipoSessao = 'admin' | 'cozinha' | 'cliente';
+type TipoSessao = 'admin' | 'cozinha' | 'cliente' | 'master';
 
 interface DadosSessao {
-    restauranteId: string;
+    restauranteId?: string;
     tipo: TipoSessao;
     token?: string;
     refreshToken?: string;
@@ -17,7 +17,9 @@ function lerSessao(): DadosSessao | undefined {
     if ((bruto ?? '') === '') return undefined;
     try {
         const parsed = JSON.parse(bruto ?? '') as Partial<DadosSessao>;
-        if ((parsed.restauranteId ?? '') === '' || (parsed.tipo ?? '') === '') return undefined;
+        if ((parsed.tipo ?? '') === '') return undefined;
+        const precisaRestaurante = parsed.tipo !== 'master';
+        if (precisaRestaurante && (parsed.restauranteId ?? '') === '') return undefined;
         return parsed as DadosSessao;
     } catch {
         return undefined;
@@ -38,7 +40,7 @@ function lerSessaoCliente(): DadosSessao | undefined {
 }
 
 export function definirSessao(
-    restauranteId: string,
+    restauranteId: string | undefined,
     tipo: TipoSessao,
     token?: string,
     email?: string,

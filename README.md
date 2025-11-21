@@ -63,9 +63,14 @@ Veja mais detalhes em `backend/test/integration/README.md`.
   - `POST /auth/admin/register` (nome, email, cpf, senha) — cria admin e restaurante vinculado (CPF validado pelo algoritmo oficial)
   - `POST /auth/admin/login` (email, senha) — retorna admin + restauranteId
   - `POST /auth/cozinha/login` (email, senha) — retorna usuário de cozinha + restauranteId
+  - `POST /auth/master/login` (email, senha) — login do painel master (seed demo: founder@garcom.com / supermaster123)
+- Master (apenas para usuários com role `master`):
+  - `GET /master/restaurantes` — visão geral de trials, status e contatos
+  - `PATCH /master/restaurantes/:id` — atualiza status de assinatura/trial ou dados de cobrança
 
 ## Notas
 - O frontend espera a API em `http://localhost:3001` (ajuste com `VITE_API_URL`).
 - Se a API não estiver rodando, os services do frontend usam fallback em `localStorage` + mocks.
 - As requisições enviam `x-restaurante-id` (quando logado) para isolar dados de cada restaurante.
 - Testes de integração usam banco PostgreSQL real (porta 5433) para validar constraints de banco.
+- Cada novo admin já nasce com um restaurante em `trial` de 30 dias (campos trialStart/trialEnd e status `trialing`), pronto para ativar cobrança via Mercado Pago depois.

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
+import { SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminRegisterDto, cpfValidoOuErro } from './dto/admin-register.dto';
 import { LoginDto } from './dto/login.dto';
@@ -14,14 +15,20 @@ const REFRESH_INACTIVITY_DAYS = 5; // expiração por inatividade
 export class AuthService {
     constructor(private prisma: PrismaService) {}
 
+    private adicionarDias(base: Date, dias: number) {
+        const copia = new Date(base);
+        copia.setDate(base.getDate() + dias);
+        return copia;
+    }
+
     // Função auxiliar para gerar o par de tokens e salvar no banco
-    private async gerarTokensRotativos(userId: string, role: 'admin' | 'cozinha') {
+    private async gerarTokensRotativos(userId: string, role: 'admin' | 'cozinha' | 'master', restauranteId = '') {
         // 1. Access Token (15 minutos)
         const accessToken = gerarToken({ 
             sub: userId, 
             role,
             // Em produção, adicione restauranteId aqui se tiver o dado fácil
-            restauranteId: '', // Será preenchido no login normal, aqui é simplificado
+            restauranteId,
         }, ACCESS_TOKEN_TTL_SECONDS); 
 
         // 2. Refresh Token (7 dias)
@@ -38,7 +45,8 @@ export class AuthService {
         };
 
         if (role === 'admin') dados.adminId = userId;
-        else dados.cozinhaId = userId;
+        else if (role === 'cozinha') dados.cozinhaId = userId;
+        else dados.masterId = userId;
 
         const registro = await this.prisma.refreshToken.create({ data: dados });
 
@@ -48,7 +56,7 @@ export class AuthService {
         return { accessToken, refreshToken };
     }
 
-async registrarAdmin(dto: AdminRegisterDto) {
+    async registrarAdmin(dto: AdminRegisterDto) {
         cpfValidoOuErro(dto.cpf);
         const cpfLimpo = dto.cpf.replace(/\D/g, '');
         
@@ -60,8 +68,18 @@ async registrarAdmin(dto: AdminRegisterDto) {
 
         const senhaHash = await bcrypt.hash(dto.senha, 10);
 
+        const agora = new Date();
+        const trialTerminaEm = this.adicionarDias(agora, 30);
+
         const restaurante = await this.prisma.restaurante.create({
-            data: { nome: `${dto.nome} - Restaurante` },
+            data: { 
+                nome: `${dto.nome} - Restaurante`,
+                billingEmail: dto.email,
+                trialStartedAt: agora,
+                trialEndsAt: trialTerminaEm,
+                subscriptionStatus: SubscriptionStatus.trialing,
+                planLabel: 'Trial 30 dias',
+            },
         });
 
         const admin = await this.prisma.admin.create({
@@ -75,40 +93,26 @@ async registrarAdmin(dto: AdminRegisterDto) {
         });
 
         // Gera tokens iniciais
-        const tokens = await this.gerarTokensRotativos(admin.id, 'admin');
-
-        // Precisamos re-gerar o access token com o restauranteId correto que agora temos
-        const accessTokenComDados = gerarToken({
-            sub: admin.id,
-            restauranteId: restaurante.id,
-            role: 'admin'
-        }, ACCESS_TOKEN_TTL_SECONDS);
+        const tokens = await this.gerarTokensRotativos(admin.id, 'admin', restaurante.id);
 
         return {
-            token: accessTokenComDados, // Compatibilidade com frontend atual
+            token: tokens.accessToken, // Compatibilidade com frontend atual
             refreshToken: tokens.refreshToken,
             admin: { id: admin.id, nome: admin.nome, email: admin.email, restauranteId: admin.restauranteId }
         };
     }
 
-async loginAdmin(dto: LoginDto) {
+    async loginAdmin(dto: LoginDto) {
         const admin = await this.prisma.admin.findUnique({ where: { email: dto.email } });
         if (!admin) throw new NotFoundException('Credenciais inválidas');
 
         const ok = await bcrypt.compare(dto.senha, admin.senhaHash);
         if (!ok) throw new UnauthorizedException('Credenciais inválidas');
 
-        const tokens = await this.gerarTokensRotativos(admin.id, 'admin');
-        
-        // Sobrescreve o Access Token genérico com os dados reais do admin
-        const accessTokenFinal = gerarToken({
-            sub: admin.id,
-            restauranteId: admin.restauranteId,
-            role: 'admin'
-        }, ACCESS_TOKEN_TTL_SECONDS);
+        const tokens = await this.gerarTokensRotativos(admin.id, 'admin', admin.restauranteId);
 
         return {
-            token: accessTokenFinal,
+            token: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             admin: { id: admin.id, nome: admin.nome, email: admin.email, restauranteId: admin.restauranteId }
         };
@@ -121,22 +125,32 @@ async loginAdmin(dto: LoginDto) {
         const ok = await bcrypt.compare(dto.senha, user.senhaHash);
         if (!ok) throw new UnauthorizedException('Credenciais inválidas');
 
-        const tokens = await this.gerarTokensRotativos(user.id, 'cozinha');
-
-        const accessTokenFinal = gerarToken({
-            sub: user.id,
-            restauranteId: user.restauranteId,
-            role: 'cozinha'
-        }, ACCESS_TOKEN_TTL_SECONDS);
+        const tokens = await this.gerarTokensRotativos(user.id, 'cozinha', user.restauranteId);
 
         return {
-            token: accessTokenFinal,
+            token: tokens.accessToken,
             refreshToken: tokens.refreshToken,
             cozinha: { id: user.id, email: user.email, restauranteId: user.restauranteId }
         };
     }
+
+    async loginMaster(dto: LoginDto) {
+        const master = await this.prisma.masterUser.findUnique({ where: { email: dto.email } });
+        if (!master) throw new NotFoundException('Credenciais inválidas');
+
+        const ok = await bcrypt.compare(dto.senha, master.senhaHash);
+        if (!ok) throw new UnauthorizedException('Credenciais inválidas');
+
+        const tokens = await this.gerarTokensRotativos(master.id, 'master', 'master');
+
+        return {
+            token: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            master: { id: master.id, nome: master.nome, email: master.email },
+        };
+    }
     
-async refresh(refreshTokenRecebido: string) {
+    async refresh(refreshTokenRecebido: string) {
         // 1. Validação básica do formato "ID.SEGREDO"
         const [id, segredo] = refreshTokenRecebido.split('.');
         if (!id || !segredo) {
@@ -146,7 +160,7 @@ async refresh(refreshTokenRecebido: string) {
         // 2. Busca no banco pelo ID
         const registro = await this.prisma.refreshToken.findUnique({
             where: { id },
-            include: { admin: true, cozinha: true } // Precisamos saber de quem é para gerar o novo
+            include: { admin: true, cozinha: true, master: true } // Precisamos saber de quem é para gerar o novo
         });
 
         if (!registro) {
@@ -182,7 +196,7 @@ async refresh(refreshTokenRecebido: string) {
 
         // 6. Gera novo par de tokens
         let userId = '';
-        let role: 'admin' | 'cozinha' = 'admin';
+        let role: 'admin' | 'cozinha' | 'master' = 'admin';
         let restauranteId = '';
 
         if (registro.admin) {
@@ -193,9 +207,16 @@ async refresh(refreshTokenRecebido: string) {
             userId = registro.cozinha.id;
             role = 'cozinha';
             restauranteId = registro.cozinha.restauranteId;
+        } else if (registro.master) {
+            userId = registro.master.id;
+            role = 'master';
+            restauranteId = 'master';
+        }
+        if (!userId) {
+            throw new UnauthorizedException('Token inválido');
         }
 
-        const novosTokens = await this.gerarTokensRotativos(userId, role);
+        const novosTokens = await this.gerarTokensRotativos(userId, role, restauranteId);
         
         // Injeta dados no access token
         const accessTokenFinal = gerarToken({

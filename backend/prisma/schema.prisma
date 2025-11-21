@@ -13,17 +13,34 @@ enum PedidoStatus {
   pronto
 }
 
+enum SubscriptionStatus {
+  trialing
+  active
+  past_due
+  canceled
+  blocked
+}
+
 model Restaurante {
-  id          String        @id @default(uuid())
-  nome        String
-  admins      Admin[]
-  cozinheiros UsuarioCozinha[]
-  categorias  Categoria[]
-  produtos    Produto[]
-  mesas       Mesa[]
-  pedidos     Pedido[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id                       String              @id @default(uuid())
+  nome                     String
+  admins                   Admin[]
+  cozinheiros              UsuarioCozinha[]
+  categorias               Categoria[]
+  produtos                 Produto[]
+  mesas                    Mesa[]
+  pedidos                  Pedido[]
+  trialStartedAt           DateTime            @default(now())
+  trialEndsAt              DateTime            @default(now())
+  subscriptionStatus       SubscriptionStatus  @default(trialing)
+  planLabel                String?
+  mercadoPagoCustomerId    String?
+  mercadoPagoSubscriptionId String?
+  billingEmail             String?
+  billingPhone             String?
+  blockedAt                DateTime?
+  createdAt                DateTime            @default(now())
+  updatedAt                DateTime            @updatedAt
 }
 
 model Admin {
@@ -47,6 +64,16 @@ model UsuarioCozinha {
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  refreshTokens RefreshToken[]
+}
+
+model MasterUser {
+  id            String        @id @default(uuid())
+  nome          String
+  email         String        @unique
+  senhaHash     String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   refreshTokens RefreshToken[]
 }
 
@@ -127,6 +154,9 @@ model RefreshToken {
   
   cozinhaId String?
   cozinha   UsuarioCozinha? @relation(fields: [cozinhaId], references: [id], onDelete: Cascade)
+
+  masterId  String?
+  master    MasterUser? @relation(fields: [masterId], references: [id], onDelete: Cascade)
 
   expiresAt DateTime
   createdAt DateTime @default(now())

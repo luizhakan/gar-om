@@ -107,7 +107,7 @@ export function CardapioCliente() {
                     <h1 className={styles.titulo}>Mesa {idMesaSeguro}</h1>
                     <p className={styles.subtitulo}>Escolha seus itens</p>
                     <div className={styles.painelAcoes}>
-                        <span>🌙 Modo escuro otimizado para salão</span>
+                        <span>🌙 Modo escuro otimizado para restaurante</span>
                         <span>🧭 Toque no item para adicionar rápido</span>
                         <span>🔎 Use busca do navegador para filtrar</span>
                     </div>

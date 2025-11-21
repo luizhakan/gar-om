@@ -1,9 +1,11 @@
-import { PrismaClient, PedidoStatus } from '@prisma/client';
+import { PrismaClient, PedidoStatus, SubscriptionStatus } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
+    await prisma.refreshToken.deleteMany();
+    await prisma.masterUser.deleteMany();
     await prisma.itemPedido.deleteMany();
     await prisma.pedido.deleteMany();
     await prisma.produto.deleteMany();
@@ -13,14 +15,24 @@ async function main() {
     await prisma.usuarioCozinha.deleteMany();
     await prisma.restaurante.deleteMany();
 
+    const agora = new Date();
+    const trialTerminaEm = new Date();
+    trialTerminaEm.setDate(agora.getDate() + 30);
+
     const restaurante = await prisma.restaurante.create({
         data: {
             id: 'restaurante-demo',
             nome: 'Restaurante Demo',
+            billingEmail: 'admin@demo.com',
+            trialStartedAt: agora,
+            trialEndsAt: trialTerminaEm,
+            subscriptionStatus: SubscriptionStatus.trialing,
+            planLabel: 'Trial 30 dias',
         },
     });
 
     const senhaPadrao = await bcrypt.hash('senha123', 10);
+    const senhaMaster = await bcrypt.hash('supermaster123', 10);
 
     await prisma.admin.create({
         data: {
@@ -30,6 +42,12 @@ async function main() {
             senhaHash: senhaPadrao,
             restauranteId: restaurante.id,
         },
+    });
+
+    await prisma.masterUser.upsert({
+        where: { email: 'founder@garcom.com' },
+        update: { nome: 'Master Demo', senhaHash: senhaMaster },
+        create: { nome: 'Master Demo', email: 'founder@garcom.com', senhaHash: senhaMaster },
     });
 
     await prisma.usuarioCozinha.create({

@@ -4,87 +4,142 @@ import styles from './Home.module.css';
 
 export function Home() {
     return (
-        <div className={styles.shell}>
+        <div className={styles.page}>
             <header className={styles.hero}>
                 <div className="container">
-                    <p className={styles.kicker}>Feng Shui digital para salão e cozinha</p>
-                    <h1 className={styles.titulo}>Garçom ágil em 3 toques</h1>
-                    <p className={styles.subtitulo}>
-                        Fluxo mobile-first, escuro e rápido. Pedidos entram em tempo real na cozinha.
-                    </p>
+                    <div className={styles.heroGrid}>
+                        <div className={styles.copy}>
+                            <p className={styles.kicker}>Garçom Ágil • SaaS de pedidos em tempo real</p>
+                            <h1 className={styles.titulo}>Cadastre seu restaurante e rode 30 dias grátis no piloto automático</h1>
+                            <p className={styles.subtitulo}>
+                                Monte cardápio, mapa de mesas e KDS em minutos. Trial de 30 dias sem cartão;
+                                depois disso, o checkout roda pelo Mercado Pago que você já usa.
+                            </p>
 
-                    <div className={styles.acoesHero}>
-                        <Link to="/admin/login">
-                            <Botao variante="primario" tamanho="grande">🔐 Painel Admin</Botao>
-                        </Link>
-                        <Link to="/cozinha">
-                            <Botao variante="secundario" tamanho="grande">🔥 KDS Cozinha</Botao>
-                        </Link>
-                    </div>
+                            <div className={styles.ctas}>
+                                <Link to="/admin/registro">
+                                    <Botao variante="primario" tamanho="grande">Começar teste de 30 dias</Botao>
+                                </Link>
+                                <Link to="/master/login">
+                                    <Botao variante="secundario" tamanho="grande">Entrar no painel master</Botao>
+                                </Link>
+                            </div>
+                            <p className={styles.trialMeta}>Sem cartão agora • Trial expira em 30 dias • Depois, cobrança via Mercado Pago</p>
+                        </div>
 
-                    <div className={styles.selos}>
-                        <div>
-                            <span className={styles.seloLabel}>Real time</span>
-                            <strong>WebSocket + Offline</strong>
-                        </div>
-                        <div>
-                            <span className={styles.seloLabel}>Modo escuro</span>
-                            <strong>Pensado para o salão</strong>
-                        </div>
-                        <div>
-                            <span className={styles.seloLabel}>3 toques</span>
-                            <strong>Padrões de polegar</strong>
+                        <div className={styles.heroCard}>
+                            <div className={styles.tag}>Trial + cobrança pronta</div>
+                            <p className={styles.cardTitle}>Fluxo completo para restaurante, cozinha e assinaturas</p>
+                            <ul className={styles.cardList}>
+                                <li>Pedidos e status em tempo real</li>
+                                <li>KDS responsivo com cores semáforo</li>
+                                <li>Mapa de mesas pronto para QR Code</li>
+                                <li>Painel master para ver trials e cobrar</li>
+                            </ul>
+                            <div className={styles.cardFooter}>
+                                <p className={styles.cardHighlight}>30 dias livres • ativa pagamento após o trial</p>
+                                <Link to="/admin/login" className={styles.linkInline}>Já tenho conta →</Link>
+                            </div>
                         </div>
                     </div>
                 </div>
             </header>
 
             <main className="container">
-                <section className={styles.gridAcoes}>
-                    <article className={styles.cardAcao}>
-                        <div className={styles.cardTopo}>
+                <section className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <p className={styles.kicker}>O que vem pronto</p>
+                        <h2>Do salão do restaurante à cozinha sem fricção</h2>
+                        <p className={styles.sectionSubtitle}>
+                            Cada área já tem o painel que precisa. É só cadastrar e ligar o trial.
+                        </p>
+                    </div>
+                    <div className={styles.featureGrid}>
+                        <article className={styles.feature}>
                             <span className={styles.badge}>Garçom</span>
-                            <p className={styles.cardTitulo}>Lançar pedido sem fricção</p>
-                        </div>
-                        <p className={styles.cardTexto}>
-                            Busca por nome/código, botoeira grande na base da tela e feedback instantâneo.
-                        </p>
-                        <div className={styles.cardFooter}>
-                            <Link to="/admin/login">
-                                <Botao tamanho="grande">Configurar cardápio</Botao>
-                            </Link>
-                        </div>
-                    </article>
+                            <h3>Pedidos em 3 toques</h3>
+                            <p>Busca por código, botoeiras grandes e feedback instantâneo para não travar o restaurante.</p>
+                            <Link to="/mesa/1" className={styles.inline}>Ver fluxo de mesa</Link>
+                        </article>
+                        <article className={styles.feature}>
+                            <span className={styles.badgeAmber}>Cozinha</span>
+                            <h3>KDS responsivo</h3>
+                            <p>Pedidos sobem em tempo real com cores para pendente, preparando e atrasado.</p>
+                            <Link to="/cozinha" className={styles.inline}>Abrir painel da cozinha</Link>
+                        </article>
+                        <article className={styles.feature}>
+                            <span className={styles.badgeBlue}>Admin</span>
+                            <h3>Mapa de mesas e cardápio</h3>
+                            <p>Configure mesas, QR Codes, categorias e preços sem depender de suporte.</p>
+                            <Link to="/admin/registro" className={styles.inline}>Cadastrar restaurante</Link>
+                        </article>
+                    </div>
+                </section>
 
-                    <article className={styles.cardAcao}>
-                        <div className={styles.cardTopo}>
-                            <span className={styles.badgeAmbar}>Cozinha</span>
-                            <p className={styles.cardTitulo}>KDS por cores</p>
-                        </div>
-                        <p className={styles.cardTexto}>
-                            Verde para novos pedidos, amarelo preparando e vermelho piscando para atrasados.
+                <section className={styles.sectionAlt}>
+                    <div className={styles.sectionHeader}>
+                        <p className={styles.kicker}>Onboarding + cobrança</p>
+                        <h2>Timeline do trial até o Mercado Pago</h2>
+                        <p className={styles.sectionSubtitle}>
+                            O sistema já guarda o fim do trial e deixa pronto para ativar a assinatura quando rodar o checkout.
                         </p>
-                        <div className={styles.cardFooter}>
-                            <Link to="/cozinha">
-                                <Botao variante="secundario" tamanho="grande">Ver painel</Botao>
-                            </Link>
-                        </div>
-                    </article>
+                    </div>
 
-                    <article className={styles.cardAcao}>
-                        <div className={styles.cardTopo}>
-                            <span className={styles.badgeAzul}>Mapa do salão</span>
-                            <p className={styles.cardTitulo}>Mesas por status</p>
+                    <div className={styles.timeline}>
+                        <div className={styles.step}>
+                            <div className={styles.stepBadge}>1</div>
+                            <div>
+                                <p className={styles.stepTitle}>Cadastre em 2 minutos</p>
+                                <p className={styles.stepText}>Cria admin e restaurante automaticamente. Trial começa na hora.</p>
+                            </div>
                         </div>
-                        <p className={styles.cardTexto}>
-                            Cores semafóricas: cinza livre, azul comendo, vermelho chamando, verde conta.
+                        <div className={styles.step}>
+                            <div className={styles.stepBadge}>2</div>
+                            <div>
+                                <p className={styles.stepTitle}>Configure cardápio e mesas</p>
+                                <p className={styles.stepText}>Categorias, preços, QR Codes e mapa do restaurante já disponíveis.</p>
+                            </div>
+                        </div>
+                        <div className={styles.step}>
+                            <div className={styles.stepBadge}>3</div>
+                            <div>
+                                <p className={styles.stepTitle}>Use 30 dias de teste</p>
+                                <p className={styles.stepText}>O modelo guarda trialStart e trialEnd para cada restaurante.</p>
+                            </div>
+                        </div>
+                        <div className={styles.step}>
+                            <div className={styles.stepBadge}>4</div>
+                            <div>
+                                <p className={styles.stepTitle}>Ative no Mercado Pago</p>
+                                <p className={styles.stepText}>Depois do trial, finalize o checkout no Mercado Pago e o status muda para ativo.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section className={styles.masterStrip}>
+                    <div>
+                        <p className={styles.kicker}>Painel master</p>
+                        <h2>Seu login para acompanhar todos os trials e cobranças</h2>
+                        <p className={styles.sectionSubtitle}>
+                            Veja todos os restaurantes, status (trial, ativo, vencido ou bloqueado) e dados de cobrança.
                         </p>
-                        <div className={styles.cardFooter}>
-                            <Link to="/admin/mesas">
-                                <Botao variante="secundario" tamanho="grande">Configurar mesas</Botao>
+                        <div className={styles.stripActions}>
+                            <Link to="/master/login">
+                                <Botao variante="primario" tamanho="grande">Acessar painel master</Botao>
                             </Link>
+                            <Link to="/admin/login" className={styles.inline}>Entrar como restaurante</Link>
                         </div>
-                    </article>
+                    </div>
+                    <div className={styles.stripCard}>
+                        <p className={styles.cardTitle}>O que o master enxerga</p>
+                        <ul className={styles.cardList}>
+                            <li>Status de trial e dias restantes</li>
+                            <li>Marcadores para cobrança no Mercado Pago</li>
+                            <li>Contato do admin e plano atual</li>
+                            <li>Botão para bloquear ou reativar</li>
+                        </ul>
+                    </div>
                 </section>
             </main>
         </div>

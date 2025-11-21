@@ -6,6 +6,7 @@ import { MesasModule } from './mesas/mesas.module';
 import { PedidosModule } from './pedidos/pedidos.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { MasterModule } from './master/master.module';
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import { AuthModule } from './auth/auth.module';
         }]),
         PrismaModule,
         AuthModule,
+        MasterModule,
         ProdutosModule,
         CategoriasModule,
         MesasModule,

@@ -1,0 +1,180 @@
+.page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, rgba(5, 7, 10, 0.95), #040507 100%);
+    padding: 2rem 0 3rem;
+    color: var(--cor-texto-principal);
+}
+
+.topo {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--espaco-lg);
+    align-items: center;
+    padding: 0 var(--espaco-md);
+}
+
+.kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--cor-texto-terciario);
+    margin: 0;
+}
+
+.topo h1 {
+    margin: 0.25rem 0;
+    font-size: clamp(1.8rem, 3vw, 2.3rem);
+}
+
+.subtitulo {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+}
+
+.acoesTopo {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.metricas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: var(--espaco-md);
+    padding: var(--espaco-lg) var(--espaco-md);
+}
+
+.metricCard {
+    padding: var(--espaco-md);
+    border-radius: var(--raio-lg);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.metricLabel {
+    margin: 0;
+    color: var(--cor-texto-terciario);
+    font-size: 0.9rem;
+}
+
+.metricValor {
+    margin: 0.25rem 0 0;
+    font-size: 2rem;
+    font-weight: 800;
+}
+
+.erro {
+    color: #ff9fad;
+    padding: 0 var(--espaco-md);
+}
+
+.loading {
+    color: var(--cor-texto-secundario);
+    padding: 0 var(--espaco-md);
+}
+
+.lista {
+    display: grid;
+    gap: var(--espaco-md);
+    padding: 0 var(--espaco-md);
+}
+
+.cardRestaurante {
+    background: rgba(12, 16, 24, 0.9);
+    border-radius: var(--raio-lg);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    padding: var(--espaco-lg);
+    box-shadow: var(--sombra-suave);
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--espaco-md);
+    align-items: flex-start;
+}
+
+.nome {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.meta {
+    margin: 0.1rem 0 0;
+    color: var(--cor-texto-secundario);
+}
+
+.status {
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--raio-circulo);
+    font-weight: 700;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+}
+
+.trialing {
+    background: rgba(56, 189, 248, 0.12);
+    color: var(--cor-info);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.active {
+    background: rgba(46, 211, 155, 0.12);
+    color: var(--cor-primaria);
+    border-color: rgba(46, 211, 155, 0.25);
+}
+
+.past_due {
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--cor-aviso);
+    border-color: rgba(251, 191, 36, 0.3);
+}
+
+.canceled {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--cor-texto-principal);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.blocked {
+    background: rgba(248, 113, 113, 0.15);
+    color: var(--cor-erro);
+    border-color: rgba(248, 113, 113, 0.35);
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--espaco-md);
+    margin: var(--espaco-md) 0;
+}
+
+.label {
+    margin: 0;
+    color: var(--cor-texto-terciario);
+    font-size: 0.9rem;
+}
+
+.valor {
+    margin: 0.2rem 0 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.detalhe {
+    margin: 0.1rem 0 0;
+    color: var(--cor-texto-secundario);
+}
+
+.acoesCard {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .topo {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

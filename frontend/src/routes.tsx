@@ -11,6 +11,8 @@ import { RevisarPedido } from './pages/Cliente/RevisarPedido';
 import { PainelCozinha } from './pages/Cozinha/Painel';
 import { LayoutCliente } from './layouts/LayoutCliente';
 import { LayoutAdmin } from './layouts/LayoutAdmin';
+import { MasterLogin } from './pages/Master/Login';
+import { MasterDashboard } from './pages/Master/Dashboard';
 import { PaginaErro } from './pages/ErroAplicacao';
 import { Pagina404 } from './pages/NotFound';
 
@@ -69,6 +71,16 @@ export const router = createBrowserRouter([
     {
         path: '/cozinha',
         element: <PainelCozinha />,
+        errorElement: <PaginaErro />,
+    },
+    {
+        path: '/master/login',
+        element: <MasterLogin />,
+        errorElement: <PaginaErro />,
+    },
+    {
+        path: '/master',
+        element: <MasterDashboard />,
         errorElement: <PaginaErro />,
     },
     {

@@ -1,7 +1,7 @@
 import * as crypto from 'crypto';
 import { UnauthorizedException } from '@nestjs/common';
 
-type Role = 'admin' | 'cozinha';
+type Role = 'admin' | 'cozinha' | 'master';
 
 export interface RefreshTokenPayload {
     sub: string;
