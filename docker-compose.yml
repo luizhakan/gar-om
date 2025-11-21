@@ -60,6 +60,7 @@ services:
       - backend
     environment:
       CERTBOT_DOMAIN: ${CERTBOT_DOMAIN:-garcomagil.com}
+    # AVISO: A indentação abaixo é crítica. 'ports' deve estar alinhado com 'command'.
     command: >
       sh -c "DOMAIN=${CERTBOT_DOMAIN:-garcomagil.com};
              if [ ! -f /etc/letsencrypt/live/$$DOMAIN/fullchain.pem ]; then
