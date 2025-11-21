@@ -6,6 +6,7 @@ import { Server, Socket } from 'socket.io';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { validarToken } from '../auth/token.util';
+import { corsWhitelist } from '../whitelist';
 
 const ADMIN_ROOM = 'restaurante_admin_cozinha_';
 const MESA_ROOM = 'mesa_';
@@ -14,7 +15,7 @@ const MESA_ROOM = 'mesa_';
 @WebSocketGateway({
     // Configuração do CORS do WebSocket (ajuste para o seu frontend em produção)
     cors: {
-        origin: '*', 
+        origin: corsWhitelist, 
         methods: ['GET', 'POST'],
     },
 })

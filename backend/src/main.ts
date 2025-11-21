@@ -6,16 +6,19 @@ import * as classTransformer from 'class-transformer';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { IoAdapter } from '@nestjs/platform-socket.io';
+import { corsWhitelist } from './whitelist';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     app.useWebSocketAdapter(new IoAdapter(app));
     app.use(helmet());
 
-    const corsOrigins =
+    const envOrigins =
         process.env.CORS_ORIGIN?.split(',')
             .map(o => o.trim())
-            .filter(Boolean) ?? ['http://localhost:5173'];
+            .filter(Boolean) ?? [];
+
+    const corsOrigins = Array.from(new Set([...corsWhitelist, ...envOrigins]));
 
     app.enableCors({
         origin: corsOrigins,
