@@ -18,6 +18,7 @@ interface ItemPedidoApi {
     produtoId: string;
     quantidade: number;
     observacao?: string | null;
+    precoUnitario?: number;
     produto?: {
         id: string;
         nome: string;
