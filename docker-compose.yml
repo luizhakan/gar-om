@@ -62,17 +62,17 @@ services:
       CERTBOT_DOMAIN: ${CERTBOT_DOMAIN:-garcomagil.com}
     command: >
       sh -c "DOMAIN=${CERTBOT_DOMAIN:-garcomagil.com};
-             if [ ! -f /etc/letsencrypt/live/$DOMAIN/fullchain.pem ]; then
+             if [ ! -f /etc/letsencrypt/live/$$DOMAIN/fullchain.pem ]; then
                echo 'Certificado não encontrado, gerando self-signed provisório';
-               mkdir -p /etc/letsencrypt/live/$DOMAIN;
+               mkdir -p /etc/letsencrypt/live/$$DOMAIN;
                openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
-                 -keyout /etc/letsencrypt/live/$DOMAIN/privkey.pem \
-                 -out /etc/letsencrypt/live/$DOMAIN/fullchain.pem \
-                 -subj \"/CN=$DOMAIN\";
+                 -keyout /etc/letsencrypt/live/$$DOMAIN/privkey.pem \
+                 -out /etc/letsencrypt/live/$$DOMAIN/fullchain.pem \
+                 -subj \"/CN=$$DOMAIN\";
              fi;
              while :; do sleep 12h; nginx -s reload; done &
              exec nginx -g 'daemon off;'"
-    ports:
+      ports:
       - "80:80"
       - "443:443"
     volumes:
