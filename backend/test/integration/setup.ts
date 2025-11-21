@@ -1,8 +1,8 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 export async function criarApp(): Promise<INestApplication> {
   const moduleFixture = await Test.createTestingModule({
@@ -10,11 +10,19 @@ export async function criarApp(): Promise<INestApplication> {
   }).compile();
 
   const app = moduleFixture.createNestApplication();
+  
+  // Adiciona validação global igual ao main.ts
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    transform: true,
+  }));
+
   return app;
 }
 
 export async function limparBancoDeDados(app: INestApplication): Promise<void> {
   const prisma = app.get(PrismaService);
+  // Ordem importa devido às foreign keys
   await prisma.itemPedido.deleteMany();
   await prisma.pedido.deleteMany();
   await prisma.mesa.deleteMany();

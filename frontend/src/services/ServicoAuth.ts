@@ -30,14 +30,14 @@ interface DadosCozinha { id: string; email: string; restauranteId: string }
 export const ServicoAuth = {
     async loginAdmin(email: string, senha: string) {
         return request<{ token: string; admin: DadosAdmin }>(
-            '/auth/admin/login',
+            '/auth/login',
             { email, senha },
         );
     },
 
     async registrarAdmin(nome: string, email: string, cpf: string, senha: string) {
         return request<{ token: string; admin: DadosAdmin }>(
-            '/auth/admin/register',
+            '/auth/register',
             { nome, email, cpf, senha },
         );
     },
