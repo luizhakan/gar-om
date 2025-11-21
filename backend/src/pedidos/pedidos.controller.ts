@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Get, Headers, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler'; // 1. Importar Throttler
 import { PedidosService } from './pedidos.service';
 import { CriarPedidoDto } from './dto/criar-pedido.dto';
 import { AtualizarStatusDto } from './dto/atualizar-status.dto';
@@ -18,6 +19,8 @@ export class PedidosController {
         return this.pedidosService.listar(usuario.restauranteId);
     }
 
+    @UseGuards(ThrottlerGuard) 
+    @Throttle({ default: { limit: 3, ttl: 60000 } }) // Máximo 3 pedidos por minuto por IP
     @Post()
     criar(@Body() dto: CriarPedidoDto, @Headers('x-restaurante-id') restauranteId?: string) {
         if (!restauranteId) {

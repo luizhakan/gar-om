@@ -3,10 +3,12 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import * as classValidator from 'class-validator';
 import * as classTransformer from 'class-transformer';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
+    app.use(helmet());
 
     const corsOrigins =
         process.env.CORS_ORIGIN?.split(',')
