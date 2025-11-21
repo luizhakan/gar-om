@@ -1,79 +1,45 @@
 # Checklist de Implementação - Garçom Ágil
 
-Este documento rastrea o progresso do desenvolvimento do MAV (Mínimo Ativo Viável).
-Marque com `[x]` as tarefas concluídas.
+Este documento rastreia o progresso do desenvolvimento do MAV (Mínimo Ativo Viável).
 
-## 1. Setup Inicial & Design System (Fundação) – Frontend
-- [x] **Limpeza do Vite**: Remover arquivos de exemplo (`App.css`, logos), limpar `App.tsx` e `index.css`.
-- [x] **Configuração de Estilos Globais**:
-    - [x] Criar `frontend/src/styles/tokens.css` (Cores, Fontes, Espaçamentos).
-    - [x] Criar `frontend/src/styles/global.css` (Reset CSS, Defaults).
-    - [x] Criar `frontend/src/styles/animacoes.css` (Micro-interações).
-    - [x] Importar estilos no `main.tsx`.
-- [x] **Configuração de Rotas**:
-    - [x] Instalar `react-router-dom`.
-    - [x] Configurar roteador básico em `frontend/src/routes.tsx` (ou direto no App).
-    - [x] Criar páginas "Placeholder" para `/admin`, `/cozinha` e `/mesa/:id`.
+## 1. Setup Inicial & Design System – Frontend
+- [x] **Limpeza do Vite**
+- [x] **Configuração de Estilos Globais**: Tokens, CSS Reset, Animações.
+- [x] **Configuração de Rotas**: React Router com Layouts.
 
-## 2. Domínio & Tipagem (O Coração) – Frontend
-- [x] **Definição de Tipos (`frontend/src/types/`)**:
-    - [x] `Produto.ts` (Interface de Produto).
-    - [x] `Categoria.ts` (Interface de Categoria).
-    - [x] `Pedido.ts` (Interface de Pedido e Itens).
-    - [x] `Mesa.ts` (Interface de Mesa).
-- [x] **Mock Data (Dados Falsos)**:
-    - [x] Criar `src/mocks/cardapio.ts` para testar a UI sem backend.
+## 2. Domínio & Tipagem – Frontend
+- [x] **Definição de Tipos**: Interfaces TypeScript completas.
+- [x] **Mock Data**: (Substituído por integração real).
 
 ## 3. Módulo 1: Painel Admin (Dono)
-- [x] **Layout Admin**: Criar `frontend/src/layouts/LayoutAdmin` (Sidebar + Área de Conteúdo).
-- [x] **Página de Login**: UI simples (sem integração real por enquanto).
-- [x] **Gestão de Produtos**:
-    - [x] Componente `CardProdutoAdmin`.
-    - [x] Formulário de Criação/Edição de Produto.
-    - [x] Listagem de Produtos.
-- [x] **Gestão de Mesas**:
-    - [x] Tela para definir número de mesas.
-    - [x] Gerador de QR Code (usar lib `qrcode.react` ou similar).
+- [x] **Auth**: Login e Registro integrados com API.
+- [x] **Gestão de Produtos**: CRUD completo + Pausa de disponibilidade.
+- [x] **Gestão de Mesas**: Criação, QR Code, Fechamento de Conta.
 
 ## 4. Módulo 2: Cliente (Cardápio Digital)
-- [x] **Layout Cliente**: Criar `frontend/src/layouts/LayoutCliente` (Header Fixo + Conteúdo).
-- [x] **Contexto de Carrinho**:
-    - [x] Criar `src/contexts/ContextoCarrinho.tsx`.
-    - [x] Implementar lógica de adicionar/remover/total.
-- [x] **Componentes de UI**:
-    - [x] `CardProdutoCliente` (Foto, Nome, Preço, Botão Adicionar).
-    - [x] `BotaoQuantidade` (+ / -).
-    - [x] `ModalObservacao` (Para "sem cebola").
-- [x] **Página do Cardápio**:
-    - [x] Listagem por Categorias (Scroll suave ou Abas).
-- [x] **Checkout / Carrinho**:
-    - [x] Botão flutuante "Ver Comanda".
-    - [x] Resumo do Pedido.
-    - [x] Botão "Enviar para Cozinha".
+- [x] **Carrinho**: Persistência no LocalStorage.
+- [x] **Página do Cardápio**: Listagem por categorias.
+- [x] **Checkout / Comanda**:
+    - [x] Envio de pedidos para API.
+    - [x] Visualização de pedidos anteriores (Comanda).
+    - [x] Solicitação de conta.
+    - [x] Edição de pedido (enquanto pendente).
 
 ## 5. Módulo 3: Cozinha (Produção)
-- [x] **Layout Cozinha**: Focado em visualização à distância (TV/Tablet).
-- [x] **Card de Pedido**:
-    - [x] Destaque para Número da Mesa.
-    - [x] Lista de itens com observações em vermelho/negrito.
-    - [x] Timer (há quanto tempo o pedido chegou).
-- [x] **Sistema de Alerta**:
-    - [x] Componente de Áudio (tocar som quando chegar pedido novo).
+- [x] **Layout Cozinha**: Otimizado para TV/Tablet.
+- [x] **Card de Pedido**: Ações de confirmar/finalizar.
+- [x] **Sistema de Alerta**: Som e visual pulsante para novos pedidos.
 
 ## 6. Backend (NestJS + Prisma)
-- [x] **Setup NestJS**: Estrutura básica, CORS e validação.
-- [x] **Prisma**: Schema com `produtos`, `categorias`, `pedidos`, `itens_pedido`, `mesas`.
-- [x] **Migrations/Seed**: Banco SQLite e script de seed.
-- [x] **Endpoints**:
-    - [x] `GET/POST/PATCH/DELETE /produtos`
-    - [x] `GET/POST /categorias`
-    - [x] `GET/PUT /mesas/configurar`
-    - [x] `GET/POST /pedidos`
-    - [x] `PATCH /pedidos/:id/status`
-    - [x] Toggle de disponibilidade de produto
-- [x] **Auth/Admin/Cozinha**: Cadastro/login admin (email/CPF/senha), login cozinha, vincular restaurante
+- [x] **Setup NestJS**: ValidationPipe, CORS, Prisma Service.
+- [x] **Banco de Dados**: Schema robusto, Migrations, Seed.
+- [x] **Endpoints**: Cobertura completa de CRUD e fluxos de negócio.
+- [x] **Testes**:
+    - [x] Unitários (Services).
+    - [x] Integração (Banco real em Docker).
 
 ## 7. Polimento & Entrega
-- [x] **Feedback Visual**: Toasts de sucesso/erro.
+- [x] **Feedback Visual**: Toasts, Loadings, Estados Vazios.
 - [x] **Tratamento de Erros**: Telas de 404 e Error Boundary.
-- [ ] **Build & Deploy**: Testar build de produção.
+- [x] **Design Premium**: Refatoração visual completa (Glassmorphism).
+- [ ] **Build & Deploy**: Configuração de produção.

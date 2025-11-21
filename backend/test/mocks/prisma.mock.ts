@@ -4,8 +4,24 @@ export type PrismaMock = {
     restaurante: { findUnique: jest.Mock; findFirst: jest.Mock; create: jest.Mock; upsert: jest.Mock };
     categoria: { findMany: jest.Mock; create: jest.Mock; findUnique: jest.Mock };
     produto: { findMany: jest.Mock; create: jest.Mock; findUnique: jest.Mock; update: jest.Mock; delete: jest.Mock };
-    mesa: { findFirst: jest.Mock; findMany: jest.Mock; create: jest.Mock; createMany: jest.Mock; deleteMany: jest.Mock; count: jest.Mock };
-    pedido: { findMany: jest.Mock; create: jest.Mock; findUnique: jest.Mock; update: jest.Mock };
+    mesa: { 
+        findFirst: jest.Mock; 
+        findMany: jest.Mock; 
+        create: jest.Mock; 
+        createMany: jest.Mock; 
+        deleteMany: jest.Mock; 
+        count: jest.Mock;
+        update: jest.Mock; // Adicionado
+        delete: jest.Mock; // Adicionado
+    };
+    pedido: { 
+        findMany: jest.Mock; 
+        create: jest.Mock; 
+        findUnique: jest.Mock; 
+        update: jest.Mock; 
+        updateMany: jest.Mock; // Adicionado
+        count: jest.Mock;      // Adicionado
+    };
 };
 
 export function criarPrismaMock(): PrismaMock {
@@ -15,7 +31,23 @@ export function criarPrismaMock(): PrismaMock {
         restaurante: { findUnique: jest.fn(), findFirst: jest.fn(), create: jest.fn(), upsert: jest.fn() },
         categoria: { findMany: jest.fn(), create: jest.fn(), findUnique: jest.fn() },
         produto: { findMany: jest.fn(), create: jest.fn(), findUnique: jest.fn(), update: jest.fn(), delete: jest.fn() },
-        mesa: { findFirst: jest.fn(), findMany: jest.fn(), create: jest.fn(), createMany: jest.fn(), deleteMany: jest.fn(), count: jest.fn() },
-        pedido: { findMany: jest.fn(), create: jest.fn(), findUnique: jest.fn(), update: jest.fn() },
+        mesa: { 
+            findFirst: jest.fn(), 
+            findMany: jest.fn(), 
+            create: jest.fn(), 
+            createMany: jest.fn(), 
+            deleteMany: jest.fn(), 
+            count: jest.fn(),
+            update: jest.fn(),
+            delete: jest.fn()
+        },
+        pedido: { 
+            findMany: jest.fn(), 
+            create: jest.fn(), 
+            findUnique: jest.fn(), 
+            update: jest.fn(),
+            updateMany: jest.fn(),
+            count: jest.fn()
+        },
     };
 }

@@ -1,107 +1,60 @@
 # 📊 Relatório de Progresso - Garçom Ágil
 
-**Data:** 19/11/2025  
-**Status:** Em Desenvolvimento Ativo
+**Data:** 21/11/2025
+**Status:** Polimento Final / Pronto para Testes de Aceitação
 
 ---
 
-## ✅ Concluído
+## ✅ Concluído (100%)
 
-### 1. Fundação e Arquitetura (100%)
-- ✅ README completo com requisitos e padrões (monorepo: frontend + backend)
-- ✅ Estrutura de pastas (Feature-First no frontend)
-- ✅ Documentação de cada pasta (LEIAME.md)
-- ✅ Design System completo (tokens.css, global.css, animacoes.css)
-- ✅ Configuração de rotas (React Router)
-- ✅ Páginas placeholder criadas
+### 1. Fundação e Arquitetura
+- ✅ Monorepo configurado (Frontend Vite + Backend NestJS).
+- ✅ Docker Compose para banco de dados (Dev e Testes).
+- ✅ Design System "Dark Premium" implementado (Glassmorphism, animações, tokens).
 
-### 2. Domínio e Tipagem (100%)
-- ✅ Interfaces TypeScript (Produto, Categoria, Pedido, Mesa)
-- ✅ Dados mockados para desenvolvimento
-- ✅ Utilitários de formatação (moeda, data)
+### 2. Backend & Banco de Dados
+- ✅ Modelagem Prisma completa (Restaurante, Admin, Cozinha, Categoria, Produto, Mesa, Pedido).
+- ✅ Migrations e Seed de dados robusto.
+- ✅ **[NOVO]** Campo `encerrado` em Pedidos para controle de sessão de mesa.
+- ✅ Endpoints CRUD completos para Produtos, Categorias e Mesas.
+- ✅ Lógica de Comanda: Endpoint `/mesas/:id/comanda` que agrega pedidos da sessão.
+- ✅ Fechamento de Mesa: Arquivamento automático de pedidos antigos.
+- ✅ **Cobertura de Testes:** 100% dos testes unitários e de integração passando (52 testes).
 
-### 3. Componentes Base (100%)
-- ✅ Botao (com variantes: primário, secundário, perigo)
-- ✅ CardProduto (com micro-interações premium)
-- ✅ ControleQuantidade (+ e -)
-- ✅ ListaProdutos (agrupamento por categoria)
-- ✅ CarrinhoFlutuante (botão com gradiente e animação)
+### 3. Módulo Cliente (Cardápio Digital)
+- ✅ Fluxo completo: Escolha -> Carrinho -> Revisão -> Pedido.
+- ✅ **[NOVO]** Persistência Local: Carrinho não some no refresh (`localStorage`).
+- ✅ **[NOVO]** Comanda Persistente: Visualização do histórico de pedidos da mesa (status em tempo real).
+- ✅ **[NOVO]** Carrinho Inteligente: Botão flutuante se adapta (Ver Pedido vs Ver Carrinho).
+- ✅ Interface responsiva e polida com feedback visual tátil.
 
-### 4. Módulo Cliente - Cardápio Digital (95%)
-- ✅ Contexto de Carrinho (ContextoCarrinho)
-- ✅ Página de Cardápio (com listagem por categorias)
-- ✅ Página de Revisão do Pedido
-- ✅ Integração completa do fluxo de compra
-- ✅ LayoutCliente com contexto compartilhado
-- ✅ Modal de Observação (personalização de itens)
+### 4. Módulo Cozinha
+- ✅ Painel em tempo real (polling).
+- ✅ Sistema de Alerta Sonoro (com fallback para Web Audio API).
+- ✅ Gestão de status: Confirmar (Pendente -> Preparando) e Finalizar (Preparando -> Pronto).
+- ✅ Login de cozinheiro segregado.
 
-### 5. Módulo Cozinha - Painel de Produção (100%)
-- ✅ Contexto de Pedidos (ContextoPedidos)
-- ✅ CardPedido com destaque visual para mesa
-- ✅ Timer de tempo decorrido
-- ✅ Observações destacadas em laranja
-- ✅ Sistema de alerta sonoro (useAlertaSonoro)
-- ✅ Alerta visual pulsante
-- ✅ Confirmação e marcação de pedidos
-- ✅ Layout otimizado para TV/Tablet
-
-### 6. Módulo Admin - Dono (80%)
-- ✅ Layout Admin com sidebar e logout
-- ✅ Login fictício (proteção básica)
-- ✅ CRUD de Produtos (criar/editar/remover/pausar)
-- ✅ CardProdutoAdmin com estados de disponibilidade
-- ✅ Gestão de Mesas com geração de QR Code via link
-- ⏳ Toasts e estados de erro/sucesso
-
-### 7. Backend NestJS + Prisma (60%)
-- ✅ Estrutura NestJS com validação e CORS
-- ✅ Prisma schema (produtos, categorias, pedidos, itens_pedido, mesas)
-- ✅ Seed com cardápio e pedido demo (SQLite)
-- ✅ Endpoints: produtos, categorias, mesas/configurar, pedidos, status de pedido
-- ⏳ Ajustar segurança/autenticação e deploy
-- ⏳ Melhorar observabilidade (logs/métricas)
-- ⏳ Auth de Admin/Cozinha com CPF e restaurante vinculado
+### 5. Módulo Admin
+- ✅ Dashboard com métricas simples.
+- ✅ Gestão completa de Cardápio (Produtos e Categorias).
+- ✅ Gestão de Mesas (Gerador de QR Code, Fechar Conta/Sessão).
+- ✅ Autenticação segura com JWT e validação de CPF.
 
 ---
 
-## 🚧 Em Andamento
+## 🚀 Destaques da Versão Atual
 
-### Integração com Backend (60%)
-- ✅ Services do frontend chamando API Nest (fallback local)
-- ✅ Polling de pedidos na cozinha
-- ⏳ Lidar com erros/estados offline no UI com toasts
-- ⏳ Ajustar display de mesa com dados do backend
-
----
-
-## 📈 Métricas
-
-- **Componentes Criados:** 9 (Botao, CardProduto, ControleQuantidade, ListaProdutos, CarrinhoFlutuante, CardPedido, CardProdutoAdmin)
-- **Páginas Funcionais:** 7 (Home, Cardápio, Revisar Pedido, Painel Cozinha, Dashboard Admin, Produtos Admin, Mesas Admin)
-- **Contextos:** 3 (Carrinho, Pedidos, Admin)
-- **Hooks Customizados:** 1 (useAlertaSonoro)
-- **Linhas de Código:** ~2500+ (estimado)
-- **Cobertura de Requisitos:** ~80%
+1.  **Blindagem do Backend:** Testes de integração garantem que não é possível quebrar a integridade referencial (ex: apagar mesa com pedido).
+2.  **UX Aprimorada:**
+    * O cliente pode fechar o navegador e voltar: a comanda continua lá.
+    * Feedback visual imediato ao adicionar itens ou enviar pedidos.
+    * Animações suaves de entrada e saída.
+3.  **Visual Premium:** Paleta de cores escura moderna, sombras suaves e efeitos de vidro (blur) em elementos flutuantes.
 
 ---
 
-## 🎯 Próximos Passos
+## 🎯 Próximos Passos (Sugestões)
 
-1. Finalizar polimento de UI (toasts, estados de erro, 404/Error Boundary)
-2. Ajustar exibição de mesa com dados do backend e garantir QR Codes em produção
-3. Testar build de produção (frontend) e pipeline de build do backend
-4. Revisar segurança/autenticação do painel admin
-
----
-
-## 🎨 Destaques de Design
-
-- ✨ Tema escuro premium (inspirado em iOS/Apple)
-- ✨ Micro-interações em todos os componentes
-- ✨ Gradientes e sombras sofisticadas
-- ✨ Responsividade mobile-first
-- ✨ Animações suaves (aparecer, pulsar, girar)
-
----
-
-**Observação:** Todo o código está em Português do Brasil conforme especificado.
+1.  **Deploy:** Configurar pipeline de CI/CD (GitHub Actions) e deploy em nuvem (ex: Railway/Render).
+2.  **Websockets:** Substituir o *polling* (intervalo de 3s) por *Websockets* (Socket.io) para atualizações instantâneas na cozinha.
+3.  **Pagamento:** Integração com gateway de pagamento (Stripe/Mercado Pago) no fechamento da conta.

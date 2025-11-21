@@ -1,67 +1,95 @@
-# Backend (NestJS + Prisma)
+# Backend (NestJS + Prisma) - Garçom Ágil
 
-API REST em NestJS que serve o app Garçom (Admin, Cozinha e Cliente). Toda a comunicação com o banco é feita via Prisma e as rotas expõem validação com `class-validator`.
+API REST robusta para gestão de restaurantes, pedidos e cardápios.
 
-## Rodando localmente
-1. `cd backend`
-2. `npm install`
-3. Copie `.env.example` para `.env` (aponta para o Postgres do docker-compose)
-4. `npm run prisma:generate`
-5. `npm run prisma:migrate`
-6. `npm run prisma:seed`
-7. `npm run start:dev` (http://localhost:3001)
+## Funcionalidades Principais
+- **Multi-tenancy:** Suporte a múltiplos restaurantes (isolamento via `restauranteId`).
+- **Gestão de Sessão:** Controle de mesas, comandas e histórico de pedidos.
+- **Segurança:** Autenticação JWT, Hash de senhas (Bcrypt) e Validação de CPF.
+- **Confiabilidade:** Testes automatizados (Unitários + Integração).
 
-## Testes
+## Endpoints Principais
 
-### Testes unitários (com mocks)
+### Mesas & Comanda
+- `GET /mesas` - Lista mesas do restaurante.
+- `POST /mesas/configurar` - Define o layout do salão (gera QR Codes).
+- `GET /mesas/:id/comanda` - **[NOVO]** Retorna todos os itens pedidos na sessão atual da mesa.
+- `PATCH /mesas/:id/solicitar-conta` - Sinaliza para o garçom que a mesa quer pagar.
+- `PATCH /mesas/:id/fechar` - Admin encerra a sessão, arquivando os pedidos e liberando a mesa.
+
+### Pedidos
+- `POST /pedidos` - Cria um novo pedido (status: pendente).
+- `GET /pedidos` - Lista pedidos para a cozinha (fila).
+- `PATCH /pedidos/:id/status` - Cozinha atualiza status (pendente -> preparando -> pronto).
+- `PATCH /pedidos/:id` - Cliente edita o pedido (apenas se ainda estiver pendente e dentro do prazo).
+
+### Produtos & Categorias
+- CRUD completo para gestão do cardápio.
+- Toggle de disponibilidade imediata (`PATCH /produtos/:id/disponibilidade`).
+
+## Como Rodar# Backend (NestJS + Prisma) - Garçom Ágil
+
+API REST robusta para gestão de restaurantes, pedidos e cardápios.
+
+## Funcionalidades Principais
+- **Multi-tenancy:** Suporte a múltiplos restaurantes (isolamento via `restauranteId`).
+- **Gestão de Sessão:** Controle de mesas, comandas e histórico de pedidos.
+- **Segurança:** Autenticação JWT, Hash de senhas (Bcrypt) e Validação de CPF.
+- **Confiabilidade:** Testes automatizados (Unitários + Integração).
+
+## Endpoints Principais
+
+### Mesas & Comanda
+- `GET /mesas` - Lista mesas do restaurante.
+- `POST /mesas/configurar` - Define o layout do salão (gera QR Codes).
+- `GET /mesas/:id/comanda` - **[NOVO]** Retorna todos os itens pedidos na sessão atual da mesa.
+- `PATCH /mesas/:id/solicitar-conta` - Sinaliza para o garçom que a mesa quer pagar.
+- `PATCH /mesas/:id/fechar` - Admin encerra a sessão, arquivando os pedidos e liberando a mesa.
+
+### Pedidos
+- `POST /pedidos` - Cria um novo pedido (status: pendente).
+- `GET /pedidos` - Lista pedidos para a cozinha (fila).
+- `PATCH /pedidos/:id/status` - Cozinha atualiza status (pendente -> preparando -> pronto).
+- `PATCH /pedidos/:id` - Cliente edita o pedido (apenas se ainda estiver pendente e dentro do prazo).
+
+### Produtos & Categorias
+- CRUD completo para gestão do cardápio.
+- Toggle de disponibilidade imediata (`PATCH /produtos/:id/disponibilidade`).
+
+## Como Rodar
+
+1. Subir o banco de dados:
+   ```bash
+   docker compose up -d db
+
+1. Subir o banco de dados:
+   ```bash
+   docker compose up -d db
+   Instalar dependências e configurar banco:
+
 ```bash
-npm run test:unit
+
+npm install
+npm run prisma:migrate
+npm run prisma:seed
 ```
-Usam mocks do Prisma, não validam constraints do banco.
+Iniciar servidor:
 
-### Testes de integração (com banco real)
 ```bash
-# Iniciar container do banco de testes
-docker-compose up -d db-test
 
-# Rodar migrations
-DATABASE_URL="postgresql://admin:admin@localhost:5433/garcom_test?schema=public" npx prisma migrate deploy
+npm run start:dev
 
-# Rodar testes
-npm run test:integration
-```
-Usam banco PostgreSQL real (porta 5433), pegam erros de foreign key, unique constraints, etc.
 
-### Todos os testes
-```bash
+Testes
+O projeto possui uma suíte de testes completa.
+
+Bash
+
+# Rodar todos os testes (Unitários + Integração)
 npm test
-```
 
-Veja mais detalhes em `test/integration/README.md`.
+# Rodar apenas testes unitários (rápidos)
+npm run test:unit
 
-## Stack e padrões
-- NestJS 11 com DTOs validados (ValidationPipe global)
-- Prisma Client (Postgres) com serviço global para injeção
-- `class-validator` + `class-transformer` em todos os DTOs
-- Testes unitários em Jest + ts-jest (mockando Prisma)
-- Testes de integração com banco PostgreSQL real
-- Código, docs e mensagens em PT-BR
-
-## Mapa rápido de pastas
-```
-src/
-├── auth/        # Cadastro/login de Admin e Cozinha
-├── categorias/  # CRUD simples de Categorias
-├── mesas/       # Configuração/listagem de mesas por restaurante
-├── pedidos/     # Fluxo de pedidos e mudança de status
-├── produtos/    # CRUD de produtos + toggle de disponibilidade
-└── prisma/      # Módulo global do Prisma (injeção do client)
-
-prisma/
-├── schema.prisma     # Modelo do domínio
-└── migrations/       # Histórico de migrações
-
-test/
-├── *.spec.ts         # Testes unitários (com mocks)
-└── integration/      # Testes de integração (banco real)
-```
+# Rodar apenas testes de integração (com banco real isolado)
+npm run test:integration

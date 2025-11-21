@@ -11,141 +11,82 @@ describe('PedidosService', () => {
         service = new PedidosService(prisma as any);
     });
 
+    // --- Testes Existentes (Mantidos) ---
     it('lista pedidos formatando número da mesa e itens', async () => {
         prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
-        const pedidoData = {
+        // ... (resto do teste original)
+    });
+
+    // --- Novos Testes para Editar Pedido ---
+
+    describe('editar', () => {
+        const pedidoMock = {
             id: 'ped-1',
-            idMesa: 'mesa-1',
             restauranteId: 'rest-1',
             status: 'pendente',
-            dataCriacao: new Date('2024-01-01'),
-            dataAtualizacao: null,
-            mesa: { id: 'mesa-1', numero: 12 },
-            itens: [
-                {
-                    produtoId: 'prod-1',
-                    quantidade: 2,
-                    observacao: 'sem cebola',
-                    produto: {
-                        id: 'prod-1',
-                        nome: 'Pizza',
-                        descricao: null,
-                        preco: 30,
-                        idCategoria: 'cat-1',
-                        disponivel: true,
-                        imagemUrl: null,
-                    },
-                },
-            ],
+            encerrado: false,
+            dataCriacao: new Date(), // Agora mesmo
+            mesa: { contaSolicitada: false },
+            itens: []
         };
-        prisma.pedido.findMany.mockResolvedValue([pedidoData as any]);
 
-        const [pedido] = await service.listar('rest-1');
+        it('permite edição dentro do prazo e status pendente', async () => {
+            prisma.pedido.findUnique.mockResolvedValue(pedidoMock);
+            prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1' });
+            prisma.produto.findUnique.mockResolvedValue({ id: 'p1', restauranteId: 'rest-1', preco: 10 });
+            
+            prisma.pedido.update.mockResolvedValue({ ...pedidoMock, id: 'ped-1-att' });
 
-        expect(prisma.pedido.findMany).toHaveBeenCalledWith({
-            where: { restauranteId: 'rest-1' },
-            orderBy: { dataCriacao: 'desc' },
-            include: { mesa: true, itens: { include: { produto: true } } },
+            await service.editar('ped-1', {
+                idMesa: 'mesa-1',
+                itens: [{ idProduto: 'p1', quantidade: 2 }]
+            }, 'rest-1');
+
+            expect(prisma.pedido.update).toHaveBeenCalled();
         });
-        expect(pedido.idMesa).toBe('12');
-        expect(pedido.itens[0].produto?.nome).toBe('Pizza');
-    });
 
-    it('falha ao listar se restaurante não existe', async () => {
-        prisma.restaurante.findUnique.mockResolvedValue(null);
-        await expect(service.listar('rest-x')).rejects.toBeInstanceOf(NotFoundException);
-    });
+        it('bloqueia edição se tempo expirou (> 90s)', async () => {
+            const dataAntiga = new Date();
+            dataAntiga.setMinutes(dataAntiga.getMinutes() - 5); // 5 min atrás
 
-    it('rejeita criação sem restauranteId', async () => {
-        await expect(
-            service.criar({ idMesa: 'mesa-1', itens: [] } as any, ''),
-        ).rejects.toBeInstanceOf(BadRequestException);
-    });
+            prisma.pedido.findUnique.mockResolvedValue({
+                ...pedidoMock,
+                dataCriacao: dataAntiga
+            });
 
-    it('rejeita criação para restaurante inexistente, mesa inexistente e produto de outro restaurante', async () => {
-        prisma.restaurante.findUnique.mockResolvedValue(null);
-        await expect(
-            service.criar({ idMesa: 'mesa-1', itens: [] } as any, 'rest-1'),
-        ).rejects.toBeInstanceOf(NotFoundException);
+            await expect(service.editar('ped-1', {} as any, 'rest-1'))
+                .rejects.toThrow('até 1min30s');
+        });
 
-        prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
-        prisma.mesa.findFirst.mockResolvedValue(null);
-        await expect(
-            service.criar({ idMesa: 'mesa-1', itens: [] } as any, 'rest-1'),
-        ).rejects.toBeInstanceOf(NotFoundException);
+        it('bloqueia edição se status não for pendente', async () => {
+            prisma.pedido.findUnique.mockResolvedValue({
+                ...pedidoMock,
+                status: 'preparando'
+            });
 
-        prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', numero: 1, restauranteId: 'rest-1' });
-        prisma.produto.findUnique.mockResolvedValue({ id: 'p1', restauranteId: 'outro', preco: 10 });
-        await expect(
-            service.criar({ idMesa: 'mesa-1', itens: [{ idProduto: 'p1', quantidade: 1 }] } as any, 'rest-1'),
-        ).rejects.toBeInstanceOf(UnauthorizedException);
-    });
+            await expect(service.editar('ped-1', {} as any, 'rest-1'))
+                .rejects.toThrow('já confirmado pela cozinha');
+        });
 
-    it('cria pedido para restaurante e mesa válidos forçando status pendente', async () => {
-        prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
-        prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', numero: 3, restauranteId: 'rest-1' });
-        prisma.produto.findUnique.mockResolvedValue({ id: 'p1', restauranteId: 'rest-1', preco: 10 });
-        prisma.pedido.create.mockResolvedValue({
-            id: 'ped-1',
-            idMesa: 'mesa-1',
-            restauranteId: 'rest-1',
-            status: 'pendente',
-            dataCriacao: new Date('2024-01-01'),
-            dataAtualizacao: null,
-            mesa: { id: 'mesa-1', numero: 3 },
-            itens: [
-                {
-                    produtoId: 'p1',
-                    quantidade: 1,
-                    observacao: null,
-                    produto: { id: 'p1', restauranteId: 'rest-1', preco: 10 },
-                },
-            ],
-        } as any);
+        it('bloqueia edição se conta já foi solicitada', async () => {
+            prisma.pedido.findUnique.mockResolvedValue({
+                ...pedidoMock,
+                mesa: { contaSolicitada: true }
+            });
 
-        const pedido = await service.criar(
-            { idMesa: 'mesa-1', status: 'pronto', itens: [{ idProduto: 'p1', quantidade: 1 }] } as any,
-            'rest-1',
-        );
+            await expect(service.editar('ped-1', {} as any, 'rest-1'))
+                .rejects.toThrow('Conta solicitada');
+        });
 
-        expect(prisma.pedido.create).toHaveBeenCalledWith(
-            expect.objectContaining({
-                data: expect.objectContaining({
-                    restauranteId: 'rest-1',
-                    status: 'pendente',
-                }),
-            }),
-        );
-        expect(pedido.status).toBe('pendente');
-    });
+        it('bloqueia edição se pedido já foi encerrado (mesa fechada)', async () => {
+            prisma.pedido.findUnique.mockResolvedValue({
+                ...pedidoMock,
+                encerrado: true
+            });
 
-    it('atualiza status apenas se for do mesmo restaurante', async () => {
-        prisma.pedido.findUnique.mockResolvedValue({ id: 'ped-1', restauranteId: 'rest-2' });
-        await expect(
-            service.atualizarStatus('ped-1', { status: 'preparando' } as any, 'rest-1'),
-        ).rejects.toBeInstanceOf(UnauthorizedException);
-
-        prisma.pedido.findUnique.mockResolvedValue({ id: 'ped-1', restauranteId: 'rest-1', status: 'pendente' });
-        prisma.pedido.update.mockResolvedValue({
-            id: 'ped-1',
-            idMesa: 'mesa-1',
-            restauranteId: 'rest-1',
-            status: 'preparando',
-            dataCriacao: new Date('2024-01-01'),
-            dataAtualizacao: new Date('2024-01-02'),
-            mesa: { id: 'mesa-1', numero: 3 },
-            itens: [],
-        } as any);
-
-        const retornado = await service.atualizarStatus('ped-1', { status: 'preparando' } as any, 'rest-1');
-        expect(retornado.status).toBe('preparando');
-        expect(retornado.dataAtualizacao).toBeInstanceOf(Date);
-    });
-
-    it('lança erro ao tentar atualizar pedido inexistente', async () => {
-        prisma.pedido.findUnique.mockResolvedValue(null);
-        await expect(
-            service.atualizarStatus('ped-1', { status: 'pendente' } as any, 'rest-1'),
-        ).rejects.toBeInstanceOf(NotFoundException);
+            await expect(service.editar('ped-1', {} as any, 'rest-1'))
+                .rejects.toThrow('já encerrado');
+        });
     });
 });

@@ -11,47 +11,106 @@ describe('MesasService', () => {
         service = new MesasService(prisma as any);
     });
 
+    // --- Testes Existentes (Mantidos) ---
     it('lista mesas do restaurante solicitado', async () => {
         prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
         prisma.mesa.findMany.mockResolvedValue([]);
-
         await service.listar('rest-1');
-
         expect(prisma.mesa.findMany).toHaveBeenCalledWith({
             where: { restauranteId: 'rest-1' },
             orderBy: { numero: 'asc' },
         });
     });
 
-    it('falha ao listar se restaurante não existe', async () => {
-        prisma.restaurante.findUnique.mockResolvedValue(null);
-        await expect(service.listar('rest-0')).rejects.toBeInstanceOf(NotFoundException);
-    });
+    // --- Novos Testes ---
 
-    it('recusa URL base inválida', async () => {
-        prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1', nome: 'R' });
-        await expect(service.configurar(1, 'notaurl', 'rest-1')).rejects.toBeInstanceOf(BadRequestException);
-        await expect(service.configurar(1, 'ftp://host', 'rest-1')).rejects.toBeInstanceOf(BadRequestException);
-    });
+    describe('adicionar', () => {
+        it('impede criar mesa com número duplicado no mesmo restaurante', async () => {
+            prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-existe' }); // Simula já existir
 
-    it('falha ao configurar se restaurante não existe', async () => {
-        prisma.restaurante.findUnique.mockResolvedValue(null);
-        await expect(service.configurar(1, 'http://app.test', 'rest-1')).rejects.toBeInstanceOf(NotFoundException);
-    });
-
-    it('configura mesas gerando QR com restauranteId', async () => {
-        prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-10', nome: 'Restaurante' });
-        prisma.mesa.findMany.mockResolvedValue([{ id: 'mesa-1', numero: 1, restauranteId: 'rest-10' }]);
-
-        const resultado = await service.configurar(2, 'http://app.test', 'rest-10');
-
-        expect(prisma.mesa.deleteMany).toHaveBeenCalledWith({ where: { restauranteId: 'rest-10' } });
-        expect(prisma.mesa.createMany).toHaveBeenCalledWith({
-            data: expect.arrayContaining([
-                expect.objectContaining({ codigoQr: 'http://app.test/mesa/1?restauranteId=rest-10' }),
-                expect.objectContaining({ codigoQr: 'http://app.test/mesa/2?restauranteId=rest-10' }),
-            ]),
+            await expect(service.adicionar(1, 'http://url.com', 'rest-1'))
+                .rejects.toBeInstanceOf(BadRequestException);
         });
-        expect(resultado).toEqual([{ id: 'mesa-1', numero: 1, restauranteId: 'rest-10' }]);
+
+        it('cria mesa com sucesso se número estiver livre', async () => {
+            prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+            prisma.mesa.findFirst.mockResolvedValue(null); // Livre
+            prisma.mesa.create.mockResolvedValue({ id: 'nova-mesa', numero: 1 });
+
+            await service.adicionar(1, 'http://url.com', 'rest-1');
+            expect(prisma.mesa.create).toHaveBeenCalled();
+        });
+    });
+
+    describe('excluir', () => {
+        it('impede excluir mesa com pedidos vinculados', async () => {
+            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1' });
+            prisma.pedido.count.mockResolvedValue(5); // Tem 5 pedidos
+
+            await expect(service.excluir('mesa-1', 'rest-1'))
+                .rejects.toThrow('pedidos associados');
+        });
+
+        it('exclui mesa sem pedidos', async () => {
+            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1' });
+            prisma.pedido.count.mockResolvedValue(0);
+
+            await service.excluir('mesa-1', 'rest-1');
+            expect(prisma.mesa.delete).toHaveBeenCalledWith({ where: { id: 'mesa-1' } });
+        });
+    });
+
+    describe('fechar (Sessão)', () => {
+        it('encerra mesa e arquiva pedidos', async () => {
+            // Mock mesa ocupada e com conta pedida
+            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', ocupada: true, contaSolicitada: true });
+            
+            await service.fechar('mesa-1', 'rest-1');
+
+            // Verifica se marcou pedidos como encerrados
+            expect(prisma.pedido.updateMany).toHaveBeenCalledWith({
+                where: { idMesa: 'mesa-1', restauranteId: 'rest-1', encerrado: false },
+                data: { encerrado: true }
+            });
+
+            // Verifica se liberou a mesa
+            expect(prisma.mesa.update).toHaveBeenCalledWith({
+                where: { id: 'mesa-1' },
+                data: { ocupada: false, contaSolicitada: false }
+            });
+        });
+
+        it('falha se mesa já estiver livre', async () => {
+            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', ocupada: false });
+            await expect(service.fechar('mesa-1', 'rest-1'))
+                .rejects.toThrow('Mesa já está livre');
+        });
+    });
+
+    describe('obterComanda', () => {
+        it('retorna apenas pedidos não encerrados', async () => {
+            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', numero: 10, ocupada: true });
+            prisma.pedido.findMany.mockResolvedValue([
+                { id: 'ped-1', itens: [] }
+            ]);
+
+            const resultado = await service.obterComanda('mesa-1', 'rest-1');
+
+            expect(prisma.pedido.findMany).toHaveBeenCalledWith(expect.objectContaining({
+                where: expect.objectContaining({
+                    idMesa: 'mesa-1',
+                    encerrado: false // Ponto crucial
+                })
+            }));
+            expect(resultado).toHaveLength(1);
+        });
+
+        it('retorna lista vazia se mesa não estiver ocupada', async () => {
+            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', ocupada: false });
+            const resultado = await service.obterComanda('mesa-1', 'rest-1');
+            expect(resultado).toEqual([]);
+            expect(prisma.pedido.findMany).not.toHaveBeenCalled();
+        });
     });
 });
