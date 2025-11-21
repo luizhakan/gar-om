@@ -1,7 +1,14 @@
 import type { Pedido, StatusPedido } from '../types/Pedido';
 import { gerarIdAleatorio } from '../utils/formatadores';
 import { env } from '../config/env';
-import { obterRestauranteId, obterToken } from '../utils/sessao';
+import { ServicoAuth } from './ServicoAuth';
+import {
+    atualizarTokensSessao,
+    limparSessao,
+    obterRefreshToken,
+    obterRestauranteId,
+    obterToken
+} from '../utils/sessao';
 
 interface PedidoApi {
     id: string;
@@ -17,6 +24,7 @@ interface ItemPedidoApi {
     produtoId: string;
     quantidade: number;
     observacao?: string | null;
+    precoUnitario?: number;
     produto?: {
         id: string;
         nome: string;
@@ -57,13 +65,33 @@ async function requestStatusPublico(idPedido: string): Promise<PedidoApi> {
     return JSON.parse(texto) as PedidoApi;
 }
 
-async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
+async function tentarRenovarToken(): Promise<string | undefined> {
+    const refreshToken = obterRefreshToken();
+    if (!refreshToken) return undefined;
+
+    try {
+        const resp = await ServicoAuth.refresh(refreshToken);
+        atualizarTokensSessao(resp.token, resp.refreshToken);
+        return resp.token;
+    } catch (erro) {
+        console.error('[ServicoPedidos] Falha ao renovar token', erro);
+        limparSessao();
+        return undefined;
+    }
+}
+
+async function requestApi<T>(
+    path: string,
+    init?: RequestInit,
+    tokenOverride?: string,
+    jaTentouRefresh = false,
+): Promise<T> {
     if (!usarApi) {
         throw new Error('API não configurada');
     }
 
     const restauranteId = obterRestauranteId();
-    const token = obterToken();
+    const token = tokenOverride ?? obterToken();
     if ((restauranteId ?? '') === '') {
         throw new Error('Sessão de restaurante não definida');
     }
@@ -78,6 +106,15 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     });
 
     const texto = await resposta.text();
+
+    if (resposta.status === 401 && !jaTentouRefresh) {
+        const novoToken = await tentarRenovarToken();
+        if (novoToken) {
+            return requestApi<T>(path, init, novoToken, true);
+        }
+        limparSessao();
+        throw new Error(texto || 'Sessão expirada, faça login novamente.');
+    }
 
     if (!resposta.ok) {
         throw new Error(texto || 'Falha na requisição de pedidos');
@@ -143,9 +180,9 @@ function mapearPedidoApi(payload: PedidoApi): Pedido {
 }
 
 export const ServicoPedidos = {
-    async listar(): Promise<Pedido[]> {
+    async listar(token?: string): Promise<Pedido[]> {
         if (usarApi) {
-            const data = await requestApi<PedidoApi[]>('/pedidos');
+            const data = await requestApi<PedidoApi[]>('/pedidos', undefined, token);
             return data.map(mapearPedidoApi);
         }
 

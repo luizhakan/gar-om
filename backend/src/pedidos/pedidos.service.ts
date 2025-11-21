@@ -122,7 +122,8 @@ export class PedidosService {
         });
 
         // Marca mesa como ocupada se necessário
-        if (!mesa.ocupada) {
+        const mesaFicouOcupada = !mesa.ocupada;
+        if (mesaFicouOcupada) {
             await this.prisma.mesa.update({
                 where: { id: mesa.id },
                 data: { ocupada: true, contaSolicitada: false },
@@ -131,7 +132,15 @@ export class PedidosService {
 
         const pedidoFormatado = this.formatarPedido(pedidoCriado);
 
-        this.pedidosGateway.emitirNovoPedido(restauranteId, pedidoFormatado); //
+        this.pedidosGateway.emitirNovoPedido(restauranteId, pedidoFormatado);
+        if (mesaFicouOcupada) {
+            this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesa.id, {
+                idMesa: mesa.id,
+                ocupada: true,
+                contaSolicitada: false,
+                numeroMesa: mesa.numero,
+            });
+        }
         return pedidoFormatado;
     }
 

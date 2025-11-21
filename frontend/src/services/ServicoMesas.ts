@@ -1,7 +1,6 @@
 import type { Mesa } from '../types/Mesa';
 import type { Pedido } from '../types/Pedido';
-import { env } from '../config/env';
-import { obterRestauranteId, obterToken } from '../utils/sessao';
+import { requestAutenticado } from './requestAutenticado';
 
 interface MesaApi {
     id: string;
@@ -10,55 +9,6 @@ interface MesaApi {
     ocupada: boolean;
     contaSolicitada?: boolean;
     restauranteId: string;
-}
-
-const API_BASE = env.apiBaseUrl.replace(/\/$/, '');
-
-async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
-    const token = obterToken();
-    const restauranteId = obterRestauranteId();
-    
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-    };
-
-    if (token) {
-        headers.Authorization = `Bearer ${token}`;
-    }
-    if ((restauranteId ?? '') !== '') {
-        headers['x-restaurante-id'] = restauranteId ?? '';
-    }
-
-    const resposta = await fetch(`${API_BASE}${path}`, {
-        headers,
-        ...init,
-    });
-
-    const textoResposta = await resposta.text();
-
-    if (!resposta.ok) {
-        // Corpo pode ser vazio ou JSON com mensagem
-        if ((textoResposta ?? '') !== '') {
-            try {
-                const parsed = JSON.parse(textoResposta) as { message?: string };
-                throw new Error(parsed.message || textoResposta || 'Falha na requisição de mesas');
-            } catch {
-                throw new Error(textoResposta || 'Falha na requisição de mesas');
-            }
-        }
-        throw new Error('Falha na requisição de mesas');
-    }
-
-    if ((textoResposta ?? '') === '') {
-        // Algumas rotas (DELETE) podem não retornar corpo
-        return undefined as T;
-    }
-
-    try {
-        return JSON.parse(textoResposta) as T;
-    } catch {
-        throw new Error('Resposta inválida ao processar mesas');
-    }
 }
 
 function mapearMesaApi(payload: MesaApi): Mesa {
@@ -74,12 +24,16 @@ function mapearMesaApi(payload: MesaApi): Mesa {
 
 export const ServicoMesas = {
     async listar(): Promise<Mesa[]> {
-        const data = await requestApi<MesaApi[]>('/mesas');
+        const data = await requestAutenticado<MesaApi[]>('/mesas');
         return data.map(mapearMesaApi);
     },
 
     async obterStatusPublico(idMesa: string): Promise<{ ocupada: boolean; contaSolicitada: boolean; }> {
-        const data = await requestApi<{ ocupada: boolean; contaSolicitada?: boolean; }>(`/mesas/${idMesa}/status-publico`);
+        const data = await requestAutenticado<{ ocupada: boolean; contaSolicitada?: boolean; }>(
+            `/mesas/${idMesa}/status-publico`,
+            undefined,
+            { includeContentType: false },
+        );
         return {
             ocupada: data.ocupada,
             contaSolicitada: data.contaSolicitada ?? false,
@@ -88,11 +42,11 @@ export const ServicoMesas = {
 
     async obterComanda(idMesa: string): Promise<Pedido[]> {
         // Retorna lista de pedidos da sessão atual (backend filtra por mesa ocupada + 24h)
-        return await requestApi<Pedido[]>(`/mesas/${idMesa}/comanda`);
+        return await requestAutenticado<Pedido[]>(`/mesas/${idMesa}/comanda`, undefined, { includeContentType: false });
     },
 
     async adicionarMesa(numero: number): Promise<Mesa> {
-        const data = await requestApi<MesaApi>('/mesas', {
+        const data = await requestAutenticado<MesaApi>('/mesas', {
             method: 'POST',
             body: JSON.stringify({
                 numero,
@@ -103,7 +57,7 @@ export const ServicoMesas = {
     },
 
     async configurarMesas(total: number): Promise<Mesa[]> {
-        const data = await requestApi<MesaApi[]>('/mesas/configurar', {
+        const data = await requestAutenticado<MesaApi[]>('/mesas/configurar', {
             method: 'POST',
             body: JSON.stringify({
                 total,
@@ -114,34 +68,19 @@ export const ServicoMesas = {
     },
 
     async excluirMesa(id: string): Promise<void> {
-        await requestApi(`/mesas/${id}`, {
+        await requestAutenticado(`/mesas/${id}`, {
             method: 'DELETE',
         });
     },
 
     async fecharMesa(id: string): Promise<Mesa> {
-        const data = await requestApi<MesaApi>(`/mesas/${id}/fechar`, {
+        const data = await requestAutenticado<MesaApi>(`/mesas/${id}/fechar`, {
             method: 'PATCH',
         });
         return mapearMesaApi(data);
     },
 
     async solicitarConta(idMesa: string): Promise<void> {
-        const restauranteId = obterRestauranteId();
-        if ((restauranteId ?? '') === '') {
-            throw new Error('Restaurante não definido na sessão');
-        }
-        await fetch(`${API_BASE}/mesas/${idMesa}/solicitar-conta`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-restaurante-id': restauranteId ?? '',
-            },
-        }).then(async resposta => {
-            if (!resposta.ok) {
-                const texto = await resposta.text();
-                throw new Error(texto || 'Falha ao solicitar conta');
-            }
-        });
+        await requestAutenticado(`/mesas/${idMesa}/solicitar-conta`, { method: 'PATCH' });
     },
 };

@@ -29,23 +29,30 @@ interface DadosCozinha { id: string; email: string; restauranteId: string }
 
 export const ServicoAuth = {
     async loginAdmin(email: string, senha: string) {
-        return request<{ token: string; admin: DadosAdmin }>(
+        return request<{ token: string; refreshToken: string; admin: DadosAdmin }>(
             '/auth/login',
             { email, senha },
         );
     },
 
     async registrarAdmin(nome: string, email: string, cpf: string, senha: string) {
-        return request<{ token: string; admin: DadosAdmin }>(
+        return request<{ token: string; refreshToken: string; admin: DadosAdmin }>(
             '/auth/register',
             { nome, email, cpf, senha },
         );
     },
 
     async loginCozinha(email: string, senha: string) {
-        return request<{ token: string; cozinha: DadosCozinha }>(
+        return request<{ token: string; refreshToken: string; cozinha: DadosCozinha }>(
             '/auth/cozinha/login',
             { email, senha },
+        );
+    },
+
+    async refresh(refreshToken: string) {
+        return request<{ token: string; refreshToken: string }>(
+            '/auth/refresh',
+            { refreshToken },
         );
     },
 };

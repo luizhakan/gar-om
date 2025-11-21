@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ProvedorPedidos } from '../../contexts/ContextoPedidos';
 import { usePedidos } from '../../hooks/usePedidos';
 import { CardPedido } from '../../components/CardPedido';
@@ -13,7 +13,6 @@ function ConteudoPainelCozinha() {
         pedidosPendentes,
         confirmarPedido,
         marcarComoPronto,
-        novoPedidoRecebido,
         limparNotificacao
     } = usePedidos();
 
@@ -50,7 +49,13 @@ function ConteudoPainelCozinha() {
     const handleLoginCozinha = async () => {
         try {
             const resp = await ServicoAuth.loginCozinha(email, senha);
-            definirSessao(resp.cozinha.restauranteId, 'cozinha', resp.token, resp.cozinha.email);
+            definirSessao(
+                resp.cozinha.restauranteId,
+                'cozinha',
+                resp.token,
+                resp.cozinha.email,
+                resp.refreshToken,
+            );
             setRestauranteId(resp.cozinha.restauranteId);
             setToken(resp.token);
             setErroLogin('');

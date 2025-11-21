@@ -1,6 +1,7 @@
 import type { Categoria } from '../types/Categoria';
 import { env } from '../config/env';
-import { obterRestauranteId, obterToken } from '../utils/sessao';
+import { requestAutenticado } from './requestAutenticado';
+import { obterRestauranteId } from '../utils/sessao';
 
 interface CategoriaApi {
     id: string;
@@ -23,39 +24,8 @@ function garantirRestauranteId() {
 
 async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     garantirBase();
-    const restauranteId = garantirRestauranteId();
-    const token = obterToken();
-
-    const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'x-restaurante-id': restauranteId,
-    };
-
-    if ((token ?? '') !== '') {
-        headers.Authorization = `Bearer ${token}`;
-    }
-
-    const resposta = await fetch(`${API_BASE}${path}`, {
-        headers,
-        ...init,
-    });
-
-    const texto = await resposta.text();
-
-    if (!resposta.ok) {
-        try {
-            const parsed = JSON.parse(texto) as { message?: string };
-            throw new Error(parsed.message || texto || 'Falha na requisição de categorias');
-        } catch {
-            throw new Error(texto || 'Falha na requisição de categorias');
-        }
-    }
-
-    if ((texto ?? '') === '') {
-        return undefined as T;
-    }
-
-    return JSON.parse(texto) as T;
+    garantirRestauranteId();
+    return requestAutenticado<T>(path, init);
 }
 
 export const ServicoCategorias = {

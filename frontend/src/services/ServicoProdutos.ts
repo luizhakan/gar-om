@@ -1,6 +1,6 @@
 import type { Produto } from '../types/Produto';
 import { env } from '../config/env';
-import { obterRestauranteId, obterToken } from '../utils/sessao';
+import { requestAutenticado } from './requestAutenticado';
 
 interface ProdutoApi {
     id: string;
@@ -22,28 +22,7 @@ async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
     if (!usarApi) {
         throw new Error('API não configurada');
     }
-
-    const restauranteId = obterRestauranteId();
-    if ((restauranteId ?? '') === '') {
-        throw new Error('Restaurante não definido na sessão');
-    }
-    const token = obterToken();
-
-    const resposta = await fetch(`${API_BASE}${path}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-restaurante-id': restauranteId ?? '',
-            ...((token ?? '') !== '' ? { Authorization: `Bearer ${token ?? ''}` } : {}),
-        },
-        ...init,
-    });
-
-    if (!resposta.ok) {
-        const texto = await resposta.text();
-        throw new Error(texto || 'Falha na requisição de produtos');
-    }
-
-    return resposta.json() as Promise<T>;
+    return requestAutenticado<T>(path, init);
 }
 
 function mapearProdutoApi(payload: ProdutoApi): Produto {

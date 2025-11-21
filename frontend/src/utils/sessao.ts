@@ -4,6 +4,7 @@ interface DadosSessao {
     restauranteId: string;
     tipo: TipoSessao;
     token?: string;
+    refreshToken?: string;
     email?: string;
 }
 
@@ -36,9 +37,15 @@ function lerSessaoCliente(): DadosSessao | undefined {
     }
 }
 
-export function definirSessao(restauranteId: string, tipo: TipoSessao, token?: string, email?: string) {
+export function definirSessao(
+    restauranteId: string,
+    tipo: TipoSessao,
+    token?: string,
+    email?: string,
+    refreshToken?: string,
+) {
     if (typeof window === 'undefined') return;
-    const dados: DadosSessao = { restauranteId, tipo, token, email };
+    const dados: DadosSessao = { restauranteId, tipo, token, email, refreshToken };
 
     if (tipo === 'cliente') {
         window.localStorage.setItem(CHAVE_SESSAO_CLIENTE, JSON.stringify({ restauranteId, tipo }));
@@ -70,4 +77,23 @@ export function obterToken(): string | undefined {
 
 export function obterEmailSessao(): string | undefined {
     return lerSessao()?.email;
+}
+
+export function obterRefreshToken(): string | undefined {
+    return lerSessao()?.refreshToken;
+}
+
+export function atualizarTokensSessao(token?: string, refreshToken?: string) {
+    if (typeof window === 'undefined') return;
+    const atual = lerSessao();
+    if (!atual) return;
+
+    const atualizado: DadosSessao = {
+        ...atual,
+        ...(token !== undefined ? { token } : {}),
+        ...(refreshToken !== undefined ? { refreshToken } : {}),
+    };
+
+    window.localStorage.setItem(CHAVE_SESSAO, JSON.stringify(atualizado));
+    window.dispatchEvent(new Event('sessao-atualizada'));
 }

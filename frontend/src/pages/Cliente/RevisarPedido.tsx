@@ -8,7 +8,7 @@ import { ServicoPedidos } from '../../services/ServicoPedidos';
 import { ServicoMesas } from '../../services/ServicoMesas';
 import { definirSessao } from '../../utils/sessao';
 import styles from './RevisarPedido.module.css';
-import type { ItemPedido, Pedido } from '../../types/Pedido';
+import type { Pedido } from '../../types/Pedido';
 import { ServicoRealtime } from '../../services/ServicoRealtime'; // <-- NOVO
 
 // Constantes

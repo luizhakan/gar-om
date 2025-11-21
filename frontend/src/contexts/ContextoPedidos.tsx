@@ -4,7 +4,7 @@ import type { Pedido } from '../types/Pedido';
 import { ServicoPedidos } from '../services/ServicoPedidos';
 import { ContextoPedidos } from './pedidos-context';
 import { ServicoRealtime } from '../services/ServicoRealtime';
-import { obterTipoSessao } from '../utils/sessao';
+import { obterTipoSessao, obterToken } from '../utils/sessao';
 
 interface ProvedorPedidosProps {
     children: ReactNode;
@@ -23,9 +23,9 @@ export function ProvedorPedidos({ children }: ProvedorPedidosProps) {
 
 useEffect(() => {
     // Carrega o estado inicial e configura o listener WS
-    const carregarEstadoInicial = async () => {
+    const carregarEstadoInicial = async (token?: string) => {
         try {
-            const lista = await ServicoPedidos.listar();
+            const lista = await ServicoPedidos.listar(token);
             setPedidos(lista);
         } catch (erro) {
             console.error('[ContextoPedidos] Erro ao carregar inicial', erro);
@@ -36,8 +36,10 @@ useEffect(() => {
     const isRealtimeUser = obterTipoSessao() === 'admin' || obterTipoSessao() === 'cozinha';
 
     if (isRealtimeUser) {
+        const initialToken = obterToken();
         const socket = ServicoRealtime.conectar();
-        void carregarEstadoInicial(); // Inicia com a lista completa
+        
+        void carregarEstadoInicial(initialToken); // Inicia com a lista completa
 
         // Handlers para eventos de WS
         const onRealtimeUpdate = (payload: Pedido) => {
@@ -74,7 +76,7 @@ useEffect(() => {
     } else {
         // Lógica de fallback original (polling/storage) para clientes anônimos
         const descadastrar = ServicoPedidos.assinarMudancas((novosPedidos) => {
-             // ... lógica original para detecção de mudança ...
+            setPedidos(novosPedidos);
         });
         return () => { descadastrar(); };
     }
@@ -129,4 +131,3 @@ useEffect(() => {
         </ContextoPedidos.Provider>
     );
 }
-

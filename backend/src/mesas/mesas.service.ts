@@ -166,10 +166,11 @@ export class MesasService {
             data: { contaSolicitada: true, ocupada: true },
         });
 
-        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, id, { 
-            idMesa: id, 
+        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesa.id, { 
+            idMesa: mesa.id, 
             ocupada: mesaAtualizada.ocupada,
             contaSolicitada: mesaAtualizada.contaSolicitada,
+            numeroMesa: mesa.numero,
         });
 
         return mesaAtualizada;
@@ -202,10 +203,11 @@ export class MesasService {
             },
         });
 
-        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, id, { 
-            idMesa: id, 
+        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesa.id, { 
+            idMesa: mesa.id, 
             ocupada: mesaAtualizada.ocupada,
             contaSolicitada: mesaAtualizada.contaSolicitada,
+            numeroMesa: mesa.numero,
         });
 
         return mesaAtualizada;

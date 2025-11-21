@@ -6,6 +6,7 @@ import type { Mesa } from '../types/Mesa';
 import { ServicoProdutos, type ProdutoNovo } from '../services/ServicoProdutos';
 import { ServicoMesas } from '../services/ServicoMesas';
 import { ServicoAuth } from '../services/ServicoAuth';
+import { ServicoRealtime } from '../services/ServicoRealtime';
 import { definirSessao, limparSessao, obterEmailSessao, obterRestauranteId, obterTipoSessao, obterToken } from '../utils/sessao';
 import { useToast } from './ContextoToast';
 import { ServicoCategorias } from '../services/ServicoCategorias';
@@ -70,13 +71,45 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
             });
     }, [restauranteId, notificar]);
 
+    useEffect(() => {
+        if (!autenticado || restauranteId === undefined) return;
+        const socket = ServicoRealtime.conectar();
+
+        const onMesaAtualizada = (
+            payload: { idMesa: string; ocupada: boolean; contaSolicitada?: boolean; numeroMesa?: number }
+        ) => {
+            setMesas(lista => {
+                const mesaAnterior = lista.find(m => m.id === payload.idMesa);
+                const contaAntes = mesaAnterior?.contaSolicitada ?? false;
+                const contaAgora = payload.contaSolicitada ?? false;
+
+                if (contaAgora && !contaAntes) {
+                    const numeroMesa = payload.numeroMesa ?? mesaAnterior?.numero;
+                    const descricaoMesa = numeroMesa ? `Mesa ${numeroMesa}` : 'Uma mesa';
+                    notificar(`${descricaoMesa} solicitou a conta`, 'info');
+                }
+
+                return lista.map(m => (
+                    m.id === payload.idMesa
+                        ? { ...m, ocupada: payload.ocupada, contaSolicitada: payload.contaSolicitada ?? false }
+                        : m
+                ));
+            });
+        };
+
+        socket.on('mesa-status-atualizado', onMesaAtualizada);
+        return () => {
+            socket.off('mesa-status-atualizado', onMesaAtualizada);
+        };
+    }, [autenticado, restauranteId, notificar]);
+
     async function login(email: string, senha: string) {
         try {
             const resp = await ServicoAuth.loginAdmin(email, senha);
             setAutenticado(true);
             setRestauranteId(resp.admin.restauranteId);
             setAdminEmail(resp.admin.email);
-            definirSessao(resp.admin.restauranteId, 'admin', resp.token, resp.admin.email);
+            definirSessao(resp.admin.restauranteId, 'admin', resp.token, resp.admin.email, resp.refreshToken);
             notificar(`Bem-vindo, ${resp.admin.nome}`, 'sucesso');
         } catch (erro) {
             console.error('[ContextoAdmin] Falha no login', erro);
