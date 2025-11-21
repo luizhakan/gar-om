@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AdminRegisterDto, cpfValidoOuErro } from './dto/admin-register.dto';
 import { LoginDto } from './dto/login.dto';
 import { gerarToken } from './token.util';
+import { AlterarSenhaAdminDto } from './dto/alterar-senha-admin.dto';
 
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutos
 const REFRESH_TTL_DAYS = 14; // expiração absoluta
@@ -148,6 +149,26 @@ export class AuthService {
             refreshToken: tokens.refreshToken,
             master: { id: master.id, nome: master.nome, email: master.email },
         };
+    }
+
+    async alterarSenhaAdmin(adminId: string, dto: AlterarSenhaAdminDto) {
+        const admin = await this.prisma.admin.findUnique({ where: { id: adminId } });
+        if (!admin) throw new NotFoundException('Admin não encontrado');
+
+        const senhaConfere = await bcrypt.compare(dto.senhaAtual, admin.senhaHash);
+        if (!senhaConfere) throw new UnauthorizedException('Senha atual incorreta');
+
+        const novaHash = await bcrypt.hash(dto.novaSenha, 10);
+
+        await this.prisma.admin.update({
+            where: { id: admin.id },
+            data: { senhaHash: novaHash },
+        });
+
+        // invalida refresh tokens anteriores desse admin
+        await this.prisma.refreshToken.deleteMany({ where: { adminId: admin.id } });
+
+        return { ok: true };
     }
     
     async refresh(refreshTokenRecebido: string) {

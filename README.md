@@ -23,20 +23,16 @@ Este repositório agora está organizado em duas pastas:
 8. `npm run start:dev` (API em http://localhost:3001)
 
 ### Stack Docker completa (db + backend + frontend + nginx + certbot)
-1. Ajuste `AUTH_SECRET` e domínio/email no `docker-compose.yml` (garcomagil.com está configurado como padrão).
-2. Gere o certificado inicialmente (DNS do domínio deve apontar para o host):
-   ```bash
-   docker compose run --rm certbot certonly --webroot -w /var/www/certbot \
-     -d garcomagil.com --email seu-email@dominio.com --agree-tos --no-eff-email
-   ```
-   Depois disso, reinicie o nginx: `docker compose restart nginx`
+1. Gere o `.env` com segredo aleatório: `./scripts/setup-env.sh` (usa openssl).
+2. Aponte o DNS de `garcomagil.com` para o host.
 3. Suba tudo: `docker compose up -d`
+   - Certbot solicitará o certificado se ainda não existir e roda renovação a cada 12h.
+   - Nginx recarrega a cada 12h para carregar certificados renovados.
    - Frontend: `frontend` (porta interna 80)
    - Backend: `backend` (porta 3001)
    - Banco: `db` (porta 5432)
    - Nginx: expõe 80/443 para o domínio e faz proxy para frontend/backend
-   - Certbot: roda renovação a cada 12h
-4. Se quiser usar sem HTTPS, suba apenas nginx + app e pule o passso do certbot (ou crie um cert self-signed nos volumes).
+4. Se quiser usar sem HTTPS, suba apenas nginx + app e pule o passo do certbot (ou crie um cert self-signed nos volumes).
 
 ### Testes
 
@@ -79,7 +75,7 @@ Veja mais detalhes em `backend/test/integration/README.md`.
   - `POST /auth/admin/register` (nome, email, cpf, senha) — cria admin e restaurante vinculado (CPF validado pelo algoritmo oficial)
   - `POST /auth/admin/login` (email, senha) — retorna admin + restauranteId
   - `POST /auth/cozinha/login` (email, senha) — retorna usuário de cozinha + restauranteId
-  - `POST /auth/master/login` (email, senha) — login do painel master (seed demo: founder@garcom.com / supermaster123)
+  - `POST /auth/master/login` (email, senha) — login do painel master (seed demo: founder@garcom.com / senha123)
 - Master (apenas para usuários com role `master`):
   - `GET /master/restaurantes` — visão geral de trials, status e contatos
   - `PATCH /master/restaurantes/:id` — atualiza status de assinatura/trial ou dados de cobrança
@@ -89,4 +85,4 @@ Veja mais detalhes em `backend/test/integration/README.md`.
 - Se a API não estiver rodando, os services do frontend usam fallback em `localStorage` + mocks.
 - As requisições enviam `x-restaurante-id` (quando logado) para isolar dados de cada restaurante.
 - Testes de integração usam banco PostgreSQL real (porta 5433) para validar constraints de banco.
-- Cada novo admin já nasce com um restaurante em `trial` de 14 dias (campos trialStart/trialEnd e status `trialing`), pronto para ativar cobrança via Mercado Pago depois.
+- Cada novo admin já nasce com um restaurante em `trial` de 14 dias (campos trialStart/trialEnd e status `trialing`), pronto para ativar cobrança via Mercado Pago depois. O master seed usa senha padrão `senha123` — altere após logar. Admin (caixa) define a própria senha no cadastro e pode trocá-la via `/auth/password` (JWT + role admin). O admin seed demo usa `admin456`.

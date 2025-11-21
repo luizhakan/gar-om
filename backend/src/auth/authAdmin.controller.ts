@@ -3,6 +3,10 @@ import { AuthService } from './auth.service';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler'; // Importar
 import { AdminRegisterDto } from './dto/admin-register.dto';
 import { LoginDto } from './dto/login.dto';
+import { AlterarSenhaAdminDto } from './dto/alterar-senha-admin.dto';
+import { AuthGuard, Roles } from './auth.guard';
+import { UsuarioAutenticado } from './auth-user.decorator';
+import type { AuthTokenPayload } from './token.util';
 
 @Controller('auth')
 export class AuthAdminController {
@@ -23,5 +27,15 @@ export class AuthAdminController {
     @Post('refresh')
     async refresh(@Body('refreshToken') refreshToken: string) {
         return this.authService.refresh(refreshToken);
+    }
+
+    @UseGuards(AuthGuard)
+    @Roles('admin')
+    @Post('password')
+    alterarSenha(
+        @UsuarioAutenticado() usuario: AuthTokenPayload,
+        @Body() dto: AlterarSenhaAdminDto,
+    ) {
+        return this.authService.alterarSenhaAdmin(usuario.sub, dto);
     }
 }

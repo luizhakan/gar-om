@@ -33,7 +33,7 @@ services:
       PORT: 3001
       DATABASE_URL: postgres://admin:admin@db:5432/garcom
       CORS_ORIGIN: https://garcomagil.com
-      AUTH_SECRET: change-me
+      AUTH_SECRET: ${AUTH_SECRET:-change-me}
     command: sh -c "npx prisma migrate deploy && node dist/main.js"
     depends_on:
       - db
@@ -57,6 +57,9 @@ services:
     depends_on:
       - frontend
       - backend
+    command: >
+      sh -c "while :; do sleep 12h; nginx -s reload; done &
+             exec nginx -g 'daemon off;'"
     ports:
       - "80:80"
       - "443:443"
@@ -68,11 +71,24 @@ services:
 
   certbot:
     image: certbot/certbot:latest
+    environment:
+      CERTBOT_DOMAIN: ${CERTBOT_DOMAIN:-garcomagil.com}
+      CERTBOT_EMAIL: ${CERTBOT_EMAIL:-seu-email@dominio.com}
     volumes:
       - certbot-etc:/etc/letsencrypt
       - certbot-var:/var/www/certbot
     entrypoint: /bin/sh
-    command: -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h; done"
+    command: >
+      -c "set -e;
+          if [ ! -f /etc/letsencrypt/live/$${CERTBOT_DOMAIN}/fullchain.pem ]; then
+            certbot certonly --webroot -w /var/www/certbot \
+              -d $${CERTBOT_DOMAIN} --email $${CERTBOT_EMAIL} \
+              --agree-tos --no-eff-email --non-interactive || true;
+          fi;
+          while :; do
+            certbot renew --webroot -w /var/www/certbot --quiet || true;
+            sleep 12h;
+          done"
     restart: unless-stopped
 
 volumes:

@@ -9,7 +9,7 @@ import styles from './MasterLogin.module.css';
 export function MasterLogin() {
     const navigate = useNavigate();
     const [email, setEmail] = useState('founder@garcom.com');
-    const [senha, setSenha] = useState('supermaster123');
+    const [senha, setSenha] = useState('senha123');
     const [erro, setErro] = useState('');
     const [carregando, setCarregando] = useState(false);
 

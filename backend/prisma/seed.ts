@@ -31,8 +31,8 @@ async function main() {
         },
     });
 
-    const senhaPadrao = await bcrypt.hash('senha123', 10);
-    const senhaMaster = await bcrypt.hash('supermaster123', 10);
+    const senhaPadrao = await bcrypt.hash('admin456', 10);
+    const senhaMaster = await bcrypt.hash('senha123', 10);
 
     await prisma.admin.create({
         data: {
