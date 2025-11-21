@@ -1,21 +1,27 @@
 .card {
-    background-color: var(--cor-superficie);
-    border-radius: var(--raio-lg);
+    background: linear-gradient(160deg, rgba(19, 25, 34, 0.92), rgba(13, 18, 26, 0.92));
+    border-radius: var(--raio-xl);
     padding: var(--espaco-xl);
-    border: 0.1875rem solid transparent;
-    transition: all 0.3s ease;
-    min-width: 21.875rem;
+    border: 0.14rem solid var(--cor-borda);
+    transition: all 0.28s ease;
+    min-width: 18.75rem;
+    box-shadow: var(--sombra-suave);
 }
 
 .card.pendente {
-    border-color: var(--cor-erro);
-    box-shadow: 0 0 1.25rem rgba(255, 69, 58, 0.3);
-    animation: pulsar 2s infinite;
+    border-color: rgba(46, 211, 155, 0.7);
+    box-shadow: 0 0 1.6rem rgba(46, 211, 155, 0.28);
 }
 
 .card.preparando {
-    border-color: var(--cor-aviso);
-    opacity: 0.8;
+    border-color: rgba(251, 191, 36, 0.55);
+    opacity: 0.92;
+}
+
+.card.atrasado {
+    border-color: rgba(248, 113, 113, 0.9);
+    box-shadow: 0 0 18px rgba(248, 113, 113, 0.4);
+    animation: pulsarAtrasado 1.4s ease-in-out infinite;
 }
 
 /* Cabeçalho */
@@ -35,15 +41,15 @@
 }
 
 .labelMesa {
-    font-size: var(--tamanho-texto-sm);
-    color: var(--cor-texto-secundario);
+    font-size: 0.75rem;
+    color: var(--cor-texto-terciario);
     font-weight: var(--peso-medio);
-    letter-spacing: 0.0625rem;
+    letter-spacing: 0.12rem;
 }
 
 .numeroMesa {
-    font-size: 3rem;
-    font-weight: var(--peso-negrito);
+    font-size: 2.6rem;
+    font-weight: 800;
     color: var(--cor-primaria);
     line-height: 1;
 }
@@ -53,7 +59,10 @@
     align-items: center;
     gap: var(--espaco-sm);
     font-size: var(--tamanho-texto-lg);
-    color: var(--cor-texto-secundario);
+    color: var(--cor-texto-primario);
+    padding: 0.45rem 0.75rem;
+    border-radius: var(--raio-md);
+    background: rgba(30, 36, 48, 0.9);
 }
 
 .iconeRelogio {
@@ -75,14 +84,15 @@
 }
 
 .quantidadeBadge {
-    background-color: var(--cor-primaria);
-    color: white;
+    background-color: rgba(46, 211, 155, 0.18);
+    color: var(--cor-primaria);
     font-weight: var(--peso-negrito);
     font-size: var(--tamanho-texto-md);
-    padding: var(--espaco-xs) var(--espaco-sm);
-    border-radius: var(--raio-sm);
-    min-width: 2.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: var(--raio-md);
+    min-width: 2.6rem;
     text-align: center;
+    border: 1px solid rgba(46, 211, 155, 0.4);
 }
 
 .infoItem {
@@ -93,19 +103,20 @@
 }
 
 .nomeItem {
-    font-size: var(--tamanho-titulo-sm);
-    font-weight: var(--peso-negrito);
+    font-size: 1.1rem;
+    font-weight: 800;
     color: var(--cor-texto-primario);
+    margin: 0;
 }
 
 .observacao {
     font-size: var(--tamanho-texto-md);
     color: var(--cor-aviso);
     font-weight: var(--peso-medio);
-    background-color: rgba(255, 159, 10, 0.1);
-    padding: var(--espaco-xs) var(--espaco-sm);
-    border-radius: var(--raio-sm);
-    border-left: 0.1875rem solid var(--cor-aviso);
+    background-color: rgba(251, 191, 36, 0.06);
+    padding: 0.35rem 0.5rem;
+    border-radius: var(--raio-md);
+    border: 1px dashed rgba(251, 191, 36, 0.6);
 }
 
 /* Ações */
@@ -118,17 +129,17 @@
     flex: 1;
 }
 
-/* Animação de pulsar para pedidos pendentes */
-@keyframes pulsar {
+/* Animação de pulsar para pedidos atrasados */
+@keyframes pulsarAtrasado {
     0% {
-        box-shadow: 0 0 1.25rem rgba(255, 69, 58, 0.3);
+        box-shadow: 0 0 12px rgba(248, 113, 113, 0.35);
     }
 
     50% {
-        box-shadow: 0 0 1.875rem rgba(255, 69, 58, 0.6);
+        box-shadow: 0 0 22px rgba(248, 113, 113, 0.7);
     }
 
     100% {
-        box-shadow: 0 0 1.25rem rgba(255, 69, 58, 0.3);
+        box-shadow: 0 0 12px rgba(248, 113, 113, 0.35);
     }
 }

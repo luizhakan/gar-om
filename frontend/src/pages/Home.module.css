@@ -1,0 +1,180 @@
+.shell {
+    min-height: 100vh;
+    background: linear-gradient(180deg, rgba(15, 19, 26, 0.92) 0%, rgba(5, 7, 10, 0.95) 100%);
+}
+
+.hero {
+    padding: var(--espaco-2xl) 0 var(--espaco-xl);
+    position: relative;
+}
+
+.hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 10%, rgba(46, 211, 155, 0.15), transparent 30%),
+                radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.12), transparent 25%);
+    filter: blur(18px);
+    pointer-events: none;
+}
+
+.hero > .container {
+    position: relative;
+    z-index: 1;
+}
+
+.kicker {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: var(--tamanho-texto-xs);
+    color: var(--cor-texto-terciario);
+    margin-bottom: var(--espaco-sm);
+}
+
+.titulo {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    line-height: 1.1;
+    font-weight: var(--peso-negrito);
+    color: var(--cor-texto-primario);
+    margin-bottom: var(--espaco-md);
+}
+
+.subtitulo {
+    color: var(--cor-texto-secundario);
+    max-width: 32rem;
+    font-size: var(--tamanho-texto-lg);
+    margin-bottom: var(--espaco-lg);
+}
+
+.acoesHero {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espaco-sm);
+    align-items: stretch;
+    margin-bottom: var(--espaco-lg);
+}
+
+.selos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: var(--espaco-md);
+    padding: var(--espaco-md);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-lg);
+    box-shadow: var(--sombra-suave);
+}
+
+.selos div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.seloLabel {
+    color: var(--cor-texto-terciario);
+    font-size: var(--tamanho-texto-xs);
+    letter-spacing: 0.08em;
+}
+
+.selos strong {
+    color: var(--cor-texto-primario);
+    font-size: var(--tamanho-texto-md);
+}
+
+.gridAcoes {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--espaco-lg);
+    padding: 0 0 var(--espaco-2xl);
+}
+
+.cardAcao {
+    background: linear-gradient(145deg, rgba(24, 30, 40, 0.9), rgba(13, 18, 26, 0.95));
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-xl);
+    padding: var(--espaco-xl);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--sombra-suave);
+}
+
+.cardAcao::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 80% 10%, rgba(46, 211, 155, 0.12), transparent 40%);
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.cardTopo {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--espaco-md);
+}
+
+.badge,
+.badgeAmbar,
+.badgeAzul {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: var(--raio-circulo);
+    font-size: var(--tamanho-texto-xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+}
+
+.badge {
+    background: rgba(46, 211, 155, 0.12);
+    color: var(--cor-primaria);
+    border-color: rgba(46, 211, 155, 0.25);
+}
+
+.badgeAmbar {
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--cor-aviso);
+    border-color: rgba(251, 191, 36, 0.25);
+}
+
+.badgeAzul {
+    background: rgba(56, 189, 248, 0.12);
+    color: var(--cor-info);
+    border-color: rgba(56, 189, 248, 0.25);
+}
+
+.cardTitulo {
+    font-size: var(--tamanho-titulo-sm);
+    color: var(--cor-texto-primario);
+    font-weight: var(--peso-negrito);
+    margin: 0;
+    flex: 1;
+}
+
+.cardTexto {
+    color: var(--cor-texto-secundario);
+    margin: var(--espaco-md) 0;
+    font-size: var(--tamanho-texto-md);
+    line-height: 1.6;
+}
+
+.cardFooter {
+    display: flex;
+    justify-content: flex-start;
+}
+
+@media (min-width: 720px) {
+    .acoesHero {
+        flex-direction: row;
+        align-items: center;
+        max-width: 32rem;
+    }
+
+    .gridAcoes {
+        grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    }
+}

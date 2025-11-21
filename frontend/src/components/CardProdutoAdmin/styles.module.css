@@ -1,25 +1,37 @@
 .card {
-    background: rgba(28, 30, 38, 0.9);
-    border: 0.0625rem solid rgba(255, 255, 255, 0.06);
-    border-radius: var(--raio-borda-lg);
-    padding: 1.1rem;
+    background: linear-gradient(150deg, rgba(21, 27, 36, 0.95), rgba(13, 18, 26, 0.92));
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-xl);
+    padding: 1.25rem;
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
-    box-shadow: 0 0.625rem 1.625rem rgba(0, 0, 0, 0.25);
+    gap: 0.75rem;
+    box-shadow: var(--sombra-suave);
+    position: relative;
+    overflow: hidden;
+}
+
+.card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 82% 12%, rgba(46, 211, 155, 0.14), transparent 42%);
+    pointer-events: none;
 }
 
 .header {
     display: flex;
     justify-content: space-between;
     gap: 0.75rem;
-    align-items: center;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
 }
 
 .categoria {
     margin: 0;
-    color: var(--cor-texto-secundario);
-    font-size: 0.9rem;
+    color: var(--cor-texto-terciario);
+    font-size: 0.85rem;
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
@@ -27,32 +39,36 @@
 .nome {
     margin: 0.15rem 0 0;
     color: var(--cor-texto-principal);
+    letter-spacing: -0.01em;
 }
 
 .tagDisponivel,
 .tagIndisponivel {
-    padding: 0.35rem 0.65rem;
-    border-radius: 62.4375rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: var(--raio-circulo);
     font-weight: 700;
     font-size: 0.85rem;
+    border: 1px solid transparent;
 }
 
 .tagDisponivel {
-    background: rgba(64, 195, 129, 0.16);
-    color: #8be5b6;
-    border: 0.0625rem solid rgba(139, 229, 182, 0.3);
+    background: rgba(46, 211, 155, 0.14);
+    color: var(--cor-primaria);
+    border-color: rgba(46, 211, 155, 0.3);
 }
 
 .tagIndisponivel {
-    background: rgba(255, 75, 95, 0.12);
+    background: rgba(248, 113, 113, 0.12);
     color: #ff9fad;
-    border: 0.0625rem solid rgba(255, 75, 95, 0.25);
+    border-color: rgba(248, 113, 113, 0.25);
 }
 
 .descricao {
     margin: 0;
     color: var(--cor-texto-secundario);
     line-height: 1.5;
+    position: relative;
+    z-index: 1;
 }
 
 .footer {
@@ -61,17 +77,19 @@
     align-items: center;
     gap: 1rem;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 1;
 }
 
 .precoRotulo {
     margin: 0;
-    color: var(--cor-texto-secundario);
+    color: var(--cor-texto-terciario);
 }
 
 .preco {
     margin: 0.1rem 0 0;
-    font-size: 1.2rem;
-    font-weight: 700;
+    font-size: 1.25rem;
+    font-weight: 800;
 }
 
 .acoes {

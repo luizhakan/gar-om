@@ -72,6 +72,7 @@ export function MesasAdmin() {
     const [carregandoConta, setCarregandoConta] = useState(false);
     const [erroConta, setErroConta] = useState('');
     const [ultimaAtualizacaoConta, setUltimaAtualizacaoConta] = useState<Date | null>(null);
+    const [mostrarContaModal, setMostrarContaModal] = useState(false);
 
     const contaLinhas = useMemo(() => agruparItensDaConta(pedidosConta), [pedidosConta]);
     const totalConta = useMemo(() => contaLinhas.reduce((acc, item) => acc + item.total, 0), [contaLinhas]);
@@ -123,12 +124,15 @@ export function MesasAdmin() {
         setTimeout(() => { setMensagem(''); }, 2200);
     }
 
-    const carregarContaParaMesa = useCallback(async (mesaAlvo: Mesa) => {
+    const carregarContaParaMesa = useCallback(async (mesaAlvo: Mesa, abrirModal = false) => {
         setMesaConta({ id: mesaAlvo.id, numero: mesaAlvo.numero });
         setCarregandoConta(true);
         setErroConta('');
         setPedidosConta([]);
         setUltimaAtualizacaoConta(null);
+        if (abrirModal) {
+            setMostrarContaModal(true);
+        }
 
         try {
             const pedidos = await ServicoMesas.obterComanda(mesaAlvo.id);
@@ -153,6 +157,7 @@ export function MesasAdmin() {
         setPedidosConta([]);
         setErroConta('');
         setUltimaAtualizacaoConta(null);
+        setMostrarContaModal(false);
     }, []);
 
     const handleImprimirConta = useCallback(() => {
@@ -359,7 +364,7 @@ export function MesasAdmin() {
                                                 <Botao
                                                     variante="primario"
                                                     tamanho="pequeno"
-                                                    onClick={() => { void carregarContaParaMesa(mesa); }}
+                                                    onClick={() => { void carregarContaParaMesa(mesa, true); }}
                                                 >
                                                     Ver/Imprimir conta
                                                 </Botao>
@@ -380,97 +385,109 @@ export function MesasAdmin() {
                 )}
             </section>
 
-            <section className={styles.contaCard}>
-                <div className={styles.contaCabecalho}>
-                    <div>
-                        <p className={styles.sectionLabel}>Conta solicitada</p>
-                        <h2 className={styles.sectionTitle}>Conta detalhada do cliente</h2>
-                        <p className={styles.subtitulo}>Assim que o cliente tocar em &quot;Fechar conta&quot;, os itens aparecem aqui para você imprimir.</p>
-                    </div>
-                    <div className={styles.contaChip} data-ativa={Boolean(mesaConta)}>
-                        {mesaConta ? `Mesa ${mesaConta.numero}` : 'Nenhuma mesa selecionada'}
-                    </div>
-                </div>
-
-                {erroConta && <p className={styles.contaErro}>{erroConta}</p>}
-                {carregandoConta && <p className={styles.contaHint}>Carregando detalhes da conta...</p>}
-
-                {mesaConta ? (
-                    <>
-                        {contaLinhas.length > 0 ? (
-                            <div className={styles.contaLista}>
-                                {contaLinhas.map(item => (
-                                    <div key={item.id} className={styles.contaItem}>
-                                        <div>
-                                            <p className={styles.contaItemTitulo}>{item.quantidade}x {item.nome}</p>
-                                            {item.observacoes.length > 0 && (
-                                                <p className={styles.contaItemObs}>Obs: {item.observacoes.join(' | ')}</p>
-                                            )}
-                                        </div>
-                                        <div className={styles.contaItemValores}>
-                                            <span>{formatarMoeda(item.precoUnitario)}</span>
-                                            <strong>{formatarMoeda(item.total)}</strong>
-                                        </div>
-                                    </div>
-                                ))}
+            {mostrarContaModal && (
+                <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+                    <div className={styles.modalConta}>
+                        <header className={styles.modalCabecalho}>
+                            <div>
+                                <p className={styles.sectionLabel}>Conta solicitada</p>
+                                <h2 className={styles.modalTitulo}>Conta detalhada do cliente</h2>
+                                <p className={styles.subtitulo}>Feche ou imprima a conta diretamente por aqui.</p>
                             </div>
+                            <div className={styles.modalTag}>
+                                {mesaConta ? `Mesa ${mesaConta.numero}` : 'Nenhuma mesa selecionada'}
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.modalFechar}
+                                onClick={limparContaEmFoco}
+                                aria-label="Fechar modal de conta"
+                            >
+                                ×
+                            </button>
+                        </header>
+
+                        {erroConta && <p className={styles.contaErro}>{erroConta}</p>}
+                        {carregandoConta && <p className={styles.contaHint}>Carregando detalhes da conta...</p>}
+
+                        {mesaConta ? (
+                            <>
+                                {contaLinhas.length > 0 ? (
+                                    <div className={styles.contaLista}>
+                                        {contaLinhas.map(item => (
+                                            <div key={item.id} className={styles.contaItem}>
+                                                <div>
+                                                    <p className={styles.contaItemTitulo}>{item.quantidade}x {item.nome}</p>
+                                                    {item.observacoes.length > 0 && (
+                                                        <p className={styles.contaItemObs}>Obs: {item.observacoes.join(' | ')}</p>
+                                                    )}
+                                                </div>
+                                                <div className={styles.contaItemValores}>
+                                                    <span>{formatarMoeda(item.precoUnitario)}</span>
+                                                    <strong>{formatarMoeda(item.total)}</strong>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    !carregandoConta && <p className={styles.contaHint}>Nenhum item em aberto para esta mesa.</p>
+                                )}
+
+                                <div className={styles.contaRodape}>
+                                    <div className={styles.contaMeta}>
+                                        <p className={styles.contaHint}>
+                                            {ultimaAtualizacaoConta
+                                                ? `Atualizado em ${ultimaAtualizacaoConta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                                                : 'Atualize para puxar os pedidos dessa mesa.'}
+                                        </p>
+                                        {mesaSelecionada && mesaSelecionada.contaSolicitada && (
+                                            <span className={styles.badgeConta}>Conta solicitada</span>
+                                        )}
+                                    </div>
+                                    <div className={styles.contaTotal}>
+                                        <span>Total</span>
+                                        <strong>{formatarMoeda(totalConta)}</strong>
+                                    </div>
+                                </div>
+                            </>
                         ) : (
-                            !carregandoConta && <p className={styles.contaHint}>Nenhum item em aberto para esta mesa.</p>
+                            <p className={styles.contaHint}>Selecione uma mesa com conta solicitada para ver os itens.</p>
                         )}
 
-                        <div className={styles.contaRodape}>
-                            <div className={styles.contaMeta}>
-                                <p className={styles.contaHint}>
-                                    {ultimaAtualizacaoConta
-                                        ? `Atualizado em ${ultimaAtualizacaoConta.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
-                                        : 'Atualize para puxar os pedidos dessa mesa.'}
-                                </p>
-                                {mesaSelecionada && mesaSelecionada.contaSolicitada && (
-                                    <span className={styles.badgeConta}>Conta solicitada</span>
-                                )}
-                            </div>
-                            <div className={styles.contaTotal}>
-                                <span>Total</span>
-                                <strong>{formatarMoeda(totalConta)}</strong>
-                            </div>
+                        <div className={styles.modalAcoes}>
+                            <Botao
+                                variante="primario"
+                                onClick={() => { handleImprimirConta(); }}
+                                disabled={!mesaConta || contaLinhas.length === 0 || carregandoConta}
+                            >
+                                Imprimir conta
+                            </Botao>
+                            <Botao
+                                variante="secundario"
+                                onClick={() => {
+                                    if (mesaConta) {
+                                        const mesaAtualizada = mesas.find(m => m.id === mesaConta.id);
+                                        if (mesaAtualizada) {
+                                            void carregarContaParaMesa(mesaAtualizada, true);
+                                        }
+                                    }
+                                }}
+                                disabled={!mesaConta || carregandoConta}
+                            >
+                                Atualizar conta
+                            </Botao>
+                            <button
+                                type="button"
+                                className={styles.contaLimpar}
+                                onClick={limparContaEmFoco}
+                                disabled={carregandoConta}
+                            >
+                                Fechar
+                            </button>
                         </div>
-                    </>
-                ) : (
-                    <p className={styles.contaHint}>Nenhuma conta ativa agora. Quando uma mesa pedir, carregaremos aqui automaticamente.</p>
-                )}
-
-                <div className={styles.contaAcoes}>
-                    <Botao
-                        variante="primario"
-                        onClick={() => { handleImprimirConta(); }}
-                        disabled={!mesaConta || contaLinhas.length === 0 || carregandoConta}
-                    >
-                        Imprimir conta
-                    </Botao>
-                    <Botao
-                        variante="secundario"
-                        onClick={() => {
-                            if (mesaConta) {
-                                const mesaAtualizada = mesas.find(m => m.id === mesaConta.id);
-                                if (mesaAtualizada) {
-                                    void carregarContaParaMesa(mesaAtualizada);
-                                }
-                            }
-                        }}
-                        disabled={!mesaConta || carregandoConta}
-                    >
-                        Atualizar conta
-                    </Botao>
-                    <button
-                        type="button"
-                        className={styles.contaLimpar}
-                        onClick={limparContaEmFoco}
-                        disabled={carregandoConta}
-                    >
-                        Limpar painel
-                    </button>
+                    </div>
                 </div>
-            </section>
+            )}
         </div>
     );
 }

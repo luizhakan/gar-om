@@ -48,14 +48,15 @@
 
 /* Variantes */
 .primario {
-    background-color: var(--cor-primaria);
-    color: white;
-    box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.39);
+    background: linear-gradient(170deg, #1f9c73 0%, var(--cor-primaria) 100%);
+    color: #071512;
+    box-shadow: 0 6px 18px 0 rgba(46, 211, 155, 0.35);
+    border: 1px solid rgba(7, 21, 18, 0.35);
 }
 
 .primario:hover:not(:disabled) {
-    background-color: var(--cor-primaria-hover);
-    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.23);
+    background: linear-gradient(170deg, #188561 0%, var(--cor-primaria-hover) 100%);
+    box-shadow: 0 10px 24px rgba(46, 211, 155, 0.28);
     transform: translateY(-1px);
 }
 

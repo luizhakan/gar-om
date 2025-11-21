@@ -10,19 +10,35 @@ import {
 
 const API_BASE = env.apiBaseUrl.replace(/\/$/, '');
 
+// Variável de controle para o Singleton (promessa única)
+let promiseDeRefresh: Promise<string | undefined> | null = null;
+
 async function tentarRenovarToken(): Promise<string | undefined> {
     const refreshToken = obterRefreshToken();
     if (!refreshToken) return undefined;
 
-    try {
-        const resp = await ServicoAuth.refresh(refreshToken);
-        atualizarTokensSessao(resp.token, resp.refreshToken);
-        return resp.token;
-    } catch (erro) {
-        console.error('[requestAutenticado] Falha ao renovar token', erro);
-        limparSessao();
-        return undefined;
+    // Se já existe uma tentativa em andamento, retorna a mesma promessa
+    if (promiseDeRefresh) {
+        return promiseDeRefresh;
     }
+
+    promiseDeRefresh = (async () => {
+        try {
+            const resp = await ServicoAuth.refresh(refreshToken);
+            atualizarTokensSessao(resp.token, resp.refreshToken);
+            return resp.token;
+        } catch (erro) {
+            console.error('[requestAutenticado] Falha crítica ao renovar token', erro);
+            limparSessao();
+            // Opcional: Redirecionar para login via window.location ou evento
+            return undefined;
+        } finally {
+            // Libera a variável para futuras renovações
+            promiseDeRefresh = null;
+        }
+    })();
+
+    return promiseDeRefresh;
 }
 
 interface RequestOptions {
@@ -39,37 +55,52 @@ export async function requestAutenticado<T>(
 ): Promise<T> {
     if (!API_BASE) throw new Error('API não configurada');
 
+    // Verifica restauranteId
     const restauranteId = obterRestauranteId();
     if (!restauranteId) {
-        throw new Error('Restaurante não definido na sessão');
+        // Tratamento para não travar se for uma chamada pública ou erro de estado
+        // throw new Error('Restaurante não definido na sessão');
     }
 
-    const token = tokenOverride ?? obterToken();
+    let token = tokenOverride ?? obterToken();
 
-    const headers: Record<string, string> = {
+    // Função auxiliar para montar headers
+    const getHeaders = (tokenAtual?: string) => ({
         ...(options?.includeContentType === false ? {} : { 'Content-Type': 'application/json' }),
-        'x-restaurante-id': restauranteId,
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'x-restaurante-id': restauranteId ?? '',
+        ...(tokenAtual ? { Authorization: `Bearer ${tokenAtual}` } : {}),
         ...(options?.extraHeaders ?? {}),
-    };
+    });
 
-    const resposta = await fetch(`${API_BASE}${path}`, {
+    let resposta = await fetch(`${API_BASE}${path}`, {
         ...init,
         headers: {
-            ...headers,
+            ...getHeaders(token),
             ...(init?.headers as Record<string, string> ?? {}),
         },
     });
 
-    const texto = await resposta.text();
-
+    // Lógica de Refresh
     if (resposta.status === 401 && !jaTentouRefresh) {
         const novoToken = await tentarRenovarToken();
+        
         if (novoToken) {
-            return requestAutenticado<T>(path, init, options, novoToken, true);
+            // Refaz a requisição original com o novo token
+            resposta = await fetch(`${API_BASE}${path}`, {
+                ...init,
+                headers: {
+                    ...getHeaders(novoToken),
+                    ...(init?.headers as Record<string, string> ?? {}),
+                },
+            });
+        } else {
+            // Se falhou o refresh, lança erro para logout
+            const texto = await resposta.text();
+            throw new Error(texto || 'Sessão expirada.');
         }
-        throw new Error(texto || 'Sessão expirada, faça login novamente.');
     }
+
+    const texto = await resposta.text();
 
     if (!resposta.ok) {
         throw new Error(texto || 'Falha na requisição');

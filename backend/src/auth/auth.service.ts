@@ -24,7 +24,7 @@ export class AuthService {
         const segredo = crypto.randomBytes(32).toString('hex');
         const hash = await bcrypt.hash(segredo, 10);
         const validade = new Date();
-        validade.setDate(validade.getDate() + 7);
+        validade.setDate(validade.getDate() + 30);
 
         // 3. Salva no banco
         const dados: any = {

@@ -238,7 +238,7 @@ export const ServicoPedidos = {
         return ServicoPedidos.listar();
     },
 
-    assinarMudancas(callback: (pedidos: Pedido[]) => void) {
+    assinarMudancas(callback: (pedidos: Pedido[]) => void, tokenOverride?: string) {
         let ativo = true;
         const restauranteId = obterRestauranteId();
         const token = tokenOverride ?? obterToken();
@@ -249,7 +249,7 @@ export const ServicoPedidos = {
         }
 
         const carregar = () => {
-            ServicoPedidos.listar()
+            ServicoPedidos.listar(tokenOverride)
                 .then((lista) => { if (ativo) callback(lista); })
                 .catch((erro: unknown) => { console.error('[ServicoPedidos] Erro ao carregar pedidos', erro); });
         };

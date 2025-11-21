@@ -1,7 +1,7 @@
 .card {
-    background-color: var(--cor-superficie);
-    border-radius: var(--raio-md);
-    padding: var(--espaco-md);
+    background: linear-gradient(150deg, rgba(21, 27, 36, 0.95), rgba(14, 18, 26, 0.95));
+    border-radius: var(--raio-lg);
+    padding: var(--espaco-lg);
     border: 1px solid var(--cor-borda);
     cursor: pointer;
     
@@ -9,19 +9,20 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 140px;
+    min-height: 160px;
+    box-shadow: var(--sombra-suave);
 }
 
 .card:hover {
     border-color: var(--cor-primaria);
     transform: translateY(-2px);
     box-shadow: var(--sombra-media);
-    background-color: var(--cor-superficie-hover);
+    background: linear-gradient(150deg, rgba(30, 36, 48, 0.95), rgba(17, 23, 32, 0.98));
 }
 
 .card.indisponivel {
-    opacity: 0.5;
-    filter: grayscale(1);
+    opacity: 0.45;
+    filter: grayscale(0.9);
     cursor: not-allowed;
 }
 
@@ -33,15 +34,16 @@
 .conteudo {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 0.35rem;
 }
 
 .nome {
     font-size: var(--tamanho-texto-md);
-    font-weight: 600;
+    font-weight: 700;
     color: var(--cor-texto-primario);
     margin: 0;
     line-height: 1.3;
+    letter-spacing: -0.01em;
 }
 
 .descricao {
@@ -50,7 +52,6 @@
     margin: 0;
     line-height: 1.5;
     
-    /* Limita a 2 linhas com ... */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -60,12 +61,13 @@
 .rodape {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
     margin-top: var(--espaco-md);
+    gap: var(--espaco-md);
 }
 
 .preco {
-    font-family: var(--fonte-mono); /* Estilo números monospaced */
+    font-family: var(--fonte-mono);
     font-size: var(--tamanho-texto-lg);
     font-weight: 700;
     color: var(--cor-texto-primario);
@@ -73,17 +75,17 @@
 }
 
 .botaoAdicionar {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 3rem;
+    height: 3rem;
     border-radius: var(--raio-circulo);
-    background-color: var(--cor-superficie-ativa);
+    background-color: rgba(46, 211, 155, 0.12);
     color: var(--cor-primaria);
-    border: none;
+    border: 1px solid rgba(46, 211, 155, 0.35);
     
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     line-height: 1;
     cursor: pointer;
     transition: all 0.2s;
@@ -91,18 +93,18 @@
 
 .botaoAdicionar:hover {
     background-color: var(--cor-primaria);
-    color: white;
-    transform: scale(1.1);
-    box-shadow: 0 0 15px var(--cor-primaria-hover);
+    color: #0b0f16;
+    transform: scale(1.04);
+    box-shadow: 0 0 18px rgba(46, 211, 155, 0.35);
 }
 
 .badgeIndisponivel {
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     font-weight: bold;
     color: var(--cor-erro);
     border: 1px solid var(--cor-erro);
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 2px 8px;
+    border-radius: var(--raio-sm);
 }

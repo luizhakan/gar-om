@@ -1,44 +1,44 @@
 :root {
-  /* --- PALETA DE CORES (Dark Premium) --- */
-  
-  /* Fundos */
-  --cor-fundo: #09090B;          /* Preto profundo, não absoluto */
-  --cor-superficie: #18181B;     /* Card base */
-  --cor-superficie-hover: #27272A;
-  --cor-superficie-ativa: #3F3F46;
-  --cor-borda: #27272A;
+  /* --- PALETA DE CORES (Noite Neon) --- */
+  --cor-fundo: #05070a;
+  --cor-superficie: #0f131a;
+  --cor-superficie-hover: #151a22;
+  --cor-superficie-ativa: #1e2430;
+  --cor-borda: #1c2330;
   
   /* Vidro (Glassmorphism) */
-  --cor-vidro: rgba(24, 24, 27, 0.75);
-  --efeito-vidro: blur(12px) saturate(180%);
+  --cor-vidro: rgba(13, 18, 26, 0.72);
+  --efeito-vidro: blur(14px) saturate(190%);
 
   /* Texto */
-  --cor-texto-primario: #FAFAFA;
-  --cor-texto-secundario: #A1A1AA;
-  --cor-texto-terciario: #71717A;
+  --cor-texto-primario: #f5f7fb;
+  --cor-texto-principal: #f5f7fb;
+  --cor-texto-secundario: #c0cadb;
+  --cor-texto-terciario: #8a94a8;
 
-  /* Brand Colors (Violeta Vibrante) */
-  --cor-primaria: #8B5CF6;       
-  --cor-primaria-hover: #7C3AED;
-  --cor-primaria-fundo: rgba(139, 92, 246, 0.15);
+  /* Brand Colors (Mint + Amber para estados) */
+  --cor-primaria: #2ed39b;
+  --cor-primaria-hover: #26bb89;
+  --cor-primaria-fundo: rgba(46, 211, 155, 0.18);
 
   /* Semântica */
-  --cor-sucesso: #10B981;        /* Emerald */
-  --cor-aviso: #F59E0B;          /* Amber */
-  --cor-erro: #EF4444;           /* Red */
-  --cor-info: #3B82F6;           /* Blue */
+  --cor-sucesso: #34d399;
+  --cor-aviso: #fbbf24;
+  --cor-erro: #f87171;
+  --cor-info: #38bdf8;
 
   /* --- TIPOGRAFIA --- */
-  --fonte-padrao: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --fonte-padrao: 'Space Grotesk', 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  --fonte-mono: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
   
   /* Escala Fluida */
   --tamanho-texto-xs: 0.75rem;
-  --tamanho-texto-sm: 0.875rem;
+  --tamanho-texto-sm: 0.9rem;
   --tamanho-texto-md: 1rem;
   --tamanho-texto-lg: 1.125rem;
   --tamanho-titulo-sm: 1.25rem;
   --tamanho-titulo-md: 1.5rem;
-  --tamanho-titulo-lg: 2rem;
+  --tamanho-titulo-lg: 2.1rem;
   --tamanho-titulo-xl: 3rem;
 
   --peso-regular: 400;
@@ -52,19 +52,24 @@
   --espaco-lg: 1.5rem;
   --espaco-xl: 2rem;
   --espaco-2xl: 3rem;
+  --espaco-3xl: 4rem;
 
   /* --- UI --- */
   --raio-sm: 0.375rem;
-  --raio-md: 0.75rem;    /* Mais arredondado = mais moderno */
-  --raio-lg: 1rem;
-  --raio-xl: 1.5rem;
+  --raio-md: 0.85rem;
+  --raio-lg: 1.15rem;
+  --raio-xl: 1.6rem;
   --raio-circulo: 9999px;
+  --raio-borda-sm: var(--raio-sm);
+  --raio-borda-md: var(--raio-md);
+  --raio-borda-lg: var(--raio-lg);
+  --raio-borda-xl: var(--raio-xl);
 
-  /* Sombras Suaves */
-  --sombra-suave: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --sombra-media: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
-  --sombra-forte: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
-  --sombra-brilho: 0 0 20px rgba(139, 92, 246, 0.3); /* Glow na cor primária */
+  /* Sombras */
+  --sombra-suave: 0 6px 12px -4px rgba(0, 0, 0, 0.18), 0 2px 8px -2px rgba(0, 0, 0, 0.2);
+  --sombra-media: 0 14px 28px -10px rgba(0, 0, 0, 0.3), 0 6px 18px -8px rgba(0, 0, 0, 0.35);
+  --sombra-forte: 0 22px 38px -12px rgba(0, 0, 0, 0.45), 0 10px 24px -10px rgba(0, 0, 0, 0.4);
+  --sombra-brilho: 0 0 22px rgba(46, 211, 155, 0.32);
 
   /* Z-Index */
   --z-base: 1;

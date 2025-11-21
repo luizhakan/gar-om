@@ -1,13 +1,20 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: var(--espaco-lg);
 }
 
-.header {
+.hero {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
+    gap: var(--espaco-md);
+    background: linear-gradient(135deg, rgba(46, 211, 155, 0.16), rgba(56, 189, 248, 0.08));
+    border: 1px solid rgba(46, 211, 155, 0.25);
+    border-radius: var(--raio-xl);
+    padding: var(--espaco-lg);
+    box-shadow: var(--sombra-suave);
+    flex-wrap: wrap;
 }
 
 .rotulo {
@@ -15,34 +22,68 @@
     text-transform: uppercase;
     letter-spacing: 0.12em;
     color: var(--cor-texto-secundario);
+    font-size: var(--tamanho-texto-xs);
 }
 
 .titulo {
-    margin: 0.2rem 0 0.15rem;
+    margin: 0.35rem 0 0.2rem;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    letter-spacing: -0.02em;
 }
 
 .subtitulo {
     margin: 0;
     color: var(--cor-texto-secundario);
+    font-size: var(--tamanho-texto-md);
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: var(--espaco-md);
 }
 
 .card {
-    background: rgba(28, 30, 38, 0.92);
-    border: 0.0625rem solid rgba(255, 255, 255, 0.05);
-    border-radius: var(--raio-borda-lg);
-    padding: 1.25rem;
-    box-shadow: 0 0.625rem 1.625rem rgba(0, 0, 0, 0.25);
+    background: linear-gradient(150deg, rgba(21, 27, 36, 0.95), rgba(13, 18, 26, 0.92));
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-xl);
+    padding: var(--espaco-lg);
+    box-shadow: var(--sombra-suave);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--espaco-md);
+    align-items: center;
+}
+
+.cardDestaque {
+    background: linear-gradient(150deg, rgba(30, 36, 48, 0.98), rgba(21, 27, 36, 0.96));
+    border-color: rgba(46, 211, 155, 0.25);
+    box-shadow: var(--sombra-media);
+}
+
+.cardIcone {
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--raio-lg);
+    background: rgba(46, 211, 155, 0.12);
+    display: grid;
+    place-items: center;
+    font-size: 1.4rem;
+    border: 1px solid rgba(46, 211, 155, 0.25);
+}
+
+.cardTexto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
 }
 
 .cardLabel {
     margin: 0;
     color: var(--cor-texto-secundario);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: var(--tamanho-texto-xs);
 }
 
 .cardNumero {
@@ -54,4 +95,14 @@
 .cardDescricao {
     margin: 0;
     color: var(--cor-texto-secundario);
+    font-size: var(--tamanho-texto-sm);
+}
+
+.badgeTempo {
+    padding: 0.55rem 0.85rem;
+    border-radius: var(--raio-circulo);
+    background: rgba(46, 211, 155, 0.12);
+    color: var(--cor-texto-primario);
+    border: 1px solid rgba(46, 211, 155, 0.25);
+    font-weight: 700;
 }

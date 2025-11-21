@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
 /* Reset CSS Moderno */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -6,7 +8,7 @@
 }
 
 :root {
-    color-scheme: dark; /* Ajuda o navegador a renderizar controles nativos escuros */
+    color-scheme: dark; /* Mantém controles nativos escuros */
 }
 
 html {
@@ -18,7 +20,9 @@ html {
 }
 
 body {
-    background-color: var(--cor-fundo);
+    background: radial-gradient(circle at 20% 20%, rgba(46, 211, 155, 0.08), transparent 25%),
+                radial-gradient(circle at 80% 0%, rgba(56, 189, 248, 0.1), transparent 28%),
+                var(--cor-fundo);
     color: var(--cor-texto-primario);
     font-family: var(--fonte-padrao);
     line-height: 1.6;
@@ -26,12 +30,16 @@ body {
     overflow-x: hidden;
 }
 
-/* Utilitários de Container */
+/* Utilitários de Container (mobile-first) */
 .container {
-    width: 100%;
-    max-width: 1120px;
+    width: min(1160px, 100% - 1.75rem);
     margin: 0 auto;
-    padding: 0 var(--espaco-lg);
+}
+
+@media (min-width: 768px) {
+    .container {
+        width: min(1200px, 100% - 3rem);
+    }
 }
 
 /* Inputs e Elementos de Formulário Melhorados */
@@ -41,8 +49,8 @@ input, select, textarea {
     border-radius: var(--raio-md);
     color: var(--cor-texto-primario);
     font-family: inherit;
-    padding: 0.75rem 1rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    padding: 0.85rem 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.1s ease;
     width: 100%;
 }
 

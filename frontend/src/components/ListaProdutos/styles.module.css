@@ -1,28 +1,34 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: var(--espaco-2xl);
+    gap: var(--espaco-xl);
 }
 
 .secaoCategoria {
     display: flex;
     flex-direction: column;
     gap: var(--espaco-lg);
+    background: rgba(15, 19, 26, 0.7);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-xl);
+    padding: var(--espaco-lg);
+    box-shadow: var(--sombra-suave);
 }
 
 .tituloCategoria {
-    font-size: var(--tamanho-titulo-md);
+    font-size: var(--tamanho-titulo-sm);
     font-weight: var(--peso-negrito);
     color: var(--cor-texto-primario);
     margin: 0;
-    padding-bottom: var(--espaco-sm);
+    padding-bottom: var(--espaco-xs);
     border-bottom: 0.125rem solid var(--cor-primaria);
+    letter-spacing: -0.01em;
 }
 
 .grade {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
-    gap: var(--espaco-lg);
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: var(--espaco-md);
 }
 
 /* Responsividade */

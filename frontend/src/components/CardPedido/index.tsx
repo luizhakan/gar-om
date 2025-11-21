@@ -11,8 +11,10 @@ interface PropsCardPedido {
 
 export function CardPedido({ pedido, aoConfirmar, aoMarcarPronto }: PropsCardPedido) {
     const tempoDecorrido = calcularTempoDecorrido(pedido.dataCriacao);
+    const minutosDecorridos = Math.floor((Date.now() - new Date(pedido.dataCriacao).getTime()) / 60000);
     const isPendente = pedido.status === 'pendente';
     const isPreparando = pedido.status === 'preparando';
+    const isAtrasado = minutosDecorridos >= 15 && pedido.status !== 'pronto';
 
     const itensEnriquecidos = pedido.itens.map(item => ({
         ...item,
@@ -20,7 +22,15 @@ export function CardPedido({ pedido, aoConfirmar, aoMarcarPronto }: PropsCardPed
     }));
 
     return (
-        <div className={`${styles.card} ${isPendente ? styles.pendente : ''} ${isPreparando ? styles.preparando : ''}`}>
+        <div
+            className={[
+                styles.card,
+                isPendente ? styles.pendente : '',
+                isPreparando ? styles.preparando : '',
+                isAtrasado ? styles.atrasado : '',
+            ].join(' ')}
+            data-status={pedido.status}
+        >
             {/* Cabeçalho com destaque para a mesa */}
             <div className={styles.cabecalho}>
                 <div className={styles.mesaDestaque}>

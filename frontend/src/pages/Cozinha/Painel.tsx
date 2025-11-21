@@ -7,8 +7,11 @@ import { Botao } from '../../components/Botao';
 import { ServicoAuth } from '../../services/ServicoAuth';
 import { definirSessao, obterRestauranteId, obterToken } from '../../utils/sessao';
 import styles from './styles.module.css';
+import { useWakeLock } from '../../hooks/useWakeLock';
 
 function ConteudoPainelCozinha() {
+    useWakeLock();
+
     const {
         pedidosPendentes,
         confirmarPedido,
@@ -138,6 +141,11 @@ function ConteudoPainelCozinha() {
                             <span className={styles.badgeLabel}>Total</span>
                         </div>
                     </div>
+                </div>
+                <div className={styles.legenda}>
+                    <span className={styles.legendaItem}><span className={`${styles.ponto} ${styles.pontoVerde}`} />Novos</span>
+                    <span className={styles.legendaItem}><span className={`${styles.ponto} ${styles.pontoAmarelo}`} />Preparando</span>
+                    <span className={styles.legendaItem}><span className={`${styles.ponto} ${styles.pontoVermelho}`} />Atrasados</span>
                 </div>
             </header>
 

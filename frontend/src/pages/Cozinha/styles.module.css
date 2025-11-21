@@ -1,8 +1,11 @@
 .container {
     min-height: 100vh;
-    background-color: var(--cor-fundo);
+    background: radial-gradient(circle at 18% 12%, rgba(46, 211, 155, 0.12), transparent 32%),
+                radial-gradient(circle at 82% 0%, rgba(56, 189, 248, 0.08), transparent 30%),
+                var(--cor-fundo);
     display: flex;
     flex-direction: column;
+    color: var(--cor-texto-primario);
 }
 
 /* Modal de Ativação de Som */
@@ -21,7 +24,7 @@
 }
 
 .modalConteudo {
-    background-color: var(--cor-superficie);
+    background: linear-gradient(150deg, rgba(21, 27, 36, 0.96), rgba(13, 18, 26, 0.96));
     border-radius: var(--raio-xl);
     padding: var(--espaco-2xl);
     max-width: 31.25rem;
@@ -86,13 +89,14 @@
 
 /* Cabeçalho */
 .cabecalho {
-    background: linear-gradient(135deg, var(--cor-superficie) 0%, var(--cor-fundo) 100%);
-    border-bottom: 0.125rem solid var(--cor-primaria);
+    background: linear-gradient(135deg, rgba(15, 19, 26, 0.92), rgba(17, 24, 33, 0.92));
+    border-bottom: 0.125rem solid rgba(46, 211, 155, 0.35);
     padding: var(--espaco-xl) var(--espaco-lg);
     position: sticky;
     top: 0;
     z-index: var(--z-flutuante);
     box-shadow: var(--sombra-media);
+    backdrop-filter: blur(8px);
 }
 
 .conteudoCabecalho {
@@ -108,11 +112,13 @@
     font-weight: var(--peso-negrito);
     color: var(--cor-texto-primario);
     margin: 0;
+    letter-spacing: -0.02em;
 }
 
 .estatisticas {
     display: flex;
-    gap: var(--espaco-lg);
+    gap: var(--espaco-md);
+    align-items: center;
 }
 
 .badge {
@@ -120,9 +126,10 @@
     flex-direction: column;
     align-items: center;
     gap: var(--espaco-xs);
-    background-color: var(--cor-superficie-hover);
+    background-color: rgba(21, 27, 36, 0.85);
     padding: var(--espaco-md) var(--espaco-lg);
-    border-radius: var(--raio-md);
+    border-radius: var(--raio-lg);
+    border: 1px solid var(--cor-borda);
 }
 
 .badgeNumero {
@@ -138,6 +145,43 @@
     letter-spacing: 0.0625rem;
 }
 
+.legenda {
+    display: flex;
+    gap: var(--espaco-md);
+    align-items: center;
+    margin-top: var(--espaco-sm);
+    flex-wrap: wrap;
+}
+
+.legendaItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--cor-texto-secundario);
+    font-size: var(--tamanho-texto-sm);
+}
+
+.ponto {
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: var(--raio-circulo);
+    display: inline-block;
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.pontoVerde {
+    background: var(--cor-sucesso);
+}
+
+.pontoAmarelo {
+    background: var(--cor-aviso);
+}
+
+.pontoVermelho {
+    background: var(--cor-erro);
+}
+
 /* Conteúdo principal */
 .conteudoPrincipal {
     flex: 1;
@@ -149,7 +193,7 @@
 
 .gradePedidos {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(21.875rem, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(18.75rem, 1fr));
     gap: var(--espaco-xl);
     animation: aparecer 0.5s ease-out;
 }
