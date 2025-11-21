@@ -77,6 +77,14 @@ export const ServicoMesas = {
         return data.map(mapearMesaApi);
     },
 
+    async obterStatusPublico(idMesa: string): Promise<{ ocupada: boolean; contaSolicitada: boolean; }> {
+        const data = await requestApi<{ ocupada: boolean; contaSolicitada?: boolean; }>(`/mesas/${idMesa}/status-publico`);
+        return {
+            ocupada: data.ocupada,
+            contaSolicitada: data.contaSolicitada ?? false,
+        };
+    },
+
     async adicionarMesa(numero: number): Promise<Mesa> {
         const data = await requestApi<MesaApi>('/mesas', {
             method: 'POST',

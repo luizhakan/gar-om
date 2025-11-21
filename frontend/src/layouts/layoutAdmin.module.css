@@ -1,15 +1,19 @@
 .shell {
     min-height: 100vh;
     display: grid;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 17.5rem 1fr;
     background: linear-gradient(135deg, #0f1115 0%, #0b0c10 35%, #11141b 100%);
     color: var(--cor-texto-principal);
 }
 
+.shellPublic {
+    grid-template-columns: 1fr;
+}
+
 .sidebar {
     background: rgba(19, 21, 29, 0.9);
-    border-right: 1px solid rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(6px);
+    border-right: 0.0625rem solid rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(0.375rem);
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
@@ -23,7 +27,7 @@
     padding: 0.75rem;
     border-radius: var(--raio-borda-md);
     background: linear-gradient(135deg, rgba(255, 75, 95, 0.12), rgba(255, 255, 255, 0.03));
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.04);
 }
 
 .logoNome {
@@ -50,7 +54,7 @@
     color: var(--cor-texto-secundario);
     font-weight: 600;
     transition: all 0.2s ease;
-    border: 1px solid transparent;
+    border: 0.0625rem solid transparent;
 }
 
 .link:hover {
@@ -67,7 +71,7 @@
 .botaoSair {
     margin-top: auto;
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.06);
     color: var(--cor-texto-principal);
     padding: 0.7rem 0.9rem;
     border-radius: var(--raio-borda-md);
@@ -85,11 +89,11 @@
 }
 
 .container {
-    max-width: 1100px;
+    max-width: 68.75rem;
     margin: 0 auto;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 60rem) {
     .shell {
         grid-template-columns: 1fr;
     }

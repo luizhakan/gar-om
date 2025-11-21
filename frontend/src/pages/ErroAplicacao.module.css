@@ -9,12 +9,12 @@
 }
 
 .card {
-  width: min(560px, 100%);
+  width: min(35rem, 100%);
   padding: 2.4rem;
   border-radius: var(--raio-borda-lg);
   background: rgba(19, 20, 28, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  border: 0.0625rem solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1.25rem 3.125rem rgba(0, 0, 0, 0.35);
 }
 
 .rotulo {
@@ -54,11 +54,11 @@
 .botaoPrimario {
   background: linear-gradient(135deg, #f97316, #fb923c);
   color: #0f172a;
-  box-shadow: 0 10px 30px rgba(249, 115, 22, 0.35);
+  box-shadow: 0 0.625rem 1.875rem rgba(249, 115, 22, 0.35);
 }
 
 .botaoSecundario {
   background: transparent;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 0.0625rem solid rgba(255, 255, 255, 0.14);
   color: var(--cor-texto-principal);
 }

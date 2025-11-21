@@ -16,17 +16,17 @@
     color: var(--cor-texto-primario);
     margin: 0;
     padding-bottom: var(--espaco-sm);
-    border-bottom: 2px solid var(--cor-primaria);
+    border-bottom: 0.125rem solid var(--cor-primaria);
 }
 
 .grade {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(17.5rem, 1fr));
     gap: var(--espaco-lg);
 }
 
 /* Responsividade */
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
     .grade {
         grid-template-columns: 1fr;
     }

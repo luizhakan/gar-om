@@ -28,11 +28,11 @@ Não coloque estilos de componentes específicos aqui (use CSS Modules nos compo
   --cor-erro: #F75A68;
 
   /* Espaçamentos */
-  --espaco-xs: 0.25rem;  /* 4px */
-  --espaco-sm: 0.5rem;   /* 8px */
-  --espaco-md: 1rem;     /* 16px */
-  --espaco-lg: 1.5rem;   /* 24px */
-  --espaco-xl: 2rem;     /* 32px */
+  --espaco-xs: 0.25rem;  /* unidade base */
+  --espaco-sm: 0.5rem;   /* passo pequeno */
+  --espaco-md: 1rem;     /* passo médio */
+  --espaco-lg: 1.5rem;   /* passo grande */
+  --espaco-xl: 2rem;     /* passo extra */
 
   /* Fontes */
   --fonte-padrao: 'Inter', sans-serif;

@@ -7,7 +7,7 @@
     background: linear-gradient(135deg, var(--cor-superficie) 0%, var(--cor-fundo) 100%);
     padding: var(--espaco-lg) 0;
     margin-bottom: var(--espaco-xl);
-    border-bottom: 1px solid var(--cor-borda);
+    border-bottom: 0.0625rem solid var(--cor-borda);
 }
 
 .botaoVoltar {
@@ -125,7 +125,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--espaco-lg);
-    border: 2px solid var(--cor-primaria);
+    border: 0.125rem solid var(--cor-primaria);
 }
 
 .linhaTotal {
@@ -133,7 +133,7 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: var(--espaco-lg);
-    border-bottom: 1px solid var(--cor-borda);
+    border-bottom: 0.0625rem solid var(--cor-borda);
 }
 
 .labelTotal {
@@ -159,7 +159,7 @@
 }
 
 .resumoPedido {
-    border-top: 1px solid var(--cor-borda);
+    border-top: 0.0625rem solid var(--cor-borda);
     padding-top: var(--espaco-md);
     display: flex;
     flex-direction: column;
@@ -194,7 +194,7 @@
 }
 
 /* Responsividade */
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
     .itemPedido {
         grid-template-columns: 1fr;
         gap: var(--espaco-md);

@@ -28,13 +28,13 @@
 
 .formCard {
     background: rgba(28, 30, 38, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.05);
     border-radius: var(--raio-borda-lg);
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0.625rem 1.625rem rgba(0, 0, 0, 0.25);
 }
 
 .sectionLabel {
@@ -56,7 +56,7 @@
 
 .col2 {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
     gap: 0.9rem;
 }
 
@@ -75,7 +75,7 @@
 .campo textarea {
     width: 100%;
     border-radius: var(--raio-borda-md);
-    border: 1px solid var(--cor-texto-principal);
+    border: 0.0625rem solid var(--cor-texto-principal);
     background: #fff;
     color: #111;
     padding: 0.8rem;
@@ -85,8 +85,8 @@
 .campo input:focus,
 .campo select:focus,
 .campo textarea:focus {
-    outline: 2px solid var(--cor-primaria);
-    outline-offset: 2px;
+    outline: 0.125rem solid var(--cor-primaria);
+    outline-offset: 0.125rem;
     border-color: var(--cor-primaria);
 }
 
@@ -116,7 +116,7 @@
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
     gap: 1rem;
 }
 

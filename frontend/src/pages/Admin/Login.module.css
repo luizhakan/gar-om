@@ -10,12 +10,12 @@
 }
 
 .card {
-    width: min(420px, 100%);
+    width: min(26.25rem, 100%);
     padding: 2rem;
     border-radius: var(--raio-borda-lg);
     background: rgba(19, 20, 28, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0.9375rem 2.5rem rgba(0, 0, 0, 0.35);
 }
 
 .rotulo {
@@ -52,15 +52,15 @@
     width: 100%;
     padding: 0.85rem;
     border-radius: var(--raio-borda-md);
-    border: 1px solid var(--cor-texto-principal);
+    border: 0.0625rem solid var(--cor-texto-principal);
     background: #fff;
     color: #111;
     font-size: 1rem;
 }
 
 .input:focus {
-    outline: 2px solid var(--cor-primaria);
-    outline-offset: 2px;
+    outline: 0.125rem solid var(--cor-primaria);
+    outline-offset: 0.125rem;
     border-color: var(--cor-primaria);
     box-shadow: none;
 }

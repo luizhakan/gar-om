@@ -1,6 +1,6 @@
 .container {
     min-height: 100vh;
-    padding-bottom: 120px;
+    padding-bottom: 7.5rem;
     /* Espaço para o botão flutuante */
 }
 
@@ -8,7 +8,7 @@
     background: linear-gradient(135deg, var(--cor-superficie) 0%, var(--cor-fundo) 100%);
     padding: var(--espaco-xl) 0;
     margin-bottom: var(--espaco-2xl);
-    border-bottom: 1px solid var(--cor-borda);
+    border-bottom: 0.0625rem solid var(--cor-borda);
 }
 
 .titulo {

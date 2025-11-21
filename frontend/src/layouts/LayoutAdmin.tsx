@@ -19,7 +19,7 @@ function ConteudoLayoutAdmin() {
         isActive ? `${styles.link} ${styles.linkAtivo}` : styles.link;
 
     return (
-        <div className={styles.shell}>
+        <div className={`${styles.shell} ${rotaPublica ? styles.shellPublic : ''}`}>
             {!rotaPublica && (
                 <aside className={styles.sidebar}>
                     <div className={styles.logo}>

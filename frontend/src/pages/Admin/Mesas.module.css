@@ -28,13 +28,13 @@
 
 .formCard {
     background: rgba(28, 30, 38, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.05);
     border-radius: var(--raio-borda-lg);
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0.625rem 1.625rem rgba(0, 0, 0, 0.25);
 }
 
 .sectionLabel {
@@ -61,7 +61,7 @@
 .input {
     width: 100%;
     border-radius: var(--raio-borda-md);
-    border: 1px solid var(--cor-texto-principal);
+    border: 0.0625rem solid var(--cor-texto-principal);
     background: #fff;
     color: #111;
     padding: 0.8rem;
@@ -69,8 +69,8 @@
 }
 
 .input:focus {
-    outline: 2px solid var(--cor-primaria);
-    outline-offset: 2px;
+    outline: 0.125rem solid var(--cor-primaria);
+    outline-offset: 0.125rem;
     border-color: var(--cor-primaria);
 }
 
@@ -87,13 +87,13 @@
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(13.75rem, 1fr));
     gap: 1rem;
 }
 
 .card {
     background: rgba(28, 30, 38, 0.92);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.05);
     border-radius: var(--raio-borda-lg);
     padding: 1rem;
     display: flex;
@@ -111,8 +111,8 @@
 
 .qrWrapper img {
     display: block;
-    width: 140px;
-    height: 140px;
+    width: 8.75rem;
+    height: 8.75rem;
 }
 
 .mesaLabel {
@@ -129,7 +129,7 @@
 
 .badgeEstado {
     padding: 0.2rem 0.5rem;
-    border-radius: 999px;
+    border-radius: 62.4375rem;
     background: rgba(255, 255, 255, 0.08);
     font-size: 0.85rem;
 }
@@ -145,7 +145,7 @@
 
 .badgeConta {
     padding: 0.2rem 0.5rem;
-    border-radius: 999px;
+    border-radius: 62.4375rem;
     background: rgba(255, 193, 7, 0.2);
     color: #ffd166;
     font-size: 0.85rem;

@@ -45,7 +45,7 @@
 
 .primario:hover:not(:disabled) {
     background-color: var(--cor-primaria-hover);
-    transform: translateY(-1px);
+    transform: translateY(-0.0625rem);
     box-shadow: var(--sombra-media);
 }
 
@@ -55,7 +55,7 @@
 
 .secundario {
     background-color: transparent;
-    border: 1px solid var(--cor-primaria);
+    border: 0.0625rem solid var(--cor-primaria);
     color: var(--cor-primaria);
 }
 
@@ -70,7 +70,7 @@
 
 .perigo:hover:not(:disabled) {
     background-color: #e03028;
-    transform: translateY(-1px);
+    transform: translateY(-0.0625rem);
 }
 
 .carregando {

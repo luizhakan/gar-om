@@ -1,11 +1,7 @@
 import { Link } from 'react-router-dom';
-import { obterRestauranteId } from '../utils/sessao';
 import { Botao } from '../components/Botao';
 
 export function Home() {
-    const restauranteId = obterRestauranteId();
-    const rotaMesaDemo = (restauranteId ?? '') !== '' ? `/mesa/1?restauranteId=${restauranteId ?? ''}` : '/mesa/1';
-
     return (
         <div className="container" style={{ paddingTop: '2rem', paddingBottom: '2rem' }}>
             <header style={{ textAlign: 'center', marginBottom: '3rem' }}>
@@ -29,9 +25,6 @@ export function Home() {
                 </Link>
                 <Link to="/cozinha">
                     <Botao variante="secundario">👨‍🍳 Cozinha</Botao>
-                </Link>
-                <Link to={rotaMesaDemo}>
-                    <Botao variante="secundario">📱 Cliente (Mesa 1)</Botao>
                 </Link>
             </nav>
 

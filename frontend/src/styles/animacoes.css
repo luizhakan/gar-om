@@ -4,7 +4,7 @@
 @keyframes aparecer {
     from {
         opacity: 0;
-        transform: translateY(10px);
+        transform: translateY(0.625rem);
     }
 
     to {
@@ -27,7 +27,7 @@
 
     70% {
         transform: scale(1.05);
-        box-shadow: 0 0 0 10px rgba(255, 69, 58, 0);
+        box-shadow: 0 0 0 0.625rem rgba(255, 69, 58, 0);
     }
 
     100% {

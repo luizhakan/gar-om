@@ -7,15 +7,15 @@
     justify-content: center;
     padding: 1.5rem;
     z-index: 50;
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(0.125rem);
     animation: fadeIn 0.2s ease;
 }
 
 .modal {
-    width: min(520px, 100%);
+    width: min(32.5rem, 100%);
     background: var(--cor-fundo-cartao);
     border-radius: var(--raio-borda-lg);
-    box-shadow: 0 12px 38px rgba(0, 0, 0, 0.18);
+    box-shadow: 0 0.75rem 2.375rem rgba(0, 0, 0, 0.18);
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
@@ -71,9 +71,9 @@
 
 .textarea {
     width: 100%;
-    min-height: 120px;
+    min-height: 7.5rem;
     border-radius: var(--raio-borda-md);
-    border: 1px solid var(--cor-borda);
+    border: 0.0625rem solid var(--cor-borda);
     padding: 0.75rem;
     font-size: 1rem;
     resize: vertical;
@@ -85,7 +85,7 @@
 .textarea:focus {
     outline: none;
     border-color: var(--cor-primaria);
-    box-shadow: 0 0 0 3px rgba(255, 75, 95, 0.15);
+    box-shadow: 0 0 0 0.1875rem rgba(255, 75, 95, 0.15);
 }
 
 .acoes {
@@ -95,7 +95,7 @@
 }
 
 .botaoAcao {
-    min-width: 160px;
+    min-width: 10rem;
 }
 
 @keyframes fadeIn {
@@ -109,7 +109,7 @@
 
 @keyframes slideUp {
     from {
-        transform: translateY(10px);
+        transform: translateY(0.625rem);
         opacity: 0;
     }
     to {

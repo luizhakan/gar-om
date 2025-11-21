@@ -10,7 +10,7 @@
     align-items: center;
     background: var(--cor-surface);
     padding: 1.5rem;
-    border-radius: 12px;
+    border-radius: 0.75rem;
     box-shadow: var(--sombra-suave);
 }
 
@@ -33,7 +33,7 @@
 
 .formCard {
     background: var(--cor-surface);
-    border-radius: 12px;
+    border-radius: 0.75rem;
     padding: 1.5rem;
     box-shadow: var(--sombra-suave);
     display: flex;
@@ -66,8 +66,8 @@
 
 .input {
     padding: 0.8rem 1rem;
-    border-radius: 10px;
-    border: 1px solid #111;
+    border-radius: 0.625rem;
+    border: 0.0625rem solid #111;
     font-size: 1rem;
     background: #fff;
     color: #111;
@@ -78,8 +78,8 @@
 }
 
 .input:focus {
-    outline: 2px solid var(--cor-primaria);
-    outline-offset: 2px;
+    outline: 0.125rem solid var(--cor-primaria);
+    outline-offset: 0.125rem;
     border-color: var(--cor-primaria);
 }
 
@@ -91,7 +91,7 @@
 .lista {
     background: var(--cor-surface);
     padding: 1.5rem;
-    border-radius: 12px;
+    border-radius: 0.75rem;
     box-shadow: var(--sombra-suave);
 }
 
@@ -101,14 +101,14 @@
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr));
     gap: 1rem;
     margin-top: 1rem;
 }
 
 .card {
-    border: 1px solid var(--cor-borda);
-    border-radius: 12px;
+    border: 0.0625rem solid var(--cor-borda);
+    border-radius: 0.75rem;
     padding: 1rem;
     display: flex;
     align-items: center;
@@ -119,7 +119,7 @@
 .badge {
     background: var(--cor-primaria);
     color: #fff;
-    border-radius: 999px;
+    border-radius: 62.4375rem;
     padding: 0.35rem 0.7rem;
     font-weight: 700;
 }

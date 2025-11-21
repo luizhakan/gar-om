@@ -2,14 +2,14 @@
     background-color: var(--cor-superficie);
     border-radius: var(--raio-lg);
     padding: var(--espaco-xl);
-    border: 3px solid transparent;
+    border: 0.1875rem solid transparent;
     transition: all 0.3s ease;
-    min-width: 350px;
+    min-width: 21.875rem;
 }
 
 .card.pendente {
     border-color: var(--cor-erro);
-    box-shadow: 0 0 20px rgba(255, 69, 58, 0.3);
+    box-shadow: 0 0 1.25rem rgba(255, 69, 58, 0.3);
     animation: pulsar 2s infinite;
 }
 
@@ -25,7 +25,7 @@
     align-items: center;
     margin-bottom: var(--espaco-lg);
     padding-bottom: var(--espaco-md);
-    border-bottom: 2px solid var(--cor-borda);
+    border-bottom: 0.125rem solid var(--cor-borda);
 }
 
 .mesaDestaque {
@@ -38,7 +38,7 @@
     font-size: var(--tamanho-texto-sm);
     color: var(--cor-texto-secundario);
     font-weight: var(--peso-medio);
-    letter-spacing: 1px;
+    letter-spacing: 0.0625rem;
 }
 
 .numeroMesa {
@@ -81,7 +81,7 @@
     font-size: var(--tamanho-texto-md);
     padding: var(--espaco-xs) var(--espaco-sm);
     border-radius: var(--raio-sm);
-    min-width: 40px;
+    min-width: 2.5rem;
     text-align: center;
 }
 
@@ -105,7 +105,7 @@
     background-color: rgba(255, 159, 10, 0.1);
     padding: var(--espaco-xs) var(--espaco-sm);
     border-radius: var(--raio-sm);
-    border-left: 3px solid var(--cor-aviso);
+    border-left: 0.1875rem solid var(--cor-aviso);
 }
 
 /* Ações */
@@ -121,14 +121,14 @@
 /* Animação de pulsar para pedidos pendentes */
 @keyframes pulsar {
     0% {
-        box-shadow: 0 0 20px rgba(255, 69, 58, 0.3);
+        box-shadow: 0 0 1.25rem rgba(255, 69, 58, 0.3);
     }
 
     50% {
-        box-shadow: 0 0 30px rgba(255, 69, 58, 0.6);
+        box-shadow: 0 0 1.875rem rgba(255, 69, 58, 0.6);
     }
 
     100% {
-        box-shadow: 0 0 20px rgba(255, 69, 58, 0.3);
+        box-shadow: 0 0 1.25rem rgba(255, 69, 58, 0.3);
     }
 }

@@ -83,6 +83,30 @@ export function RevisarPedido() {
     }, [restauranteId]);
 
     useEffect(() => {
+        let ativo = true;
+        const restauranteParam = restauranteId ?? '';
+        if (restauranteParam === '' || (idMesa ?? '') === '') return;
+
+        const chave = `${CHAVE_CONTA_SOLICITADA}:${restauranteParam}:${idMesa ?? ''}`;
+
+        const sincronizarStatusMesa = async () => {
+            try {
+                const status = await ServicoMesas.obterStatusPublico(idMesa ?? '');
+                if (!ativo) return;
+                setContaSolicitada(status.contaSolicitada);
+                if (!status.contaSolicitada) {
+                    window.localStorage.removeItem(chave);
+                }
+            } catch (erro) {
+                console.error('[RevisarPedido] Falha ao consultar status da mesa', erro);
+            }
+        };
+
+        void sincronizarStatusMesa();
+        return () => { ativo = false; };
+    }, [idMesa, restauranteId]);
+
+    useEffect(() => {
         const atualizar = () => {
             const info = carregarPedidoEditavel(restauranteId);
             if (!info) {

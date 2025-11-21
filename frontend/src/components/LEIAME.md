@@ -64,7 +64,7 @@ export function Botao({
 
 .secundario {
   background-color: transparent;
-  border: 1px solid var(--cor-primaria);
+  border: 0.0625rem solid var(--cor-primaria);
   color: var(--cor-primaria);
 }
 ```

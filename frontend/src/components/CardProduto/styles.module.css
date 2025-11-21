@@ -4,11 +4,11 @@
     padding: var(--espaco-lg);
     cursor: pointer;
     transition: all 0.2s ease;
-    border: 1px solid transparent;
+    border: 0.0625rem solid transparent;
 }
 
 .card:hover {
-    transform: translateY(-2px);
+    transform: translateY(-0.125rem);
     box-shadow: var(--sombra-media);
     border-color: var(--cor-primaria);
 }
@@ -58,8 +58,8 @@
 }
 
 .botaoAdicionar {
-    width: 36px;
-    height: 36px;
+    width: 2.25rem;
+    height: 2.25rem;
     border-radius: var(--raio-circulo);
     background-color: var(--cor-primaria);
     color: white;

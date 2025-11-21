@@ -8,8 +8,8 @@
 }
 
 .botao {
-    width: 32px;
-    height: 32px;
+    width: 2rem;
+    height: 2rem;
     border-radius: var(--raio-sm);
     background-color: var(--cor-primaria);
     color: white;
@@ -39,7 +39,7 @@
 }
 
 .quantidade {
-    min-width: 32px;
+    min-width: 2rem;
     text-align: center;
     font-size: var(--tamanho-texto-lg);
     font-weight: var(--peso-negrito);

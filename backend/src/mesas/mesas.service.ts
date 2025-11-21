@@ -190,4 +190,12 @@ export class MesasService {
             },
         });
     }
+
+    async statusPublico(id: string, restauranteId: string) {
+        const mesa = await this.garantirMesa(id, restauranteId);
+        return {
+            ocupada: mesa.ocupada,
+            contaSolicitada: mesa.contaSolicitada,
+        };
+    }
 }

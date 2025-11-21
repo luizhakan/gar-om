@@ -1,12 +1,12 @@
 .card {
     background: rgba(28, 30, 38, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    border: 0.0625rem solid rgba(255, 255, 255, 0.06);
     border-radius: var(--raio-borda-lg);
     padding: 1.1rem;
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 0.625rem 1.625rem rgba(0, 0, 0, 0.25);
 }
 
 .header {
@@ -32,7 +32,7 @@
 .tagDisponivel,
 .tagIndisponivel {
     padding: 0.35rem 0.65rem;
-    border-radius: 999px;
+    border-radius: 62.4375rem;
     font-weight: 700;
     font-size: 0.85rem;
 }
@@ -40,13 +40,13 @@
 .tagDisponivel {
     background: rgba(64, 195, 129, 0.16);
     color: #8be5b6;
-    border: 1px solid rgba(139, 229, 182, 0.3);
+    border: 0.0625rem solid rgba(139, 229, 182, 0.3);
 }
 
 .tagIndisponivel {
     background: rgba(255, 75, 95, 0.12);
     color: #ff9fad;
-    border: 1px solid rgba(255, 75, 95, 0.25);
+    border: 0.0625rem solid rgba(255, 75, 95, 0.25);
 }
 
 .descricao {
