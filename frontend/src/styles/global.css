@@ -1,66 +1,60 @@
 /* Reset CSS Moderno */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
 }
 
+:root {
+    color-scheme: dark; /* Ajuda o navegador a renderizar controles nativos escuros */
+}
+
 html {
-    font-size: 1rem;
+    font-size: 16px;
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 body {
     background-color: var(--cor-fundo);
     color: var(--cor-texto-primario);
     font-family: var(--fonte-padrao);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    line-height: 1.5;
+    line-height: 1.6;
     min-height: 100vh;
+    overflow-x: hidden;
 }
 
-/* Inputs e Botões herdam fonte */
-input,
-button,
-textarea,
-select {
-    font-family: inherit;
-    font-size: inherit;
-    color: inherit;
-}
-
-/* Remover estilos padrão de botão */
-button {
-    background: none;
-    border: none;
-    cursor: pointer;
-}
-
-/* Links */
-a {
-    color: var(--cor-primaria);
-    text-decoration: none;
-    transition: color 0.2s;
-}
-
-a:hover {
-    color: var(--cor-primaria-hover);
-}
-
-/* Utilitários Globais */
+/* Utilitários de Container */
 .container {
     width: 100%;
-    max-width: 75rem;
+    max-width: 1120px;
     margin: 0 auto;
-    padding: 0 var(--espaco-md);
+    padding: 0 var(--espaco-lg);
 }
 
-/* Scrollbar customizada (estilo dark) */
+/* Inputs e Elementos de Formulário Melhorados */
+input, select, textarea {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-md);
+    color: var(--cor-texto-primario);
+    font-family: inherit;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
+
+input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 3px var(--cor-primaria-fundo);
+}
+
+/* Scrollbar Estilizada */
 ::-webkit-scrollbar {
-    width: 0.5rem;
+    width: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -68,10 +62,17 @@ a:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--cor-superficie);
-    border-radius: var(--raio-md);
+    background: var(--cor-superficie-ativa);
+    border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--cor-superficie-hover);
+    background: var(--cor-texto-terciario);
+}
+
+/* Links */
+a {
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
 }

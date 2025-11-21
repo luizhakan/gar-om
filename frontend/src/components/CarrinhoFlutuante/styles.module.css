@@ -4,25 +4,36 @@
     left: 50%;
     transform: translateX(-50%);
     z-index: var(--z-flutuante);
-
-    /* Animação de entrada */
-    animation: aparecer 0.3s ease-out;
+    width: auto;
+    min-width: 300px;
+    
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .botaoFlutuante {
-    background: linear-gradient(135deg, var(--cor-primaria) 0%, var(--cor-primaria-hover) 100%);
-    border: none;
-    border-radius: var(--raio-xl);
-    padding: var(--espaco-md) var(--espaco-xl);
+    width: 100%;
+    background: rgba(15, 15, 18, 0.85); /* Fundo semi-transparente */
+    backdrop-filter: blur(16px) saturate(180%); /* O segredo do glassmorphism */
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 100px; /* Pílula completa */
+    padding: 0.75rem 1.25rem;
+    
     cursor: pointer;
-
-    box-shadow: var(--sombra-forte);
-    transition: all 0.2s ease;
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+    transition: all 0.3s ease;
+    
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 .botaoFlutuante:hover {
-    transform: translateY(-0.125rem);
-    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.2);
+    background: rgba(20, 20, 25, 0.9);
 }
 
 .botaoFlutuante:active {
@@ -32,72 +43,77 @@
 .conteudo {
     display: flex;
     align-items: center;
-    gap: var(--espaco-lg);
+    gap: var(--espaco-md);
+    width: 100%;
 }
 
 .badge {
-    background-color: white;
-    color: var(--cor-primaria);
-    width: 2rem;
-    height: 2rem;
+    background-color: var(--cor-primaria);
+    color: white;
+    min-width: 2.5rem;
+    height: 2.5rem;
     border-radius: var(--raio-circulo);
+    
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: var(--peso-negrito);
+    font-weight: 700;
     font-size: var(--tamanho-texto-md);
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.4);
 }
 
 .info {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.125rem;
+    flex: 1;
 }
 
 .label {
-    color: white;
-    font-size: var(--tamanho-texto-sm);
-    opacity: 0.9;
+    color: var(--cor-texto-secundario);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
 }
 
 .total {
-    color: white;
-    font-size: var(--tamanho-titulo-sm);
-    font-weight: var(--peso-negrito);
+    color: var(--cor-texto-primario);
+    font-size: var(--tamanho-texto-lg);
+    font-weight: 700;
+    font-family: var(--fonte-mono);
 }
 
 .icone {
-    color: white;
-    font-size: var(--tamanho-titulo-md);
-    font-weight: bold;
+    color: var(--cor-texto-primario);
+    font-size: 1.25rem;
+    opacity: 0.5;
+    transition: opacity 0.2s;
 }
 
-@keyframes aparecer {
+.botaoFlutuante:hover .icone {
+    opacity: 1;
+    transform: translateX(2px);
+}
+
+@keyframes slideUp {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(1.25rem);
+        transform: translate(-50%, 20px);
     }
-
     to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translate(-50%, 0);
     }
 }
 
-/* Responsividade */
-@media (max-width: 48rem) {
+/* Mobile */
+@media (max-width: 480px) {
     .container {
         left: var(--espaco-md);
         right: var(--espaco-md);
+        width: auto;
         transform: none;
-    }
-
-    .botaoFlutuante {
-        width: 100%;
-    }
-
-    .conteudo {
-        justify-content: space-between;
+        bottom: 1.5rem;
     }
 }

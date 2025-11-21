@@ -95,6 +95,7 @@ model Pedido {
   idMesa          String
   restauranteId   String
   status          PedidoStatus  @default(pendente)
+  encerrado       Boolean       @default(false)
   dataCriacao     DateTime      @default(now())
   dataAtualizacao DateTime?
   mesa            Mesa          @relation(fields: [idMesa], references: [id])

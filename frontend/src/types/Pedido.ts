@@ -16,6 +16,7 @@ export interface Pedido {
     restauranteId?: string;
     itens: ItemPedido[];
     status: StatusPedido;
+    encerrado?: boolean; // Novo campo
     dataCriacao: string;
     dataAtualizacao?: string;
 }

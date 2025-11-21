@@ -176,12 +176,23 @@ export class MesasService {
 
     async fechar(id: string, restauranteId: string) {
         const mesa = await this.garantirMesa(id, restauranteId);
+        
         if (!mesa.ocupada) {
             throw new BadRequestException('Mesa já está livre');
         }
-        if (!mesa.contaSolicitada) {
-            throw new BadRequestException('Conta não solicitada para esta mesa');
-        }
+        
+        // Encerra todos os pedidos ativos desta mesa
+        await this.prisma.pedido.updateMany({
+            where: {
+                idMesa: mesa.id,
+                restauranteId,
+                encerrado: false,
+            },
+            data: {
+                encerrado: true,
+            },
+        });
+
         return this.prisma.mesa.update({
             where: { id: mesa.id },
             data: {
@@ -197,5 +208,54 @@ export class MesasService {
             ocupada: mesa.ocupada,
             contaSolicitada: mesa.contaSolicitada,
         };
+    }
+
+    async obterComanda(id: string, restauranteId: string) {
+        const mesa = await this.garantirMesa(id, restauranteId);
+        
+        // Se a mesa não está ocupada, não há comanda ativa
+        if (!mesa.ocupada) {
+            return [];
+        }
+
+        // Retorna apenas pedidos NÃO encerrados
+        const pedidos = await this.prisma.pedido.findMany({
+            where: {
+                idMesa: mesa.id,
+                restauranteId,
+                encerrado: false,
+            },
+            orderBy: { dataCriacao: 'desc' },
+            include: {
+                itens: {
+                    include: { produto: true },
+                },
+            },
+        });
+
+        return pedidos.map(pedido => ({
+            id: pedido.id,
+            idMesa: String(mesa.numero),
+            restauranteId: pedido.restauranteId,
+            status: pedido.status,
+            encerrado: pedido.encerrado,
+            dataCriacao: pedido.dataCriacao,
+            dataAtualizacao: pedido.dataAtualizacao,
+            itens: pedido.itens.map(item => ({
+                idProduto: item.produtoId,
+                quantidade: item.quantidade,
+                observacao: item.observacao,
+                precoUnitario: item.precoUnitario,
+                produto: {
+                    id: item.produto.id,
+                    nome: item.produto.nome,
+                    descricao: item.produto.descricao,
+                    preco: item.produto.preco,
+                    idCategoria: item.produto.idCategoria,
+                    disponivel: item.produto.disponivel,
+                    imagemUrl: item.produto.imagemUrl,
+                }
+            })),
+        }));
     }
 }

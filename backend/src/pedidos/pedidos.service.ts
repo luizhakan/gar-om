@@ -15,6 +15,7 @@ export class PedidosService {
             idMesa: pedido.mesa?.numero ? String(pedido.mesa.numero) : pedido.idMesa,
             restauranteId: pedido.restauranteId,
             status: pedido.status,
+            encerrado: pedido.encerrado, // Novo campo
             dataCriacao: pedido.dataCriacao,
             dataAtualizacao: pedido.dataAtualizacao ?? undefined,
             itens: pedido.itens.map((item: any) => ({
@@ -108,6 +109,7 @@ export class PedidosService {
                 idMesa: mesa.id,
                 restauranteId: restaurante.id,
                 status: PedidoStatus.pendente,
+                encerrado: false, // Default
                 itens: {
                     create: itensPreparados,
                 },
@@ -118,7 +120,8 @@ export class PedidosService {
             },
         });
 
-        if (typeof this.prisma.mesa.update === 'function') {
+        // Marca mesa como ocupada se necessário
+        if (!mesa.ocupada) {
             await this.prisma.mesa.update({
                 where: { id: mesa.id },
                 data: { ocupada: true, contaSolicitada: false },
@@ -139,6 +142,9 @@ export class PedidosService {
         if (!pedidoExistente) throw new NotFoundException('Pedido não encontrado');
         if (pedidoExistente.restauranteId !== restauranteId) {
             throw new UnauthorizedException('Pedido pertence a outro restaurante');
+        }
+        if (pedidoExistente.encerrado) {
+            throw new BadRequestException('Pedido já encerrado (conta fechada)');
         }
 
         const agora = new Date();
@@ -234,8 +240,11 @@ export class PedidosService {
             throw new UnauthorizedException('Pedido pertence a outro restaurante');
         }
 
+        // Se encerrado, não aplicamos limite de tempo para ver a comanda histórica, 
+        // mas o frontend pode decidir não mostrar.
+        // Mantemos o limite para evitar scraping excessivo de pedidos antigos
         const agora = new Date();
-        const limiteHoras = 4;
+        const limiteHoras = 24; // Aumentado para cobrir a sessão da mesa
         const diffHoras = (agora.getTime() - pedido.dataCriacao.getTime()) / (1000 * 60 * 60);
         if (diffHoras > limiteHoras) {
             throw new BadRequestException('Status público indisponível para pedidos antigos');

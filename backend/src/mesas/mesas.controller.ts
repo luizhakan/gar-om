@@ -25,6 +25,14 @@ export class MesasController {
         return this.mesasService.statusPublico(id, restauranteId);
     }
 
+    @Get(':id/comanda')
+    obterComanda(@Param('id') id: string, @Headers('x-restaurante-id') restauranteId?: string) {
+        if (!restauranteId) {
+            throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
+        }
+        return this.mesasService.obterComanda(id, restauranteId);
+    }
+
     @UseGuards(AuthGuard)
     @Roles('admin')
     @Post()

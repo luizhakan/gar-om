@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { Produto } from '../types/Produto';
 import { ContextoCarrinho, type ItemCarrinho } from './carrinho-context';
@@ -7,15 +7,28 @@ interface ProvedorCarrinhoProps {
     children: ReactNode;
 }
 
+const CHAVE_CARRINHO = 'garcom_carrinho_itens';
+
 export function ProvedorCarrinho({ children }: ProvedorCarrinhoProps) {
-    const [itens, setItens] = useState<ItemCarrinho[]>([]);
+    // 1. Inicializa lendo do LocalStorage para não perder dados no F5
+    const [itens, setItens] = useState<ItemCarrinho[]>(() => {
+        if (typeof window === 'undefined') return [];
+        const salvos = window.localStorage.getItem(CHAVE_CARRINHO);
+        return salvos ? (JSON.parse(salvos) as ItemCarrinho[]) : [];
+    });
+
+    // 2. Salva no LocalStorage sempre que mudar
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.localStorage.setItem(CHAVE_CARRINHO, JSON.stringify(itens));
+        }
+    }, [itens]);
 
     function adicionarItem(produto: Produto, observacao?: string) {
         setItens((itensAtuais) => {
             const itemExistente = itensAtuais.find(item => item.idProduto === produto.id);
 
             if (itemExistente) {
-                // Se já existe, incrementa quantidade
                 return itensAtuais.map(item =>
                     item.idProduto === produto.id
                         ? { ...item, quantidade: item.quantidade + 1 }
@@ -23,7 +36,6 @@ export function ProvedorCarrinho({ children }: ProvedorCarrinhoProps) {
                 );
             }
 
-            // Se não existe, adiciona novo item
             return [...itensAtuais, {
                 idProduto: produto.id,
                 produto,
@@ -66,7 +78,6 @@ export function ProvedorCarrinho({ children }: ProvedorCarrinhoProps) {
         setItens([]);
     }
 
-    // Cálculos derivados
     const total = itens.reduce((acc, item) => {
         return acc + (item.produto.preco * item.quantidade);
     }, 0);
@@ -90,5 +101,3 @@ export function ProvedorCarrinho({ children }: ProvedorCarrinhoProps) {
         </ContextoCarrinho.Provider>
     );
 }
-
-

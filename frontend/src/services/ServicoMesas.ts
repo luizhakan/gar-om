@@ -1,4 +1,5 @@
 import type { Mesa } from '../types/Mesa';
+import type { Pedido } from '../types/Pedido';
 import { env } from '../config/env';
 import { obterRestauranteId, obterToken } from '../utils/sessao';
 
@@ -83,6 +84,11 @@ export const ServicoMesas = {
             ocupada: data.ocupada,
             contaSolicitada: data.contaSolicitada ?? false,
         };
+    },
+
+    async obterComanda(idMesa: string): Promise<Pedido[]> {
+        // Retorna lista de pedidos da sessão atual (backend filtra por mesa ocupada + 24h)
+        return await requestApi<Pedido[]>(`/mesas/${idMesa}/comanda`);
     },
 
     async adicionarMesa(numero: number): Promise<Mesa> {
