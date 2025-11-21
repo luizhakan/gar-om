@@ -4,6 +4,16 @@ import { AuthService } from '../src/auth/auth.service';
 import { validarToken } from '../src/auth/token.util';
 import { criarPrismaMock, PrismaMock } from './mocks/prisma.mock';
 
+// Mock do crypto para garantir determinismo
+jest.mock('crypto', () => ({
+    randomBytes: jest.fn().mockReturnValue(Buffer.from('segredo-randomico')),
+    createHmac: jest.fn().mockReturnValue({
+        update: jest.fn().mockReturnThis(),
+        digest: jest.fn().mockReturnValue('assinatura-fake'),
+    }),
+    timingSafeEqual: jest.fn().mockReturnValue(true),
+}));
+
 jest.mock('bcryptjs');
 
 describe('AuthService', () => {
@@ -14,11 +24,14 @@ describe('AuthService', () => {
         process.env.AUTH_SECRET = 'segredo-de-teste';
     });
 
-    beforeEach(() => {
+beforeEach(() => {
         prisma = criarPrismaMock();
         service = new AuthService(prisma as any);
         (bcrypt.hash as jest.Mock).mockResolvedValue('senha-hash');
         (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+        
+        // CORREÇÃO CRÍTICA: Configurar retorno padrão do refreshToken
+        prisma.refreshToken.create.mockResolvedValue({ id: 'rt-123' });
     });
 
     it('registra admin com CPF higienizado, cria restaurante e retorna token', async () => {
@@ -155,5 +168,30 @@ describe('AuthService', () => {
         });
         (bcrypt.compare as jest.Mock).mockResolvedValueOnce(false);
         await expect(service.loginCozinha({ email: 'x', senha: 'errada' })).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+describe('refresh', () => {
+        it('realiza rotação de token com sucesso', async () => {
+            prisma.refreshToken.findUnique.mockResolvedValue({
+                id: 'rt-123',
+                tokenHash: 'hash-do-segredo',
+                expiresAt: new Date(Date.now() + 10000),
+                admin: { id: 'admin-1', restauranteId: 'rest-1' }
+            });
+
+            const tokenRecebido = 'rt-123.7365677265646f2d72616e646f6d69636f'; 
+            const resultado = await service.refresh(tokenRecebido);
+
+            expect(prisma.refreshToken.delete).toHaveBeenCalledWith({ where: { id: 'rt-123' } });
+            expect(prisma.refreshToken.create).toHaveBeenCalled();
+            expect(resultado).toHaveProperty('token');
+            expect(resultado).toHaveProperty('refreshToken');
+        });
+
+        it('falha se token não existir no banco', async () => {
+            prisma.refreshToken.findUnique.mockResolvedValue(null);
+            const token = 'rt-999.segredo';
+            await expect(service.refresh(token)).rejects.toBeInstanceOf(UnauthorizedException);
+        });
     });
 });

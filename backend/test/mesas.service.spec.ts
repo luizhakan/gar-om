@@ -113,4 +113,57 @@ describe('MesasService', () => {
             expect(prisma.pedido.findMany).not.toHaveBeenCalled();
         });
     });
+
+    describe('adicionar (Segurança QR Code)', () => {
+        it('DEVE IGNORAR baseUrl maliciosa e usar a do sistema', async () => {
+            prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+            prisma.mesa.findFirst.mockResolvedValue(null);
+            prisma.mesa.create.mockResolvedValue({ id: 'm1' });
+
+            // Tenta injetar URL de phishing
+            const urlMaliciosa = 'http://site-falso.com';
+            
+            await service.adicionar(1, urlMaliciosa, 'rest-1');
+
+            // Verifica se o create foi chamado com a URL SEGURA
+            expect(prisma.mesa.create).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        codigoQr: expect.stringContaining('http://localhost:5173/mesa/1'),
+                    })
+                })
+            );
+            
+            // Garante que a URL maliciosa NÃO foi usada
+            expect(prisma.mesa.create).not.toHaveBeenCalledWith(
+                expect.objectContaining({
+                    data: expect.objectContaining({
+                        codigoQr: expect.stringContaining('site-falso'),
+                    })
+                })
+            );
+        });
+    });
+
+    describe('configurar (Segurança QR Code)', () => {
+        it('DEVE IGNORAR baseUrl maliciosa ao recriar mesas', async () => {
+            prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+            prisma.pedido.count.mockResolvedValue(0); // Sem pedidos ativos
+
+            const urlMaliciosa = 'http://phishing.com';
+
+            await service.configurar(5, urlMaliciosa, 'rest-1');
+
+            expect(prisma.mesa.createMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    data: expect.arrayContaining([
+                        expect.objectContaining({
+                            // Verifica se o item 1 tem a URL segura
+                            codigoQr: expect.stringContaining('http://localhost:5173/mesa/1')
+                        })
+                    ])
+                })
+            );
+        });
+    });
 });

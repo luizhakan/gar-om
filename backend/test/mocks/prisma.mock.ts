@@ -11,16 +11,22 @@ export type PrismaMock = {
         createMany: jest.Mock; 
         deleteMany: jest.Mock; 
         count: jest.Mock;
-        update: jest.Mock; // Adicionado
-        delete: jest.Mock; // Adicionado
+        update: jest.Mock; 
+        delete: jest.Mock; 
     };
     pedido: { 
         findMany: jest.Mock; 
         create: jest.Mock; 
         findUnique: jest.Mock; 
         update: jest.Mock; 
-        updateMany: jest.Mock; // Adicionado
-        count: jest.Mock;      // Adicionado
+        updateMany: jest.Mock; 
+        count: jest.Mock;      
+    };
+    // Novo campo obrigatório para os testes de auth
+    refreshToken: {
+        create: jest.Mock;
+        findUnique: jest.Mock;
+        delete: jest.Mock;
     };
 };
 
@@ -45,9 +51,14 @@ export function criarPrismaMock(): PrismaMock {
             findMany: jest.fn(), 
             create: jest.fn(), 
             findUnique: jest.fn(), 
-            update: jest.fn(),
+            update: jest.fn(), 
             updateMany: jest.fn(),
-            count: jest.fn()
+            count: jest.fn() 
+        },
+        refreshToken: {
+            create: jest.fn(),
+            findUnique: jest.fn(),
+            delete: jest.fn(),
         },
     };
 }
