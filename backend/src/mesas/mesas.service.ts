@@ -8,10 +8,18 @@ export class MesasService {
     constructor(private prisma: PrismaService, private pedidosGateway: PedidosGateway) {}
 
     // Método auxiliar de segurança para garantir a URL correta
-    private obterUrlBaseSegura(): string {
+    private obterUrlBaseSegura(baseUrlRecebida?: string): string {
         // Em produção, defina a variável FRONTEND_URL no .env
         // Ex: FRONTEND_URL=https://meu-app-garcom.com
-        return process.env.FRONTEND_URL || 'http://localhost:5173';
+        const basePreferencial = process.env.FRONTEND_URL || baseUrlRecebida || 'http://localhost:5173';
+        const fallback = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+        try {
+            // Sempre normaliza para apenas protocolo + host, ignorando path/query
+            return new URL(basePreferencial).origin;
+        } catch {
+            return new URL(fallback).origin;
+        }
     }
 
     private async garantirMesa(idMesaRecebido: string, restauranteId: string) {
@@ -44,8 +52,8 @@ export class MesasService {
     }
 
     // Correção: O parâmetro baseUrl recebido é ignorado por segurança
-    async adicionar(numero: number, _baseUrlIgnorada: string, restauranteId: string) {
-        const baseUrlSegura = this.obterUrlBaseSegura();
+    async adicionar(numero: number, baseUrl: string, restauranteId: string) {
+        const baseUrlSegura = this.obterUrlBaseSegura(baseUrl);
 
         const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
         if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
@@ -74,8 +82,8 @@ export class MesasService {
     }
 
     // Correção: O parâmetro baseUrl recebido é ignorado por segurança
-    async configurar(quantidade: number, _baseUrlIgnorada: string, restauranteId: string) {
-        const baseUrlSegura = this.obterUrlBaseSegura();
+    async configurar(quantidade: number, baseUrl: string, restauranteId: string) {
+        const baseUrlSegura = this.obterUrlBaseSegura(baseUrl);
 
         const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
         if (!restaurante) throw new NotFoundException('Restaurante não encontrado');

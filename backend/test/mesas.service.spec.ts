@@ -7,11 +7,17 @@ describe('MesasService', () => {
     let prisma: PrismaMock;
     let service: MesasService;
     let pedidosGateway: PedidosGatewayMock;
+    const FRONTEND_URL_ORIGINAL = process.env.FRONTEND_URL;
 
     beforeEach(() => {
         prisma = criarPrismaMock();
         pedidosGateway = criarPedidosGatewayMock();
         service = new MesasService(prisma as any, pedidosGateway as any);
+        process.env.FRONTEND_URL = '';
+    });
+
+    afterEach(() => {
+        process.env.FRONTEND_URL = FRONTEND_URL_ORIGINAL;
     });
 
     // --- Testes Existentes (Mantidos) ---
@@ -120,12 +126,12 @@ describe('MesasService', () => {
     });
 
     describe('adicionar (Segurança QR Code)', () => {
-        it('DEVE IGNORAR baseUrl maliciosa e usar a do sistema', async () => {
+        it('prioriza FRONTEND_URL configurada, mesmo se receber base diferente', async () => {
+            process.env.FRONTEND_URL = 'https://app.oficial.com';
             prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
             prisma.mesa.findFirst.mockResolvedValue(null);
             prisma.mesa.create.mockResolvedValue({ id: 'm1' });
 
-            // Tenta injetar URL de phishing
             const urlMaliciosa = 'http://site-falso.com';
             
             await service.adicionar(1, urlMaliciosa, 'rest-1');
@@ -134,16 +140,23 @@ describe('MesasService', () => {
             expect(prisma.mesa.create).toHaveBeenCalledWith(
                 expect.objectContaining({
                     data: expect.objectContaining({
-                        codigoQr: expect.stringContaining('http://localhost:5173/mesa/1'),
+                        codigoQr: expect.stringContaining('https://app.oficial.com/mesa/1'),
                     })
                 })
             );
-            
-            // Garante que a URL maliciosa NÃO foi usada
-            expect(prisma.mesa.create).not.toHaveBeenCalledWith(
+        });
+
+        it('usa base enviada quando FRONTEND_URL não está definida', async () => {
+            prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+            prisma.mesa.findFirst.mockResolvedValue(null);
+            prisma.mesa.create.mockResolvedValue({ id: 'm1' });
+
+            await service.adicionar(2, 'https://minha-pagina.com/app', 'rest-1');
+
+            expect(prisma.mesa.create).toHaveBeenCalledWith(
                 expect.objectContaining({
                     data: expect.objectContaining({
-                        codigoQr: expect.stringContaining('site-falso'),
+                        codigoQr: expect.stringContaining('https://minha-pagina.com/mesa/2'),
                     })
                 })
             );
@@ -151,7 +164,8 @@ describe('MesasService', () => {
     });
 
     describe('configurar (Segurança QR Code)', () => {
-        it('DEVE IGNORAR baseUrl maliciosa ao recriar mesas', async () => {
+        it('usa FRONTEND_URL ao recriar mesas quando configurada', async () => {
+            process.env.FRONTEND_URL = 'https://frente.oficial.app';
             prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
             prisma.pedido.count.mockResolvedValue(0); // Sem pedidos ativos
 
@@ -164,9 +178,26 @@ describe('MesasService', () => {
                     data: expect.arrayContaining([
                         expect.objectContaining({
                             // Verifica se o item 1 tem a URL segura
-                            codigoQr: expect.stringContaining('http://localhost:5173/mesa/1')
+                            codigoQr: expect.stringContaining('https://frente.oficial.app/mesa/1')
                         })
                     ])
+                })
+            );
+        });
+
+        it('usa base recebida quando FRONTEND_URL não está configurada', async () => {
+            prisma.restaurante.findUnique.mockResolvedValue({ id: 'rest-1' });
+            prisma.pedido.count.mockResolvedValue(0);
+
+            await service.configurar(3, 'https://dominio-exemplo.com', 'rest-1');
+
+            expect(prisma.mesa.createMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    data: expect.arrayContaining([
+                        expect.objectContaining({
+                            codigoQr: expect.stringContaining('https://dominio-exemplo.com/mesa/1')
+                        }),
+                    ]),
                 })
             );
         });
