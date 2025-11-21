@@ -176,6 +176,7 @@ describe('refresh', () => {
                 id: 'rt-123',
                 tokenHash: 'hash-do-segredo',
                 expiresAt: new Date(Date.now() + 10000),
+                lastUsedAt: new Date(),
                 admin: { id: 'admin-1', restauranteId: 'rest-1' }
             });
 
@@ -192,6 +193,21 @@ describe('refresh', () => {
             prisma.refreshToken.findUnique.mockResolvedValue(null);
             const token = 'rt-999.segredo';
             await expect(service.refresh(token)).rejects.toBeInstanceOf(UnauthorizedException);
+        });
+
+        it('revoga refresh token após inatividade', async () => {
+            const antigo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // 7 dias atrás
+            prisma.refreshToken.findUnique.mockResolvedValue({
+                id: 'rt-123',
+                tokenHash: 'hash-do-segredo',
+                expiresAt: new Date(Date.now() + 10000),
+                lastUsedAt: antigo,
+                createdAt: antigo,
+                admin: { id: 'admin-1', restauranteId: 'rest-1' }
+            });
+
+            await expect(service.refresh('rt-123.segredo')).rejects.toBeInstanceOf(UnauthorizedException);
+            expect(prisma.refreshToken.delete).toHaveBeenCalledWith({ where: { id: 'rt-123' } });
         });
     });
 });

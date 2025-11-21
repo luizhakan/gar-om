@@ -3,10 +3,13 @@
 import type { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
 import { env } from '../config/env';
-import { obterRestauranteId, obterTipoSessao, obterToken } from '../utils/sessao';
+import { ServicoAuth } from './ServicoAuth';
+import { atualizarTokensSessao, limparSessao, obterRefreshToken, obterRestauranteId, obterTipoSessao, obterToken } from '../utils/sessao';
 
 const API_BASE = env.apiBaseUrl.replace(/^http/, 'ws').replace(/\/$/, '');
 let socket: Socket | null = null;
+let refreshPromise: Promise<string | undefined> | null = null;
+let recuperandoWs = false;
 
 function obterQueryParams(): Record<string, string> {
     const restauranteId = obterRestauranteId();
@@ -37,6 +40,28 @@ function resolveTransports(): string[] {
     return ['websocket', 'polling'];
 }
 
+async function tentarRenovarTokenWs(): Promise<string | undefined> {
+    const refreshToken = obterRefreshToken();
+    if (!refreshToken) return undefined;
+    if (refreshPromise) return refreshPromise;
+
+    refreshPromise = (async () => {
+        try {
+            const resp = await ServicoAuth.refresh(refreshToken);
+            atualizarTokensSessao(resp.token, resp.refreshToken);
+            return resp.token;
+        } catch (erro) {
+            console.error('[Realtime] Falha ao renovar token do WS', erro);
+            limparSessao();
+            return undefined;
+        } finally {
+            refreshPromise = null;
+        }
+    })();
+
+    return refreshPromise;
+}
+
 export const ServicoRealtime = {
     conectar(): Socket {
         // Se já estiver conectado, retorna a instância existente
@@ -65,7 +90,25 @@ export const ServicoRealtime = {
 
         socket.on('connect', () => { console.log('[WS] Conectado.'); });
         socket.on('disconnect', () => { console.log('[WS] Desconectado.'); });
-        socket.on('connect_error', (err) => { console.error('[WS] Erro de conexão:', err.message); });
+        socket.on('connect_error', (err) => {
+            console.error('[WS] Erro de conexão:', err.message);
+
+            const mensagem = (err?.message ?? '').toLowerCase();
+            const problemaAuth = mensagem.includes('token') || mensagem.includes('unauthorized');
+
+            if (!problemaAuth || recuperandoWs) return;
+
+            recuperandoWs = true;
+            void (async () => {
+                const novoToken = await tentarRenovarTokenWs();
+                recuperandoWs = false;
+
+                if (novoToken && socket) {
+                    socket.auth = { token: novoToken };
+                    socket.connect(); // Força nova tentativa já com token atualizado
+                }
+            })();
+        });
 
         return socket;
     },

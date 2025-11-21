@@ -6,6 +6,10 @@ import { AdminRegisterDto, cpfValidoOuErro } from './dto/admin-register.dto';
 import { LoginDto } from './dto/login.dto';
 import { gerarToken } from './token.util';
 
+const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutos
+const REFRESH_TTL_DAYS = 14; // expiração absoluta
+const REFRESH_INACTIVITY_DAYS = 5; // expiração por inatividade
+
 @Injectable()
 export class AuthService {
     constructor(private prisma: PrismaService) {}
@@ -18,18 +22,19 @@ export class AuthService {
             role,
             // Em produção, adicione restauranteId aqui se tiver o dado fácil
             restauranteId: '', // Será preenchido no login normal, aqui é simplificado
-        }, 15 * 60); 
+        }, ACCESS_TOKEN_TTL_SECONDS); 
 
         // 2. Refresh Token (7 dias)
         const segredo = crypto.randomBytes(32).toString('hex');
         const hash = await bcrypt.hash(segredo, 10);
         const validade = new Date();
-        validade.setDate(validade.getDate() + 30);
+        validade.setDate(validade.getDate() + REFRESH_TTL_DAYS);
 
         // 3. Salva no banco
         const dados: any = {
             tokenHash: hash,
             expiresAt: validade,
+            lastUsedAt: new Date(),
         };
 
         if (role === 'admin') dados.adminId = userId;
@@ -77,7 +82,7 @@ async registrarAdmin(dto: AdminRegisterDto) {
             sub: admin.id,
             restauranteId: restaurante.id,
             role: 'admin'
-        }, 15 * 60);
+        }, ACCESS_TOKEN_TTL_SECONDS);
 
         return {
             token: accessTokenComDados, // Compatibilidade com frontend atual
@@ -100,7 +105,7 @@ async loginAdmin(dto: LoginDto) {
             sub: admin.id,
             restauranteId: admin.restauranteId,
             role: 'admin'
-        }, 15 * 60);
+        }, ACCESS_TOKEN_TTL_SECONDS);
 
         return {
             token: accessTokenFinal,
@@ -122,7 +127,7 @@ async loginAdmin(dto: LoginDto) {
             sub: user.id,
             restauranteId: user.restauranteId,
             role: 'cozinha'
-        }, 15 * 60);
+        }, ACCESS_TOKEN_TTL_SECONDS);
 
         return {
             token: accessTokenFinal,
@@ -154,6 +159,16 @@ async refresh(refreshTokenRecebido: string) {
         if (registro.expiresAt < new Date()) {
             await this.prisma.refreshToken.delete({ where: { id } });
             throw new UnauthorizedException('Sessão expirada, faça login novamente');
+        }
+
+        // 3.1 Expiração por inatividade
+        // campo lastUsedAt foi adicionado; cast flexível evita quebra se o client não estiver regenerado
+        const lastUsed = (registro as any).lastUsedAt ?? registro.createdAt;
+        const limiteInatividade = new Date(lastUsed);
+        limiteInatividade.setDate(limiteInatividade.getDate() + REFRESH_INACTIVITY_DAYS);
+        if (limiteInatividade < new Date()) {
+            await this.prisma.refreshToken.delete({ where: { id } });
+            throw new UnauthorizedException('Sessão expirada por inatividade');
         }
 
         // 4. Compara o segredo com o hash

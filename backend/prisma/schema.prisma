@@ -130,4 +130,5 @@ model RefreshToken {
 
   expiresAt DateTime
   createdAt DateTime @default(now())
+  lastUsedAt DateTime @default(now())
 }

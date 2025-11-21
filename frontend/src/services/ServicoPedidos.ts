@@ -2,6 +2,7 @@ import type { Pedido, StatusPedido } from '../types/Pedido';
 import { gerarIdAleatorio } from '../utils/formatadores';
 import { env } from '../config/env';
 import { obterRestauranteId, obterToken } from '../utils/sessao';
+import { requestAutenticado } from './requestAutenticado';
 
 interface PedidoApi {
     id: string;
@@ -57,37 +58,12 @@ async function requestStatusPublico(idPedido: string): Promise<PedidoApi> {
     return JSON.parse(texto) as PedidoApi;
 }
 
-async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
+async function requestApi<T>(path: string, init?: RequestInit, tokenOverride?: string): Promise<T> {
     if (!usarApi) {
         throw new Error('API não configurada');
     }
 
-    const restauranteId = obterRestauranteId();
-    const token = obterToken();
-    if ((restauranteId ?? '') === '') {
-        throw new Error('Sessão de restaurante não definida');
-    }
-
-    const resposta = await fetch(`${API_BASE}${path}`, {
-        headers: {
-            'Content-Type': 'application/json',
-            'x-restaurante-id': restauranteId ?? '',
-            Authorization: `Bearer ${token ?? ''}`,
-        },
-        ...init,
-    });
-
-    const texto = await resposta.text();
-
-    if (!resposta.ok) {
-        throw new Error(texto || 'Falha na requisição de pedidos');
-    }
-
-    if ((texto ?? '') === '') {
-        return undefined as T;
-    }
-
-    return JSON.parse(texto) as T;
+    return requestAutenticado<T>(path, init, undefined, tokenOverride);
 }
 
 function obterPedidosStorage(): Pedido[] {
