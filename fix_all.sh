@@ -2,26 +2,27 @@
 
 echo "🔧 Iniciando correção geral do sistema..."
 
-# 1. Atualizar Backend para Node 20 (Correção do erro EBADENGINE)
-echo "📦 Atualizando Backend para Node 20..."
+# 1. Garantir Backend com Node 20
+echo "📦 Garantindo Node 20 no Backend..."
 sed -i 's/node:18-alpine/node:20-alpine/g' backend/Dockerfile
 
-# 2. Ajustar CORS para aceitar www e sem www
+# 2. Ajustar CORS (adiciona www e non-www)
 echo "🌐 Ajustando CORS no docker-compose..."
 sed -i 's|CORS_ORIGIN: https://garcomagil.com|CORS_ORIGIN: https://garcomagil.com,https://www.garcomagil.com|g' docker-compose.yml
 
-# 3. Garantir configuração correta do TypeScript (Correção do erro de Seed)
-echo "📝 Corrigindo tsconfig.json..."
+# 3. Corrigir tsconfig.json para NodeNext (Solução do erro TS5109)
+echo "📝 Configurando TypeScript para Node 20 (NodeNext)..."
 cat > backend/tsconfig.json <<EOF
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "target": "es2019",
+    "target": "ES2022",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": ".",
@@ -29,7 +30,6 @@ cat > backend/tsconfig.json <<EOF
     "strict": true,
     "skipLibCheck": true,
     "types": ["node", "jest"],
-    "moduleResolution": "node",
     "esModuleInterop": true
   },
   "include": ["src/**/*.ts", "prisma/**/*.ts", "test/**/*.ts"]
@@ -47,4 +47,4 @@ sleep 10
 echo "🌱 Rodando Seed do banco..."
 docker exec gar-om_backend_1 npm run prisma:seed
 
-echo "✅ Concluído! Tente acessar https://garcomagil.com ou https://www.garcomagil.com"
+echo "✅ Concluído! Sistema rodando com TypeScript corrigido."
