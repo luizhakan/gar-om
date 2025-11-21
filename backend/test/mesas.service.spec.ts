@@ -1,14 +1,17 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { MesasService } from '../src/mesas/mesas.service';
 import { criarPrismaMock, PrismaMock } from './mocks/prisma.mock';
+import { criarPedidosGatewayMock, PedidosGatewayMock } from './mocks/pedidos-gateway.mock';
 
 describe('MesasService', () => {
     let prisma: PrismaMock;
     let service: MesasService;
+    let pedidosGateway: PedidosGatewayMock;
 
     beforeEach(() => {
         prisma = criarPrismaMock();
-        service = new MesasService(prisma as any);
+        pedidosGateway = criarPedidosGatewayMock();
+        service = new MesasService(prisma as any, pedidosGateway as any);
     });
 
     // --- Testes Existentes (Mantidos) ---
@@ -64,7 +67,9 @@ describe('MesasService', () => {
     describe('fechar (Sessão)', () => {
         it('encerra mesa e arquiva pedidos', async () => {
             // Mock mesa ocupada e com conta pedida
-            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', ocupada: true, contaSolicitada: true });
+            prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', numero: 10, ocupada: true, contaSolicitada: true });
+            prisma.pedido.updateMany.mockResolvedValue({ count: 1 });
+            prisma.mesa.update.mockResolvedValue({ id: 'mesa-1', numero: 10, ocupada: false, contaSolicitada: false });
             
             await service.fechar('mesa-1', 'rest-1');
 

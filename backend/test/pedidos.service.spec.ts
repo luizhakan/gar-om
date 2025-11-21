@@ -1,14 +1,17 @@
 import { BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PedidosService } from '../src/pedidos/pedidos.service';
 import { criarPrismaMock, PrismaMock } from './mocks/prisma.mock';
+import { criarPedidosGatewayMock, PedidosGatewayMock } from './mocks/pedidos-gateway.mock';
 
 describe('PedidosService', () => {
     let prisma: PrismaMock;
     let service: PedidosService;
+    let pedidosGateway: PedidosGatewayMock;
 
     beforeEach(() => {
         prisma = criarPrismaMock();
-        service = new PedidosService(prisma as any);
+        pedidosGateway = criarPedidosGatewayMock();
+        service = new PedidosService(prisma as any, pedidosGateway as any);
     });
 
     // --- Testes Existentes (Mantidos) ---
