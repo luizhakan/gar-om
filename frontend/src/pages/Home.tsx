@@ -50,7 +50,6 @@ export function Home() {
                                 <li>Pedidos e status em tempo real</li>
                                 <li>KDS responsivo com cores semáforo</li>
                                 <li>Mapa de mesas pronto para QR Code</li>
-                                <li>Painel master para ver trials e cobrar</li>
                             </ul>
                             <div className={styles.cardFooter}>
                                 <p className={styles.cardHighlight}>14 dias livres • ativa pagamento após o trial</p>

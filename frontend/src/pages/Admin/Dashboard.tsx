@@ -10,7 +10,7 @@ export function DashboardAdmin() {
             <header className={styles.hero}>
                 <div>
                     <p className={styles.rotulo}>Radar do restaurante</p>
-                    <h1 className={styles.titulo}>Painel do Dono</h1>
+                    <h1 className={styles.titulo}>Painel do Caixa</h1>
                     <p className={styles.subtitulo}>Produtos, mesas e QR Codes em tempo real.</p>
                 </div>
                 <div className={styles.badgeTempo}>

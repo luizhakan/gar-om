@@ -42,7 +42,7 @@ export function RegistrarAdmin() {
         <div className={styles.container}>
             <div className={styles.card}>
                 <p className={styles.rotulo}>Novo restaurante</p>
-                <h1 className={styles.titulo}>Criar conta de Admin</h1>
+                <h1 className={styles.titulo}>Criar conta de Caixa</h1>
                 <p className={styles.subtitulo}>Um cadastro cria também o restaurante vinculado.</p>
 
                 <form

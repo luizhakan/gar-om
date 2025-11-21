@@ -3,7 +3,6 @@ version: '3.9'
 services:
   db:
     image: postgres:16-alpine
-    container_name: garcom-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: admin
@@ -16,7 +15,6 @@ services:
 
   db-test:
     image: postgres:16-alpine
-    container_name: garcom-db-test
     restart: unless-stopped
     environment:
       POSTGRES_USER: admin
@@ -27,5 +25,57 @@ services:
     tmpfs:
       - /var/lib/postgresql/data
 
+  backend:
+    build:
+      context: ./backend
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgres://admin:admin@db:5432/garcom
+      CORS_ORIGIN: https://garcomagil.com
+      AUTH_SECRET: change-me
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+    depends_on:
+      - db
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: https://garcomagil.com/api
+    depends_on:
+      - backend
+    ports:
+      - "4173:80"
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/www/certbot
+    restart: unless-stopped
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-var:/var/www/certbot
+    entrypoint: /bin/sh
+    command: -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h; done"
+    restart: unless-stopped
+
 volumes:
   garcom_db_data:
+  certbot-etc:
+  certbot-var:

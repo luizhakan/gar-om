@@ -22,6 +22,22 @@ Este repositório agora está organizado em duas pastas:
 7. `npm run prisma:seed` (dados de exemplo: cardápio, mesas, pedido demo)
 8. `npm run start:dev` (API em http://localhost:3001)
 
+### Stack Docker completa (db + backend + frontend + nginx + certbot)
+1. Ajuste `AUTH_SECRET` e domínio/email no `docker-compose.yml` (garcomagil.com está configurado como padrão).
+2. Gere o certificado inicialmente (DNS do domínio deve apontar para o host):
+   ```bash
+   docker compose run --rm certbot certonly --webroot -w /var/www/certbot \
+     -d garcomagil.com --email seu-email@dominio.com --agree-tos --no-eff-email
+   ```
+   Depois disso, reinicie o nginx: `docker compose restart nginx`
+3. Suba tudo: `docker compose up -d`
+   - Frontend: `frontend` (porta interna 80)
+   - Backend: `backend` (porta 3001)
+   - Banco: `db` (porta 5432)
+   - Nginx: expõe 80/443 para o domínio e faz proxy para frontend/backend
+   - Certbot: roda renovação a cada 12h
+4. Se quiser usar sem HTTPS, suba apenas nginx + app e pule o passso do certbot (ou crie um cert self-signed nos volumes).
+
 ### Testes
 
 #### Rodar todos os testes (unitários + integração)
