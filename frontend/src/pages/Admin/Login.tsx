@@ -31,45 +31,47 @@ export function LoginAdmin() {
 
     return (
         <div className={styles.container}>
-            <div className={styles.card}>
-                <p className={styles.rotulo}>Acesso restrito</p>
-                <h1 className={styles.titulo}>Painel do Dono</h1>
-                <p className={styles.subtitulo}>Entre com seu email e senha cadastrados.</p>
+            <div className={styles.modalOverlay}>
+                <div className={styles.modalConteudo}>
+                    <div className={styles.modalIcone}>🧾</div>
+                    <h2 className={styles.modalTitulo}>Login do Caixa</h2>
+                    <p className={styles.modalTexto}>
+                        Entre com o email e senha cadastrados para gerenciar cardápio, mesas e pedidos.
+                    </p>
 
-                <form
-                    className={styles.form}
-                    onSubmit={(event) => {
-                        void handleSubmit(event);
-                    }}
-                >
-                    <label className={styles.label} htmlFor="email">Email</label>
-                    <input
-                        id="email"
-                        type="email"
-                        value={email}
-                        onChange={(event) => { setEmail(event.target.value); }}
-                        className={styles.input}
-                        placeholder="seuemail@restaurante.com"
-                        required
-                    />
+                    <form
+                        className={styles.form}
+                        onSubmit={(event) => {
+                            void handleSubmit(event);
+                        }}
+                    >
+                        <input
+                            id="email"
+                            type="email"
+                            value={email}
+                            onChange={(event) => { setEmail(event.target.value); }}
+                            className={styles.inputLogin}
+                            placeholder="caixa@restaurante.com"
+                            required
+                        />
 
-                    <label className={styles.label} htmlFor="senha">Senha</label>
-                    <input
-                        id="senha"
-                        type="password"
-                        value={senha}
-                        onChange={(event) => { setSenha(event.target.value); }}
-                        className={styles.input}
-                        placeholder="Digite a senha"
-                        required
-                    />
+                        <input
+                            id="senha"
+                            type="password"
+                            value={senha}
+                            onChange={(event) => { setSenha(event.target.value); }}
+                            className={styles.inputLogin}
+                            placeholder="senha"
+                            required
+                        />
 
-                    {erro && <p className={styles.erro}>{erro}</p>}
+                        {erro && <p className={styles.erroLogin}>{erro}</p>}
 
-                    <Botao type="submit" variante="primario" tamanho="grande" className={styles.botao}>
-                        Entrar
-                    </Botao>
-                </form>
+                        <Botao type="submit" variante="primario" tamanho="grande">
+                            Entrar como Caixa
+                        </Botao>
+                    </form>
+                </div>
             </div>
         </div>
     );

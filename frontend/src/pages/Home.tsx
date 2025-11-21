@@ -1,10 +1,29 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Botao } from '../components/Botao';
 import styles from './Home.module.css';
 
 export function Home() {
+    const navigate = useNavigate();
+    const [modalLoginAberto, setModalLoginAberto] = useState(false);
+
+    const abrirLogin = () => setModalLoginAberto(true);
+    const fecharLogin = () => setModalLoginAberto(false);
+    const irPara = (path: string) => {
+        setModalLoginAberto(false);
+        navigate(path);
+    };
+
     return (
         <div className={styles.page}>
+            <div className={styles.topbar}>
+                <div className="container">
+                    <div className={styles.topbarContent}>
+                        <div className={styles.brand}>Garçom Ágil</div>
+                        <Botao variante="secundario" tamanho="pequeno" onClick={abrirLogin}>Login</Botao>
+                    </div>
+                </div>
+            </div>
             <header className={styles.hero}>
                 <div className="container">
                     <div className={styles.heroGrid}>
@@ -19,9 +38,6 @@ export function Home() {
                             <div className={styles.ctas}>
                                 <Link to="/admin/registro">
                                     <Botao variante="primario" tamanho="grande">Começar teste de 14 dias</Botao>
-                                </Link>
-                                <Link to="/master/login">
-                                    <Botao variante="secundario" tamanho="grande">Entrar no painel master</Botao>
                                 </Link>
                             </div>
                             <p className={styles.trialMeta}>Sem cartão agora • Trial expira em 14 dias • Depois, cobrança via Mercado Pago</p>
@@ -68,7 +84,7 @@ export function Home() {
                             <Link to="/cozinha" className={styles.inline}>Abrir painel da cozinha</Link>
                         </article>
                         <article className={styles.feature}>
-                            <span className={styles.badgeBlue}>Admin</span>
+                            <span className={styles.badgeBlue}>Caixa</span>
                             <h3>Mapa de mesas e cardápio</h3>
                             <p>Configure mesas, QR Codes, categorias e preços sem depender de suporte.</p>
                             <Link to="/admin/registro" className={styles.inline}>Cadastrar restaurante</Link>
@@ -117,31 +133,25 @@ export function Home() {
                     </div>
                 </section>
 
-                <section className={styles.masterStrip}>
-                    <div>
-                        <p className={styles.kicker}>Painel master</p>
-                        <h2>Seu login para acompanhar todos os trials e cobranças</h2>
-                        <p className={styles.sectionSubtitle}>
-                            Veja todos os restaurantes, status (trial, ativo, vencido ou bloqueado) e dados de cobrança.
+            </main>
+
+            {modalLoginAberto && (
+                <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+                    <div className={styles.modalCard}>
+                        <div className={styles.modalHeader}>
+                            <h3>Qual acesso você quer usar?</h3>
+                            <button className={styles.modalClose} onClick={fecharLogin} aria-label="Fechar modal">×</button>
+                        </div>
+                        <p className={styles.modalTexto}>
+                            Escolha se deseja entrar na visão de caixa (admin) ou no painel da cozinha.
                         </p>
-                        <div className={styles.stripActions}>
-                            <Link to="/master/login">
-                                <Botao variante="primario" tamanho="grande">Acessar painel master</Botao>
-                            </Link>
-                            <Link to="/admin/login" className={styles.inline}>Entrar como restaurante</Link>
+                        <div className={styles.modalAcoes}>
+                            <Botao variante="primario" onClick={() => irPara('/admin/login')}>Entrar como Caixa</Botao>
+                            <Botao variante="secundario" onClick={() => irPara('/cozinha')}>Entrar na Cozinha</Botao>
                         </div>
                     </div>
-                    <div className={styles.stripCard}>
-                        <p className={styles.cardTitle}>O que o master enxerga</p>
-                        <ul className={styles.cardList}>
-                            <li>Status de trial e dias restantes</li>
-                            <li>Marcadores para cobrança no Mercado Pago</li>
-                            <li>Contato do admin e plano atual</li>
-                            <li>Botão para bloquear ou reativar</li>
-                        </ul>
-                    </div>
-                </section>
-            </main>
+                </div>
+            )}
         </div>
     );
 }

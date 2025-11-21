@@ -33,7 +33,7 @@ function ConteudoLayoutAdmin() {
                             <span role="img" aria-label="garçom">🧾</span>
                             <div>
                                 <p className={styles.logoNome}>Garçom Ágil</p>
-                                <p className={styles.logoSub}>Admin</p>
+                                <p className={styles.logoSub}>Caixa</p>
                             </div>
                         </div>
                         <div className={styles.topbarAcoes}>
