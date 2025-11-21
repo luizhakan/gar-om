@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import type { Prisma } from '@prisma/client';
+import { PedidosGateway } from '../pedidos/pedidos.gateway';
 
 @Injectable()
 export class MesasService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService, private pedidosGateway: PedidosGateway) {}
 
     // Método auxiliar de segurança para garantir a URL correta
     private obterUrlBaseSegura(): string {
@@ -160,10 +161,18 @@ export class MesasService {
             throw new BadRequestException('Mesa não está ocupada');
         }
 
-        return this.prisma.mesa.update({
+        const mesaAtualizada = await this.prisma.mesa.update({
             where: { id: mesa.id },
             data: { contaSolicitada: true, ocupada: true },
         });
+
+        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, id, { 
+            idMesa: id, 
+            ocupada: mesaAtualizada.ocupada,
+            contaSolicitada: mesaAtualizada.contaSolicitada,
+        });
+
+        return mesaAtualizada;
     }
 
     async fechar(id: string, restauranteId: string) {
@@ -185,13 +194,21 @@ export class MesasService {
             },
         });
 
-        return this.prisma.mesa.update({
+        const mesaAtualizada = await this.prisma.mesa.update({
             where: { id: mesa.id },
             data: {
                 ocupada: false,
                 contaSolicitada: false,
             },
         });
+
+        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, id, { 
+            idMesa: id, 
+            ocupada: mesaAtualizada.ocupada,
+            contaSolicitada: mesaAtualizada.contaSolicitada,
+        });
+
+        return mesaAtualizada;
     }
 
     async statusPublico(id: string, restauranteId: string) {

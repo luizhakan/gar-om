@@ -4,10 +4,11 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CriarPedidoDto } from './dto/criar-pedido.dto';
 import { AtualizarStatusDto } from './dto/atualizar-status.dto';
 import { EditarPedidoDto } from './dto/editar-pedido.dto';
+import { PedidosGateway } from './pedidos.gateway';
 
 @Injectable()
 export class PedidosService {
-    constructor(private prisma: PrismaService) {}
+    constructor(private prisma: PrismaService, private pedidosGateway: PedidosGateway) { }
 
     private formatarPedido(pedido: any) {
         return {
@@ -128,7 +129,10 @@ export class PedidosService {
             });
         }
 
-        return this.formatarPedido(pedidoCriado);
+        const pedidoFormatado = this.formatarPedido(pedidoCriado);
+
+        this.pedidosGateway.emitirNovoPedido(restauranteId, pedidoFormatado); //
+        return pedidoFormatado;
     }
 
     async editar(id: string, dto: EditarPedidoDto, restauranteId: string) {
@@ -225,7 +229,15 @@ export class PedidosService {
             },
         });
 
-        return this.formatarPedido(atualizado);
+        const pedidoFormatado = this.formatarPedido(atualizado);
+
+        this.pedidosGateway.emitirAtualizacaoPedido(
+            restauranteId,
+            atualizado.idMesa, // idMesa do pedido atualizado
+            pedidoFormatado
+        );
+
+        return pedidoFormatado;
     }
 
     async statusPublico(id: string, restauranteId: string) {

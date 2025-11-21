@@ -5,9 +5,11 @@ import * as classValidator from 'class-validator';
 import * as classTransformer from 'class-transformer';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
+    app.useWebSocketAdapter(new IoAdapter(app));
     app.use(helmet());
 
     const corsOrigins =

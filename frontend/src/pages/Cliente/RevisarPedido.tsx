@@ -9,6 +9,7 @@ import { ServicoMesas } from '../../services/ServicoMesas';
 import { definirSessao } from '../../utils/sessao';
 import styles from './RevisarPedido.module.css';
 import type { ItemPedido, Pedido } from '../../types/Pedido';
+import { ServicoRealtime } from '../../services/ServicoRealtime'; // <-- NOVO
 
 // Constantes
 const CHAVE_PEDIDO_EDITAVEL = 'garcom_pedido_editavel';
@@ -98,29 +99,47 @@ export function RevisarPedido() {
     }, [restauranteId]);
 
     // Carregar comanda do servidor e status da mesa
-    useEffect(() => {
-        if (!idMesa || !restauranteId) return;
+useEffect(() => {
+    if (!idMesa || !restauranteId) return;
 
-        const carregarDados = async () => {
-            try {
-                // 1. Status da Mesa
-                const status = await ServicoMesas.obterStatusPublico(idMesa);
-                setContaSolicitada(status.contaSolicitada);
+    // Função para carregar dados (usada na inicialização e nos eventos WS)
+    const carregarDados = async () => {
+        try {
+            // 1. Status da Mesa
+            const status = await ServicoMesas.obterStatusPublico(idMesa);
+            setContaSolicitada(status.contaSolicitada);
 
-                // 2. Comanda (Backend agora retorna apenas pedidos NÃO encerrados)
-                const pedidosAnteriores = await ServicoMesas.obterComanda(idMesa);
-                setComanda(pedidosAnteriores);
-            } catch (erro) {
-                console.error('[RevisarPedido] Erro ao carregar dados', erro);
-            } finally {
-                setCarregando(false);
-            }
-        };
+            // 2. Comanda
+            const pedidosAnteriores = await ServicoMesas.obterComanda(idMesa);
+            setComanda(pedidosAnteriores);
+            setCarregando(false);
 
-        void carregarDados();
-        const intervalo = setInterval(carregarDados, 5000);
-        return () => { clearInterval(intervalo); };
-    }, [idMesa, restauranteId]);
+        } catch (erro) {
+            console.error('[RevisarPedido] Erro ao carregar dados', erro);
+            setCarregando(false);
+        }
+    };
+
+    // --- Lógica WebSocket (NOVA) ---
+    const socket = ServicoRealtime.conectar();
+    void carregarDados(); // Carrega estado inicial
+
+    const onComandaAtualizada = () => {
+         console.log('[WS] Evento de comanda/mesa recebido, recarregando...');
+         void carregarDados(); // Recarrega os dados completos
+    };
+
+    // Assina os eventos específicos desta mesa
+    socket.on('status-comanda-atualizado', onComandaAtualizada); // Se o status de um pedido mudar
+    socket.on('mesa-status-atualizado', onComandaAtualizada); // Se a conta for solicitada/mesa fechada
+
+    // Cleanup: remove listeners e desconecta, substituindo o clearInterval
+    return () => {
+        socket.off('status-comanda-atualizado', onComandaAtualizada);
+        socket.off('mesa-status-atualizado', onComandaAtualizada);
+        ServicoRealtime.desconectar();
+    };
+}, [idMesa, restauranteId]); //
 
     const handleVoltarCardapio = () => {
         const sufixoBusca = searchParams.toString();
