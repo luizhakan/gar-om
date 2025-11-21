@@ -34,6 +34,7 @@ services:
       DATABASE_URL: postgres://admin:admin@db:5432/garcom
       CORS_ORIGIN: https://garcomagil.com
       AUTH_SECRET: ${AUTH_SECRET:-change-me}
+      FRONTEND_URL: https://garcomagil.com
     command: sh -c "npx prisma migrate deploy && node dist/main.js"
     depends_on:
       - db
