@@ -53,7 +53,8 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:1.27-alpine
+    build:
+      context: ./nginx
     depends_on:
       - frontend
       - backend
