@@ -20,6 +20,7 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
       POSTGRES_DB: garcom_test
+      VITE_MERCADO_PAGO_PUBLIC_KEY: ${VITE_MERCADO_PAGO_PUBLIC_KEY:-your_public_key_here}
     ports:
       - "5433:5432"
     tmpfs:
@@ -35,6 +36,9 @@ services:
       AUTH_SECRET: ${AUTH_SECRET:-change-me}
       FRONTEND_URL: https://garcomagil.com
       CORS_ORIGIN: https://garcomagil.com,https://www.garcomagil.com,https://admin.garcomagil.com
+      MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-your_access_token_here}
+      MERCADO_PAGO_PUBLIC_KEY: ${MERCADO_PAGO_PUBLIC_KEY:-your_public_key_here}
+      MERCADO_PAGO_WEBHOOK_URL: https://garcomagil.com/api/webhook/mercado-pago
     command: sh -c "npx prisma migrate deploy && node dist/main.js"
     depends_on:
       - db
