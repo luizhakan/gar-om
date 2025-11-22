@@ -50,6 +50,7 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: https://garcomagil.com/api
+        VITE_MERCADO_PAGO_PUBLIC_KEY: ${VITE_MERCADO_PAGO_PUBLIC_KEY}:-your_public_key_here}
     environment:
       VITE_API_URL: ${VITE_API_URL:-https://garcomagil.com/api}
       VITE_MERCADO_PAGO_PUBLIC_KEY: ${VITE_MERCADO_PAGO_PUBLIC_KEY:-your_public_key_here}
