@@ -31,7 +31,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: ${DATABASE_URL:-postgres://admin:${POSTGRES_PASSWORD:-your_password_here}@db:5432/garcom}
+      DATABASE_URL: postgres://admin:${POSTGRES_PASSWORD:-your_password_here}@db:5432/garcom
       AUTH_SECRET: ${AUTH_SECRET:-change-me}
       FRONTEND_URL: https://garcomagil.com
       CORS_ORIGIN: https://garcomagil.com,https://www.garcomagil.com,https://admin.garcomagil.com
