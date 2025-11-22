@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_password_here}
       POSTGRES_DB: garcom
     ports:
-      - "54321:54321"
+      - "54321:5432"
     volumes:
       - garcom_db_data:/var/lib/postgresql/data
 
