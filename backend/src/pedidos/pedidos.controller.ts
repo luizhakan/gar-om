@@ -1,9 +1,10 @@
 import { BadRequestException, Body, Controller, Get, Headers, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
-import { ThrottlerGuard, Throttle } from '@nestjs/throttler'; // 1. Importar Throttler
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { PedidosService } from './pedidos.service';
 import { CriarPedidoDto } from './dto/criar-pedido.dto';
 import { AtualizarStatusDto } from './dto/atualizar-status.dto';
 import { AuthGuard, Roles } from '../auth/auth.guard';
+import { SubscriptionGuard } from '../auth/subscription.guard';
 import { UsuarioAutenticado } from '../auth/auth-user.decorator';
 import type { AuthTokenPayload } from '../auth/token.util';
 import { EditarPedidoDto } from './dto/editar-pedido.dto';
@@ -14,7 +15,7 @@ import { extrairIpCliente } from '../utils/ip.util';
 export class PedidosController {
     constructor(private readonly pedidosService: PedidosService) {}
 
-    @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard, SubscriptionGuard)
     @Roles('admin', 'cozinha')
     @Get()
     listar(@UsuarioAutenticado() usuario: AuthTokenPayload) {
@@ -65,7 +66,7 @@ export class PedidosController {
         return this.pedidosService.statusPublico(id, restauranteId, ip);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard, SubscriptionGuard)
     @Roles('admin', 'cozinha')
     @Patch(':id/status')
     atualizarStatus(

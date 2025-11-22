@@ -50,23 +50,36 @@ export function verificarBloqueioAssinatura(restaurante: Restaurante): {
     diasAtraso: number;
     mensagem: string;
 } {
-    const agora = new Date();
-    const dataVencimento = new Date(restaurante.trialEndsAt);
-    const diffMs = agora.getTime() - dataVencimento.getTime();
-    const diasAtraso = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    // Bloqueia se passou 3 dias após vencimento
-    if (diasAtraso >= 3) {
+    const statusPermitidos = ['trialing', 'active'];
+    
+    // Se o status não é permitido, bloqueia imediatamente
+    if (!statusPermitidos.includes(restaurante.subscriptionStatus)) {
         return {
             bloqueado: true,
-            diasAtraso,
-            mensagem: `Sua assinatura está ${diasAtraso} dias atrasada. Renove para continuar usando o sistema.`,
+            diasAtraso: 0,
+            mensagem: 'Assinatura inválida. Renove sua assinatura para continuar usando o sistema.',
         };
+    }
+
+    // Se está em trialing, verifica se não expirou
+    if (restaurante.subscriptionStatus === 'trialing') {
+        const agora = new Date();
+        const dataVencimento = new Date(restaurante.trialEndsAt);
+        const diffMs = agora.getTime() - dataVencimento.getTime();
+        const diasAtraso = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+        if (diasAtraso > 0) {
+            return {
+                bloqueado: true,
+                diasAtraso,
+                mensagem: `Período de trial expirado há ${diasAtraso} ${diasAtraso === 1 ? 'dia' : 'dias'}. Renove sua assinatura para continuar usando o sistema.`,
+            };
+        }
     }
 
     return {
         bloqueado: false,
-        diasAtraso: Math.max(0, diasAtraso),
+        diasAtraso: 0,
         mensagem: '',
     };
 }

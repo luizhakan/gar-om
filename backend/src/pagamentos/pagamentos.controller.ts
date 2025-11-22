@@ -3,9 +3,11 @@ import { PagamentosService } from './pagamentos.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UsuarioAutenticado } from '../auth/auth-user.decorator';
 import { AuthGuard } from '../auth/auth.guard';
+import { SkipSubscriptionCheck } from '../auth/subscription.guard';
 
 @Controller('pagamentos')
 @UseGuards(AuthGuard)
+@SkipSubscriptionCheck()
 export class PagamentosController {
     constructor(private readonly pagamentosService: PagamentosService) {}
 

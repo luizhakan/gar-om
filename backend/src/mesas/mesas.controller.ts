@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { MesasService } from './mesas.service';
 import { AuthGuard, Roles } from '../auth/auth.guard';
+import { SubscriptionGuard } from '../auth/subscription.guard';
 import { UsuarioAutenticado } from '../auth/auth-user.decorator';
 import type { AuthTokenPayload } from '../auth/token.util';
 import { AdicionarMesaDto } from './dto/adicionar-mesa.dto';
@@ -48,7 +49,7 @@ export class MesasController {
         return 'http://localhost:5173';
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard, SubscriptionGuard)
     @Roles('admin', 'cozinha')
     @Get()
     listar(@UsuarioAutenticado() usuario: AuthTokenPayload) {
@@ -81,7 +82,7 @@ export class MesasController {
         return this.mesasService.obterComanda(id, restauranteId, ip);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard, SubscriptionGuard)
     @Roles('admin')
     @Post()
     adicionar(
@@ -93,7 +94,7 @@ export class MesasController {
         return this.mesasService.adicionar(dto.numero, baseUrl, usuario.restauranteId);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard, SubscriptionGuard)
     @Roles('admin')
     @Post('configurar')
     configurar(
@@ -105,14 +106,14 @@ export class MesasController {
         return this.mesasService.configurar(dto.total, baseUrl, usuario.restauranteId);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard, SubscriptionGuard)
     @Roles('admin')
     @Delete(':id')
     excluir(@Param('id') id: string, @UsuarioAutenticado() usuario: AuthTokenPayload) {
         return this.mesasService.excluir(id, usuario.restauranteId);
     }
 
-    @UseGuards(AuthGuard)
+    @UseGuards(AuthGuard, SubscriptionGuard)
     @Roles('admin')
     @Patch(':id/fechar')
     fechar(@Param('id') id: string, @UsuarioAutenticado() usuario: AuthTokenPayload) {

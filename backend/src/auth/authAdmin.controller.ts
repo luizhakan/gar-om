@@ -1,10 +1,11 @@
 import { Body, Controller, Post, Get, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ThrottlerGuard, Throttle } from '@nestjs/throttler'; // Importar
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { AdminRegisterDto } from './dto/admin-register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AlterarSenhaAdminDto } from './dto/alterar-senha-admin.dto';
 import { AuthGuard, Roles } from './auth.guard';
+import { SkipSubscriptionCheck } from './subscription.guard';
 import { UsuarioAutenticado } from './auth-user.decorator';
 import type { AuthTokenPayload } from './token.util';
 
@@ -41,6 +42,7 @@ export class AuthAdminController {
 
     @UseGuards(AuthGuard)
     @Roles('admin')
+    @SkipSubscriptionCheck()
     @Get('restaurante')
     obterRestaurante(@UsuarioAutenticado() usuario: AuthTokenPayload) {
         return this.authService.obterRestaurante(usuario.restauranteId);

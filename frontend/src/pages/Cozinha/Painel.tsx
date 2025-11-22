@@ -122,15 +122,32 @@ function ConteudoPainelCozinha() {
 
     // Exibe bloqueio de assinatura
     if (assinaturaBloqueada) {
+        const { restauranteInfo } = useCozinha();
+        const statusNaoPermitido = restauranteInfo && 
+            !['trialing', 'active'].includes(restauranteInfo.subscriptionStatus);
+
         return (
             <div className={styles.container}>
                 <div className={styles.modalOverlay} style={{ zIndex: 10000 }}>
                     <div className={styles.modalConteudo} style={{ border: '3px solid #f44336' }}>
                         <div className={styles.modalIcone}>🔒</div>
                         <h2 className={styles.modalTitulo} style={{ color: '#f44336' }}>Conta Bloqueada</h2>
-                        <p className={styles.modalTexto}>
-                            A assinatura está <strong style={{ color: '#f44336' }}>{diasAtrasoAssinatura} dias atrasada</strong>.
-                        </p>
+                        {statusNaoPermitido ? (
+                            <p className={styles.modalTexto}>
+                                A assinatura está <strong style={{ color: '#f44336' }}>inválida</strong>.
+                            </p>
+                        ) : diasAtrasoAssinatura > 0 ? (
+                            <p className={styles.modalTexto}>
+                                O período de trial expirou há{' '}
+                                <strong style={{ color: '#f44336' }}>
+                                    {diasAtrasoAssinatura} {diasAtrasoAssinatura === 1 ? 'dia' : 'dias'}
+                                </strong>.
+                            </p>
+                        ) : (
+                            <p className={styles.modalTexto}>
+                                A assinatura expirou.
+                            </p>
+                        )}
                         <p className={styles.modalTexto}>
                             Entre em contato com o administrador para renovar a assinatura.
                         </p>

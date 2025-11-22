@@ -1,11 +1,12 @@
 import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard, Roles } from './auth.guard';
+import { SubscriptionGuard } from './subscription.guard';
 import { UsuarioAutenticado } from './auth-user.decorator';
 import type { AuthTokenPayload } from './token.util';
 import { AlterarSenhaCozinhaDto } from './dto/alterar-senha-cozinha.dto';
 
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, SubscriptionGuard)
 @Roles('admin')
 @Controller('cozinha/usuario')
 export class UsuarioCozinhaController {
