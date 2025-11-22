@@ -37,7 +37,6 @@ export function Home() {
                 <div className="container">
                     <div className={styles.heroGrid}>
                         <div className={styles.copy}>
-                            <p className={styles.kicker}>Garçom Ágil • SaaS de pedidos em tempo real</p>
                             <h1 className={styles.titulo}>Cadastre seu restaurante e rode 14 dias grátis no piloto automático</h1>
                             <p className={styles.subtitulo}>
                                 Monte cardápio, mapa de mesas e KDS em minutos. Trial de 14 dias sem cartão;
@@ -62,7 +61,7 @@ export function Home() {
                                     Já tenho conta
                                 </Botao>
                             </div>
-                            <p className={styles.trialMeta}>Sem cartão agora • Trial expira em 14 dias • Depois, cobrança via Mercado Pago</p>
+                            <p className={styles.trialMeta}>Sem cartão agora • Teste expira em 14 dias</p>
                         </div>
 
                         <div className={styles.heroCard}>
