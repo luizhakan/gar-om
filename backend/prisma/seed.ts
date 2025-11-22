@@ -52,7 +52,7 @@ async function main() {
 
     await prisma.usuarioCozinha.create({
         data: {
-            email: 'cozinha@demo.com',
+            login: 'garcom-agil',
             senhaHash: senhaPadrao,
             restauranteId: restaurante.id,
         },

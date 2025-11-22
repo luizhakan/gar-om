@@ -58,9 +58,10 @@ model Admin {
 
 model UsuarioCozinha {
   id            String      @id @default(uuid())
-  email         String      @unique
+  login         String      @unique
+  nome          String      @default("Cozinha")
   senhaHash     String
-  restauranteId String
+  restauranteId String      @unique
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

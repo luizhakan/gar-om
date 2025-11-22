@@ -12,7 +12,7 @@ export function RegistrarAdmin() {
     const { notificar } = useToast();
     const [nome, setNome] = useState('');
     const [email, setEmail] = useState('');
-    const [cpf, setCpf] = useState('');
+    const [cpfCnpj, setCpfCnpj] = useState('');
     const [senha, setSenha] = useState('');
     const [carregando, setCarregando] = useState(false);
 
@@ -20,7 +20,7 @@ export function RegistrarAdmin() {
         event.preventDefault();
         setCarregando(true);
         try {
-            const resp = await ServicoAuth.registrarAdmin(nome, email, cpf, senha);
+            const resp = await ServicoAuth.registrarAdmin(nome, email, cpfCnpj, senha);
             definirSessao(
                 resp.admin.restauranteId,
                 'admin',
@@ -73,14 +73,14 @@ export function RegistrarAdmin() {
                         required
                     />
 
-                    <label className={styles.label} htmlFor="cpf">CPF</label>
+                    <label className={styles.label} htmlFor="cpf">CPF ou CNPJ</label>
                     <input
                         id="cpf"
                         type="text"
-                        value={cpf}
-                        onChange={(event) => { setCpf(event.target.value); }}
+                        value={cpfCnpj}
+                        onChange={(event) => { setCpfCnpj(event.target.value); }}
                         className={styles.input}
-                        placeholder="000.000.000-00"
+                        placeholder="000.000.000-00 ou 00.000.000/0001-00"
                         required
                     />
 

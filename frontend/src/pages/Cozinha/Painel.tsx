@@ -23,7 +23,7 @@ function ConteudoPainelCozinha() {
     const [mostrarModalSom, setMostrarModalSom] = useState(true);
     const [restauranteId, setRestauranteId] = useState<string | undefined>(() => obterRestauranteId());
     const [token, setToken] = useState<string | undefined>(() => obterToken());
-    const [email, setEmail] = useState('');
+    const [login, setLogin] = useState('');
     const [senha, setSenha] = useState('');
     const [erroLogin, setErroLogin] = useState('');
 
@@ -51,12 +51,12 @@ function ConteudoPainelCozinha() {
 
     const handleLoginCozinha = async () => {
         try {
-            const resp = await ServicoAuth.loginCozinha(email, senha);
+            const resp = await ServicoAuth.loginCozinha(login, senha);
             definirSessao(
                 resp.cozinha.restauranteId,
                 'cozinha',
                 resp.token,
-                resp.cozinha.email,
+                resp.cozinha.login,
                 resp.refreshToken,
             );
             setRestauranteId(resp.cozinha.restauranteId);
@@ -76,14 +76,14 @@ function ConteudoPainelCozinha() {
                         <div className={styles.modalIcone}>🧑‍🍳</div>
                         <h2 className={styles.modalTitulo}>Login da Cozinha</h2>
                         <p className={styles.modalTexto}>
-                            Informe email e senha vinculados ao restaurante.
+                            Informe o login (nome do restaurante) e a senha definida pelo admin.
                         </p>
                         <input
                             className={styles.inputLogin}
-                            type="email"
-                            placeholder="email@cozinha.com"
-                            value={email}
-                            onChange={(e) => { setEmail(e.target.value); }}
+                            type="text"
+                            placeholder="nomerestaurante"
+                            value={login}
+                            onChange={(e) => { setLogin(e.target.value); }}
                         />
                         <input
                             className={styles.inputLogin}

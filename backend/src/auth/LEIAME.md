@@ -3,9 +3,11 @@
 Gerencia cadastro/login do administrador e login dos usuários da cozinha. Usa `bcryptjs` para hash de senha e valida CPF pelo algoritmo oficial.
 
 ## Fluxos
-- `POST /auth/admin/register`: cria restaurante + admin vinculado (CPF higienizado para números).
+- `POST /auth/admin/register`: cria restaurante + admin vinculado (CPF/CNPJ higienizado para números).
 - `POST /auth/admin/login`: autentica admin e retorna payload básico (id/nome/email/restauranteId).
-- `POST /auth/cozinha/login`: autentica usuário da cozinha e retorna id/email/restauranteId.
+- `POST /auth/cozinha/login`: autentica usuário da cozinha pelo login (nome do restaurante) e retorna id/login/restauranteId.
+- `GET/POST /cozinha/usuario`: admin consulta ou cria o único usuário de cozinha do restaurante (login é gerado automaticamente a partir do nome do restaurante, senha padrão configurável por env `SENHA_PADRAO_COZINHA`).
+- `PATCH /cozinha/usuario/senha`: admin altera a senha da cozinha e derruba refresh tokens anteriores.
 
 ## Regras
 - Validação de entrada via DTOs (`login.dto.ts`, `admin-register.dto.ts`).

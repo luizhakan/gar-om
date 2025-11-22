@@ -16,7 +16,7 @@ export async function obterTokenAdmin(app: INestApplication): Promise<string> {
 export async function obterTokenCozinha(app: INestApplication): Promise<string> {
   const response = await request(app.getHttpServer())
     .post('/auth/cozinha/login')
-    .send({ email: 'cozinha@teste.com', senha: 'senha123' });
+    .send({ login: 'restaurante-teste', senha: 'senha123' });
 
   if (response.status !== 201) {
     throw new Error(`Falha no login da Cozinha (Status ${response.status}): ${JSON.stringify(response.body)}`);

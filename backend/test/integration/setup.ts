@@ -56,7 +56,7 @@ export async function popularBancoDeDados(app: INestApplication): Promise<void> 
 
     await prisma.usuarioCozinha.create({
         data: {
-            email: 'cozinha@teste.com',
+            login: 'restaurante-teste',
             senhaHash,
             restauranteId: restaurante.id,
         },

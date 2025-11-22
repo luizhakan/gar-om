@@ -1,16 +1,19 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { SubscriptionStatus } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { AdminRegisterDto, cpfValidoOuErro } from './dto/admin-register.dto';
+import { AdminRegisterDto, documentoValidoOuErro } from './dto/admin-register.dto';
 import { LoginDto } from './dto/login.dto';
+import { LoginCozinhaDto } from './dto/login-cozinha.dto';
 import { gerarToken } from './token.util';
 import { AlterarSenhaAdminDto } from './dto/alterar-senha-admin.dto';
+import { AlterarSenhaCozinhaDto } from './dto/alterar-senha-cozinha.dto';
 
 const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutos
 const REFRESH_TTL_DAYS = 14; // expiração absoluta
 const REFRESH_INACTIVITY_DAYS = 5; // expiração por inatividade
+const SENHA_PADRAO_COZINHA = process.env.SENHA_PADRAO_COZINHA ?? 'cozinha123';
 
 @Injectable()
 export class AuthService {
@@ -20,6 +23,37 @@ export class AuthService {
         const copia = new Date(base);
         copia.setDate(base.getDate() + dias);
         return copia;
+    }
+
+    private slugificar(nome: string) {
+        const slug = nome
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^\w\s-]/g, '')
+            .trim()
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-')
+            .toLowerCase();
+        return slug || 'cozinha';
+    }
+
+    private async gerarLoginCozinha(restauranteId: string) {
+        const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
+        const base = this.slugificar(restaurante?.nome ?? 'cozinha');
+
+        let tentativa = 0;
+        let loginGerado = base;
+
+        // Garante login único
+        // Evita loop infinito limitando tentativas
+        while (tentativa < 5) {
+            const existente = await this.prisma.usuarioCozinha.findUnique({ where: { login: loginGerado } });
+            if (!existente) return loginGerado;
+            tentativa += 1;
+            loginGerado = `${base}-${restauranteId.slice(0, 4)}-${tentativa}`;
+        }
+
+        throw new BadRequestException('Não foi possível gerar login único para a cozinha');
     }
 
     // Função auxiliar para gerar o par de tokens e salvar no banco
@@ -58,14 +92,14 @@ export class AuthService {
     }
 
     async registrarAdmin(dto: AdminRegisterDto) {
-        cpfValidoOuErro(dto.cpf);
-        const cpfLimpo = dto.cpf.replace(/\D/g, '');
+        documentoValidoOuErro(dto.cpfCnpj);
+        const documentoLimpo = dto.cpfCnpj.replace(/\D/g, '');
         
         const existe = await this.prisma.admin.findUnique({ where: { email: dto.email } });
         if (existe) throw new UnauthorizedException('Email já cadastrado');
 
-        const cpfExiste = await this.prisma.admin.findUnique({ where: { cpf: cpfLimpo } });
-        if (cpfExiste) throw new UnauthorizedException('CPF já cadastrado');
+        const documentoExiste = await this.prisma.admin.findUnique({ where: { cpf: documentoLimpo } });
+        if (documentoExiste) throw new UnauthorizedException('CPF/CNPJ já cadastrado');
 
         const senhaHash = await bcrypt.hash(dto.senha, 10);
 
@@ -87,7 +121,7 @@ export class AuthService {
             data: {
                 nome: dto.nome,
                 email: dto.email,
-                cpf: cpfLimpo,
+                cpf: documentoLimpo,
                 senhaHash,
                 restauranteId: restaurante.id,
             },
@@ -119,8 +153,8 @@ export class AuthService {
         };
     }
 
-    async loginCozinha(dto: LoginDto) {
-        const user = await this.prisma.usuarioCozinha.findUnique({ where: { email: dto.email } });
+    async loginCozinha(dto: LoginCozinhaDto) {
+        const user = await this.prisma.usuarioCozinha.findUnique({ where: { login: dto.login } });
         if (!user) throw new NotFoundException('Credenciais inválidas');
 
         const ok = await bcrypt.compare(dto.senha, user.senhaHash);
@@ -131,7 +165,7 @@ export class AuthService {
         return {
             token: tokens.accessToken,
             refreshToken: tokens.refreshToken,
-            cozinha: { id: user.id, email: user.email, restauranteId: user.restauranteId }
+            cozinha: { id: user.id, login: user.login, restauranteId: user.restauranteId }
         };
     }
 
@@ -169,6 +203,52 @@ export class AuthService {
         await this.prisma.refreshToken.deleteMany({ where: { adminId: admin.id } });
 
         return { ok: true };
+    }
+
+    async obterUsuarioCozinha(restauranteId: string) {
+        return this.prisma.usuarioCozinha.findUnique({ where: { restauranteId } });
+    }
+
+    async criarUsuarioCozinha(restauranteId: string) {
+        const jaExiste = await this.prisma.usuarioCozinha.findUnique({ where: { restauranteId } });
+        if (jaExiste) {
+            throw new BadRequestException('Já existe um usuário de cozinha para este restaurante.');
+        }
+
+        const login = await this.gerarLoginCozinha(restauranteId);
+        const senhaHash = await bcrypt.hash(SENHA_PADRAO_COZINHA, 10);
+
+        const criado = await this.prisma.usuarioCozinha.create({
+            data: {
+                login,
+                senhaHash,
+                restauranteId,
+                nome: 'Cozinha',
+            },
+        });
+
+        return {
+            id: criado.id,
+            login: criado.login,
+            restauranteId: criado.restauranteId,
+            nome: criado.nome,
+            createdAt: criado.createdAt,
+        };
+    }
+
+    async alterarSenhaUsuarioCozinha(restauranteId: string, dto: AlterarSenhaCozinhaDto) {
+        const usuario = await this.prisma.usuarioCozinha.findUnique({ where: { restauranteId } });
+        if (!usuario) throw new NotFoundException('Usuário da cozinha não encontrado');
+
+        const senhaHash = await bcrypt.hash(dto.novaSenha, 10);
+        const atualizado = await this.prisma.usuarioCozinha.update({
+            where: { id: usuario.id },
+            data: { senhaHash },
+        });
+
+        await this.prisma.refreshToken.deleteMany({ where: { cozinhaId: usuario.id } });
+
+        return { id: atualizado.id, login: atualizado.login, restauranteId: atualizado.restauranteId };
     }
     
     async refresh(refreshTokenRecebido: string) {

@@ -1,4 +1,4 @@
-import { cpfValidoOuErro } from '../src/auth/dto/admin-register.dto';
+import { documentoValidoOuErro } from '../src/auth/dto/admin-register.dto';
 import { validarCpf } from '../src/auth/cpf.util';
 
 describe('CPF utilitário', () => {
@@ -13,7 +13,9 @@ describe('CPF utilitário', () => {
         expect(validarCpf('52998224724')).toBe(false);
     });
 
-    it('lança erro quando CPF é inválido no helper', () => {
-        expect(() => cpfValidoOuErro('11111111111')).toThrow('CPF inválido');
+    it('lança erro quando documento não tem 11 ou 14 dígitos', () => {
+        expect(() => documentoValidoOuErro('11111111111')).not.toThrow();
+        expect(() => documentoValidoOuErro('12345678901234')).not.toThrow();
+        expect(() => documentoValidoOuErro('123')).toThrow('CPF/CNPJ inválido');
     });
 });

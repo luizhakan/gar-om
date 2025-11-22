@@ -7,10 +7,12 @@ import { ServicoProdutos, type ProdutoNovo } from '../services/ServicoProdutos';
 import { ServicoMesas } from '../services/ServicoMesas';
 import { ServicoAuth } from '../services/ServicoAuth';
 import { ServicoRealtime } from '../services/ServicoRealtime';
+import { ServicoUsuariosCozinha } from '../services/ServicoUsuariosCozinha';
 import { definirSessao, limparSessao, obterEmailSessao, obterRestauranteId, obterTipoSessao, obterToken } from '../utils/sessao';
 import { useToast } from './ContextoToast';
 import { ServicoCategorias } from '../services/ServicoCategorias';
 import { ContextoAdmin } from './admin-context';
+import type { UsuarioCozinha } from '../types/UsuarioCozinha';
 
 interface ProvedorAdminProps {
     children: ReactNode;
@@ -38,6 +40,8 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
     const [mesas, setMesas] = useState<Mesa[]>([]);
 
     const [categorias, setCategorias] = useState<Categoria[]>([]);
+    const [usuarioCozinha, setUsuarioCozinha] = useState<UsuarioCozinha | null | undefined>(undefined);
+    const [carregandoUsuarioCozinha, setCarregandoUsuarioCozinha] = useState(false);
 
     useEffect(() => {
         if (!autenticado || restauranteId === undefined) return;
@@ -70,6 +74,25 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 notificar('Não foi possível carregar as categorias', 'erro');
             });
     }, [restauranteId, notificar]);
+
+    useEffect(() => {
+        if (!autenticado || restauranteId === undefined) {
+            setUsuarioCozinha(undefined);
+            return;
+        }
+
+        setCarregandoUsuarioCozinha(true);
+        ServicoUsuariosCozinha.obter()
+            .then(setUsuarioCozinha)
+            .catch((erro: unknown) => {
+                console.error('[ContextoAdmin] Erro ao carregar usuário da cozinha:', erro);
+                setUsuarioCozinha(null);
+                notificar('Não foi possível carregar o acesso da cozinha', 'erro');
+            })
+            .finally(() => {
+                setCarregandoUsuarioCozinha(false);
+            });
+    }, [autenticado, restauranteId, notificar]);
 
     useEffect(() => {
         if (!autenticado || restauranteId === undefined) return;
@@ -124,6 +147,9 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         setAdminEmail(undefined);
         setProdutos([]);
         setMesas([]);
+        setCategorias([]);
+        setUsuarioCozinha(undefined);
+        setCarregandoUsuarioCozinha(false);
         limparSessao();
         notificar('Sessão encerrada', 'info');
     }
@@ -198,6 +224,42 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         notificar('Mesa excluída com sucesso', 'aviso');
     }
 
+    async function recarregarUsuarioCozinha() {
+        setCarregandoUsuarioCozinha(true);
+        try {
+            const usuario = await ServicoUsuariosCozinha.obter();
+            setUsuarioCozinha(usuario);
+        } catch (erro) {
+            console.error('[ContextoAdmin] Falha ao recarregar usuário da cozinha', erro);
+            setUsuarioCozinha(null);
+            notificar('Não foi possível carregar o usuário da cozinha', 'erro');
+            throw erro;
+        } finally {
+            setCarregandoUsuarioCozinha(false);
+        }
+    }
+
+    async function criarUsuarioCozinha() {
+        if (carregandoUsuarioCozinha) {
+            throw new Error('Aguarde terminar o carregamento antes de criar o usuário.');
+        }
+        if (usuarioCozinha) {
+            throw new Error('Já existe um usuário da cozinha para este restaurante.');
+        }
+
+        const criado = await ServicoUsuariosCozinha.criar();
+        setUsuarioCozinha(criado);
+        notificar('Usuário da cozinha criado com sucesso', 'sucesso');
+        return criado;
+    }
+
+    async function alterarSenhaUsuarioCozinha(novaSenha: string) {
+        const atualizado = await ServicoUsuariosCozinha.alterarSenha(novaSenha);
+        setUsuarioCozinha(atualizado);
+        notificar('Senha da cozinha atualizada', 'info');
+        return atualizado;
+    }
+
     return (
         <ContextoAdmin.Provider
             value={{
@@ -219,6 +281,11 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 gerarLinkMesa,
                 restauranteId,
                 adminEmail,
+                usuarioCozinha,
+                carregandoUsuarioCozinha,
+                criarUsuarioCozinha,
+                recarregarUsuarioCozinha,
+                alterarSenhaUsuarioCozinha,
             }}
         >
             {children}

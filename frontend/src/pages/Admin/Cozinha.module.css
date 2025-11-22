@@ -1,0 +1,230 @@
+.pagina {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.cabecalho {
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-xl);
+    padding: 1.75rem;
+    box-shadow: var(--sombra-suave);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+}
+
+.rotulo {
+    text-transform: uppercase;
+    color: var(--cor-texto-terciario);
+    letter-spacing: 0.08em;
+    font-size: 0.9rem;
+}
+
+.titulo {
+    margin: 0.1rem 0;
+    font-size: 2rem;
+    color: var(--cor-texto-primario);
+}
+
+.subtitulo {
+    color: var(--cor-texto-secundario);
+    max-width: 40rem;
+}
+
+.pillUnico {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    background: var(--cor-superficie-ativa);
+    border: 1px dashed var(--cor-primaria);
+    border-radius: var(--raio-lg);
+    padding: 0.9rem 1rem;
+    min-width: 16rem;
+    box-shadow: 0 0 0 1px rgba(46, 211, 155, 0.08);
+}
+
+.icone {
+    font-size: 1.4rem;
+}
+
+.pillTitulo {
+    margin: 0;
+    color: var(--cor-primaria);
+    font-weight: 700;
+}
+
+.pillTexto {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+    font-size: 0.95rem;
+}
+
+.grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+    align-items: start;
+}
+
+.card {
+    background: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-lg);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--sombra-suave);
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cardStatus {
+    position: relative;
+    overflow: hidden;
+}
+
+.cardStatus::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 18% 12%, rgba(46, 211, 155, 0.08), transparent 26%),
+        radial-gradient(circle at 88% 8%, rgba(56, 189, 248, 0.08), transparent 25%);
+    pointer-events: none;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.cardRotulo {
+    color: var(--cor-texto-terciario);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.85rem;
+}
+
+.cardHint {
+    color: var(--cor-texto-terciario);
+    font-size: 0.9rem;
+}
+
+.cardCorpo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.cardTitulo {
+    margin: 0;
+    font-size: 1.35rem;
+}
+
+.valor {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.detalhe {
+    color: var(--cor-texto-secundario);
+}
+
+.dica {
+    color: var(--cor-texto-terciario);
+    font-size: 0.95rem;
+}
+
+.listaRegras {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--cor-texto-secundario);
+    display: grid;
+    gap: 0.35rem;
+}
+
+.badgeSucesso,
+.badgeNeutro {
+    padding: 0.35rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+}
+
+.badgeSucesso {
+    background: rgba(52, 211, 153, 0.16);
+    color: var(--cor-sucesso);
+    border-color: rgba(52, 211, 153, 0.35);
+}
+
+.badgeNeutro {
+    background: rgba(192, 202, 219, 0.1);
+    color: var(--cor-texto-secundario);
+    border-color: rgba(192, 202, 219, 0.25);
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.label {
+    font-weight: 600;
+    color: var(--cor-texto-primario);
+}
+
+.input {
+    background: var(--cor-superficie-ativa);
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio-md);
+    padding: 0.85rem 1rem;
+    color: var(--cor-texto-primario);
+}
+
+.input::placeholder {
+    color: var(--cor-texto-terciario);
+}
+
+.input:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.mensagem {
+    margin: 0.35rem 0 0;
+    padding: 0.75rem 0.9rem;
+    border-radius: var(--raio-md);
+    border: 1px solid;
+}
+
+.msgSucesso {
+    border-color: rgba(52, 211, 153, 0.35);
+    background: rgba(52, 211, 153, 0.12);
+    color: var(--cor-sucesso);
+}
+
+.msgErro {
+    border-color: rgba(248, 113, 113, 0.4);
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--cor-erro);
+}
+
+.botao {
+    width: 100%;
+}
+
+.notaUnica {
+    color: var(--cor-texto-terciario);
+    font-size: 0.95rem;
+}
+
+@media (max-width: 840px) {
+    .cabecalho {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}

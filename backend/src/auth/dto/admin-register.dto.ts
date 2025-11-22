@@ -1,6 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
 import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
-import { validarCpf } from '../cpf.util';
 
 export class AdminRegisterDto {
     @IsNotEmpty()
@@ -12,15 +11,16 @@ export class AdminRegisterDto {
 
     @IsString()
     @IsNotEmpty()
-    cpf!: string;
+    cpfCnpj!: string;
 
     @IsString()
     @MinLength(6)
     senha!: string;
 }
 
-export function cpfValidoOuErro(cpf: string) {
-    if (!validarCpf(cpf)) {
-        throw new BadRequestException('CPF inválido');
+export function documentoValidoOuErro(cpfCnpj: string) {
+    const apenasDigitos = cpfCnpj.replace(/\D/g, '');
+    if (apenasDigitos.length !== 11 && apenasDigitos.length !== 14) {
+        throw new BadRequestException('CPF/CNPJ inválido');
     }
 }

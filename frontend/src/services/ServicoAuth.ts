@@ -25,7 +25,7 @@ async function request<TResponse>(
 }
 
 interface DadosAdmin { id: string; nome: string; email: string; restauranteId: string }
-interface DadosCozinha { id: string; email: string; restauranteId: string }
+interface DadosCozinha { id: string; login: string; restauranteId: string }
 interface DadosMaster { id: string; nome: string; email: string }
 
 export const ServicoAuth = {
@@ -36,17 +36,17 @@ export const ServicoAuth = {
         );
     },
 
-    async registrarAdmin(nome: string, email: string, cpf: string, senha: string) {
+    async registrarAdmin(nome: string, email: string, cpfCnpj: string, senha: string) {
         return request<{ token: string; refreshToken: string; admin: DadosAdmin }>(
             '/auth/register',
-            { nome, email, cpf, senha },
+            { nome, email, cpfCnpj, senha },
         );
     },
 
-    async loginCozinha(email: string, senha: string) {
+    async loginCozinha(login: string, senha: string) {
         return request<{ token: string; refreshToken: string; cozinha: DadosCozinha }>(
             '/auth/cozinha/login',
-            { email, senha },
+            { login, senha },
         );
     },
 

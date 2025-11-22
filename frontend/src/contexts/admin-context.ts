@@ -3,6 +3,7 @@ import type { Produto } from '../types/Produto';
 import type { Categoria } from '../types/Categoria';
 import type { Mesa } from '../types/Mesa';
 import type { ProdutoNovo } from '../services/ServicoProdutos';
+import type { UsuarioCozinha } from '../types/UsuarioCozinha';
 
 export interface DadosContextoAdmin {
     autenticado: boolean;
@@ -23,6 +24,11 @@ export interface DadosContextoAdmin {
     gerarLinkMesa: (numeroMesa: number) => string;
     restauranteId?: string;
     adminEmail?: string;
+    usuarioCozinha?: UsuarioCozinha | null;
+    carregandoUsuarioCozinha: boolean;
+    criarUsuarioCozinha: () => Promise<UsuarioCozinha>;
+    recarregarUsuarioCozinha: () => Promise<void>;
+    alterarSenhaUsuarioCozinha: (novaSenha: string) => Promise<UsuarioCozinha>;
 }
 
 export const ContextoAdmin = createContext<DadosContextoAdmin | undefined>(undefined);
