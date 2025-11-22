@@ -14,6 +14,7 @@ const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutos
 const REFRESH_TTL_DAYS = 14; // expiração absoluta
 const REFRESH_INACTIVITY_DAYS = 5; // expiração por inatividade
 const SENHA_PADRAO_COZINHA = process.env.SENHA_PADRAO_COZINHA ?? 'cozinha123';
+const TRIAL_DIAS = 14;
 
 @Injectable()
 export class AuthService {
@@ -104,7 +105,7 @@ export class AuthService {
         const senhaHash = await bcrypt.hash(dto.senha, 10);
 
         const agora = new Date();
-        const trialTerminaEm = this.adicionarDias(agora, 30);
+        const trialTerminaEm = this.adicionarDias(agora, TRIAL_DIAS);
 
         const restaurante = await this.prisma.restaurante.create({
             data: { 

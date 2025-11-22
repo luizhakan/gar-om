@@ -36,9 +36,22 @@ export function Home() {
                             </p>
 
                             <div className={styles.ctas}>
-                                <Link to="/admin/registro">
-                                    <Botao variante="primario" tamanho="grande">Começar teste de 14 dias</Botao>
-                                </Link>
+                                <Botao
+                                    type="button"
+                                    variante="primario"
+                                    tamanho="grande"
+                                    onClick={() => irPara('/admin/registro')}
+                                >
+                                    Começar teste de 14 dias
+                                </Botao>
+                                <Botao
+                                    type="button"
+                                    variante="secundario"
+                                    tamanho="grande"
+                                    onClick={() => irPara('/admin/login')}
+                                >
+                                    Já tenho conta
+                                </Botao>
                             </div>
                             <p className={styles.trialMeta}>Sem cartão agora • Trial expira em 14 dias • Depois, cobrança via Mercado Pago</p>
                         </div>
@@ -71,10 +84,10 @@ export function Home() {
                     </div>
                     <div className={styles.featureGrid}>
                         <article className={styles.feature}>
-                            <span className={styles.badge}>Garçom</span>
-                            <h3>Pedidos em 3 toques</h3>
-                            <p>Busca por código, botoeiras grandes e feedback instantâneo para não travar o restaurante.</p>
-                            <Link to="/mesa/1" className={styles.inline}>Ver fluxo de mesa</Link>
+                            <span className={styles.badge}>Cliente</span>
+                            <h3>Pedido pelo QR Code</h3>
+                            <p>O cliente abre o cardápio, envia pedido e acompanha o status direto do celular.</p>
+                            <Link to="/mesa/1" className={styles.inline}>Ver fluxo do cliente</Link>
                         </article>
                         <article className={styles.feature}>
                             <span className={styles.badgeAmber}>Cozinha</span>
@@ -88,47 +101,6 @@ export function Home() {
                             <p>Configure mesas, QR Codes, categorias e preços sem depender de suporte.</p>
                             <Link to="/admin/registro" className={styles.inline}>Cadastrar restaurante</Link>
                         </article>
-                    </div>
-                </section>
-
-                <section className={styles.sectionAlt}>
-                    <div className={styles.sectionHeader}>
-                        <p className={styles.kicker}>Onboarding + cobrança</p>
-                        <h2>Timeline do trial até o Mercado Pago</h2>
-                        <p className={styles.sectionSubtitle}>
-                            O sistema já guarda o fim do trial e deixa pronto para ativar a assinatura quando rodar o checkout.
-                        </p>
-                    </div>
-
-                    <div className={styles.timeline}>
-                        <div className={styles.step}>
-                            <div className={styles.stepBadge}>1</div>
-                            <div>
-                                <p className={styles.stepTitle}>Cadastre em 2 minutos</p>
-                                <p className={styles.stepText}>Cria admin e restaurante automaticamente. Trial começa na hora.</p>
-                            </div>
-                        </div>
-                        <div className={styles.step}>
-                            <div className={styles.stepBadge}>2</div>
-                            <div>
-                                <p className={styles.stepTitle}>Configure cardápio e mesas</p>
-                                <p className={styles.stepText}>Categorias, preços, QR Codes e mapa do restaurante já disponíveis.</p>
-                            </div>
-                        </div>
-                        <div className={styles.step}>
-                            <div className={styles.stepBadge}>3</div>
-                            <div>
-                                <p className={styles.stepTitle}>Use 14 dias de teste</p>
-                                <p className={styles.stepText}>O modelo guarda trialStart e trialEnd para cada restaurante.</p>
-                            </div>
-                        </div>
-                        <div className={styles.step}>
-                            <div className={styles.stepBadge}>4</div>
-                            <div>
-                                <p className={styles.stepTitle}>Ative no Mercado Pago</p>
-                                <p className={styles.stepText}>Depois do trial, finalize o checkout no Mercado Pago e o status muda para ativo.</p>
-                            </div>
-                        </div>
                     </div>
                 </section>
 

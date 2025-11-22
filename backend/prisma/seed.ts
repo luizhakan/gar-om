@@ -17,7 +17,7 @@ async function main() {
 
     const agora = new Date();
     const trialTerminaEm = new Date();
-    trialTerminaEm.setDate(agora.getDate() + 30);
+    trialTerminaEm.setDate(agora.getDate() + 14);
 
     const restaurante = await prisma.restaurante.create({
         data: {
