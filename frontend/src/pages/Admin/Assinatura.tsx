@@ -142,11 +142,6 @@ export function Assinatura() {
                         <span>Válido até:</span>{' '}
                         {new Date(restaurante.trialEndsAt).toLocaleDateString('pt-BR')}
                     </p>
-                    {restaurante.planLabel && (
-                        <p>
-                            <span>Plano:</span> {restaurante.planLabel}
-                        </p>
-                    )}
                 </div>
 
                 {expirouOuProximoExpirar && (
