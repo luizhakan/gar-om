@@ -32,7 +32,6 @@ services:
       NODE_ENV: production
       PORT: 3001
       DATABASE_URL: postgres://admin:admin@db:5432/garcom
-      CORS_ORIGIN: https://garcomagil.com
       AUTH_SECRET: ${AUTH_SECRET:-change-me}
       FRONTEND_URL: https://garcomagil.com
       CORS_ORIGIN: https://garcomagil.com,https://www.garcomagil.com,https://admin.garcomagil.com
@@ -48,8 +47,7 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: https://garcomagil.com/api
-    depends_on:
-      - backend
+    # Dependência removida para permitir reinício independente
     ports:
       - "4173:80"
     restart: unless-stopped

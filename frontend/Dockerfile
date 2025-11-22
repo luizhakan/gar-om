@@ -1,9 +1,12 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
+# Instala dependências
 COPY package*.json ./
-RUN npm ci
+# Usamos npm install para permitir a atualização do lockfile com a nova versão do Vite
+RUN npm install
 
+# Copia código e gera build
 COPY . .
 
 # Permite informar a API na hora do build
@@ -17,5 +20,3 @@ COPY --from=builder /app/dist ./
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
-
-# Usa entrypoint padrão do nginx
