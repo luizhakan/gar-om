@@ -6,7 +6,17 @@ import { env } from '../config/env';
 import { ServicoAuth } from './ServicoAuth';
 import { atualizarTokensSessao, limparSessao, obterRefreshToken, obterRestauranteId, obterTipoSessao, obterToken } from '../utils/sessao';
 
-const API_BASE = env.apiBaseUrl.replace(/^http/, 'ws').replace(/\/$/, '');
+const httpBase = env.apiBaseUrl ?? 'http://localhost:3001';
+const API_BASE = (() => {
+    try {
+        const url = new URL(httpBase);
+        const protocoloWs = url.protocol === 'https:' ? 'wss:' : 'ws:';
+        return `${protocoloWs}//${url.host}`;
+    } catch {
+        // Fallback simples caso a URL seja inválida
+        return httpBase.replace(/^http/, 'ws').replace(/\/.*$/, '');
+    }
+})();
 let socket: Socket | null = null;
 let refreshPromise: Promise<string | undefined> | null = null;
 let recuperandoWs = false;
@@ -82,6 +92,7 @@ export const ServicoRealtime = {
             query: queryParams,
             auth: queryParams.token ? { token: queryParams.token } : undefined,
             transports: resolveTransports(),
+            path: '/socket.io',
             autoConnect: true,
             reconnection: true,
             reconnectionAttempts: Infinity,

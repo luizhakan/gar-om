@@ -134,7 +134,7 @@ export class PedidosService {
 
         const mesa = await this.garantirMesa(dto.idMesa, restaurante.id);
 
-        const itensPreparados = [];
+        const itensPreparados: Prisma.ItemPedidoUncheckedCreateWithoutPedidoInput[] = [];
         for (const item of dto.itens) {
             const produto = await this.prisma.produto.findUnique({
                 where: { id: item.idProduto },
@@ -230,7 +230,7 @@ export class PedidosService {
 
         const mesa = await this.garantirMesa(dto.idMesa, restaurante.id);
 
-        const itensPreparados = [];
+        const itensPreparados: Prisma.ItemPedidoUncheckedCreateWithoutPedidoInput[] = [];
         for (const item of dto.itens) {
             const produto = await this.prisma.produto.findUnique({
                 where: { id: item.idProduto },
