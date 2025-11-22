@@ -124,7 +124,6 @@ describe('CozinhaAdmin', () => {
         render(
             <ProviderTeste
                 value={criarContextoBase({
-                    usuarioCozinha: { id: 'cook-1', login: 'restaurante-demo', restauranteId: 'rest-1' },
                     usuarioCozinha: { id: 'cook-1', login: 'restaurante-demo', nome: 'Cozinha', restauranteId: 'rest-1' },
                     alterarSenhaUsuarioCozinha,
                 })}
