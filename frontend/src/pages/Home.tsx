@@ -14,6 +14,15 @@ export function Home() {
         navigate(path);
     };
 
+    const irParaRegistro = () => {
+        console.log('Navegando para registro...');
+        navigate('/admin/registro');
+    };
+    const irParaLogin = () => {
+        console.log('Navegando para login...');
+        navigate('/admin/login');
+    };
+
     return (
         <div className={styles.page}>
             <div className={styles.topbar}>
@@ -40,7 +49,7 @@ export function Home() {
                                     type="button"
                                     variante="primario"
                                     tamanho="grande"
-                                    onClick={() => irPara('/admin/registro')}
+                                    onClick={irParaRegistro}
                                 >
                                     Começar teste de 14 dias
                                 </Botao>
@@ -48,7 +57,7 @@ export function Home() {
                                     type="button"
                                     variante="secundario"
                                     tamanho="grande"
-                                    onClick={() => irPara('/admin/login')}
+                                    onClick={irParaLogin}
                                 >
                                     Já tenho conta
                                 </Botao>
