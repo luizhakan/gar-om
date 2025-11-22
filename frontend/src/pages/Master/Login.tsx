@@ -41,7 +41,6 @@ export function MasterLogin() {
                 <p className={styles.rotulo}>Painel master</p>
                 <h1 className={styles.titulo}>Entrar para gerenciar trials</h1>
                 <p className={styles.subtitulo}>Use o login criado para o dono da plataforma.</p>
-                <p className={styles.dica}>Demo seed: founder@garcom.com / supermaster123</p>
 
                 <form className={styles.form} onSubmit={(e) => { void handleSubmit(e); }}>
                     <label className={styles.label} htmlFor="email">Email</label>
