@@ -94,6 +94,10 @@ jobs:
                 
                 echo "🔄 Reiniciando container do frontend..."
                 docker-compose up -d --no-recreate frontend || docker-compose up -d frontend
+                
+                # Reinicia o Nginx para garantir que os headers anti-cache sejam aplicados
+                echo "🔄 Recarregando configuração do Nginx..."
+                docker-compose exec -T nginx nginx -s reload || true
               fi
             fi
 

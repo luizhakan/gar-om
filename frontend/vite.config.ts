@@ -11,4 +11,14 @@ export default defineConfig({
         setupFiles: './src/setupTests.ts',
         css: true,
     },
+    build: {
+        // Garante que os hashes dos arquivos sejam únicos a cada build
+        rollupOptions: {
+            output: {
+                entryFileNames: 'assets/[name]-[hash].js',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash].[ext]'
+            }
+        }
+    }
 });
