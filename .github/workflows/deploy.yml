@@ -57,6 +57,13 @@ jobs:
             # Recria o arquivo .env com o conteúdo da Secret do GitHub
             echo "${{ secrets.ENV_FILE }}" > .env
 
+            # Configurar .env do frontend
+            echo "🔐 Configurando .env do frontend..."
+            cat > frontend/.env << 'EOF'
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_MERCADO_PAGO_PUBLIC_KEY=${{ secrets.VITE_MERCADO_PAGO_PUBLIC_KEY }}
+            EOF
+
             # --- LÓGICA DE DEPLOY INTELIGENTE ---
 
             # CASO 1: Mudança Crítica (Docker Compose, Nginx ou Variáveis)
