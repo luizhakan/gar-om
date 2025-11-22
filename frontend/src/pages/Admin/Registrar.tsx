@@ -11,6 +11,7 @@ export function RegistrarAdmin() {
     const navigate = useNavigate();
     const { notificar } = useToast();
     const [nome, setNome] = useState('');
+    const [nomeRestaurante, setNomeRestaurante] = useState('');
     const [email, setEmail] = useState('');
     const [cpfCnpj, setCpfCnpj] = useState('');
     const [senha, setSenha] = useState('');
@@ -20,7 +21,7 @@ export function RegistrarAdmin() {
         event.preventDefault();
         setCarregando(true);
         try {
-            const resp = await ServicoAuth.registrarAdmin(nome, email, cpfCnpj, senha);
+            const resp = await ServicoAuth.registrarAdmin(nome, nomeRestaurante, email, cpfCnpj, senha);
             definirSessao(
                 resp.admin.restauranteId,
                 'admin',
@@ -42,7 +43,7 @@ export function RegistrarAdmin() {
         <div className={styles.container}>
             <div className={styles.card}>
                 <p className={styles.rotulo}>Novo restaurante</p>
-                <h1 className={styles.titulo}>Criar conta de Caixa</h1>
+                <h1 className={styles.titulo}>Criar conta</h1>
                 <p className={styles.subtitulo}>Um cadastro cria também o restaurante vinculado.</p>
 
                 <form
@@ -59,6 +60,17 @@ export function RegistrarAdmin() {
                         onChange={(event) => { setNome(event.target.value); }}
                         className={styles.input}
                         placeholder="Maria Souza"
+                        required
+                    />
+
+                    <label className={styles.label} htmlFor="nomeRestaurante">Nome do Restaurante</label>
+                    <input
+                        id="nomeRestaurante"
+                        type="text"
+                        value={nomeRestaurante}
+                        onChange={(event) => { setNomeRestaurante(event.target.value); }}
+                        className={styles.input}
+                        placeholder="Restaurante Sabor da Casa"
                         required
                     />
 

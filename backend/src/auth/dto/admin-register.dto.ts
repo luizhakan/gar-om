@@ -6,6 +6,10 @@ export class AdminRegisterDto {
     @IsString()
     nome!: string;
 
+    @IsNotEmpty()
+    @IsString()
+    nomeRestaurante!: string;
+
     @IsEmail()
     email!: string;
 

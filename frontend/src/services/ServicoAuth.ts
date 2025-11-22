@@ -36,10 +36,10 @@ export const ServicoAuth = {
         );
     },
 
-    async registrarAdmin(nome: string, email: string, cpfCnpj: string, senha: string) {
+    async registrarAdmin(nome: string, nomeRestaurante: string, email: string, cpfCnpj: string, senha: string) {
         return request<{ token: string; refreshToken: string; admin: DadosAdmin }>(
             '/auth/register',
-            { nome, email, cpfCnpj, senha },
+            { nome, nomeRestaurante, email, cpfCnpj, senha },
         );
     },
 

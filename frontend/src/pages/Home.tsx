@@ -66,7 +66,6 @@ export function Home() {
                             </ul>
                             <div className={styles.cardFooter}>
                                 <p className={styles.cardHighlight}>14 dias livres • ativa pagamento após o trial</p>
-                                <Link to="/admin/login" className={styles.linkInline}>Já tenho conta →</Link>
                             </div>
                         </div>
                     </div>

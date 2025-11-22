@@ -109,7 +109,7 @@ export class AuthService {
 
         const restaurante = await this.prisma.restaurante.create({
             data: { 
-                nome: `${dto.nome} - Restaurante`,
+                nome: dto.nomeRestaurante,
                 billingEmail: dto.email,
                 trialStartedAt: agora,
                 trialEndsAt: trialTerminaEm,
