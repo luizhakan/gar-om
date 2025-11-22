@@ -10,6 +10,56 @@ import { PedidosGateway } from './pedidos.gateway';
 export class PedidosService {
     constructor(private prisma: PrismaService, private pedidosGateway: PedidosGateway) { }
 
+    private async registrarIpNaMesa(
+        prisma: PrismaService | Prisma.TransactionClient,
+        mesaId: string,
+        ip?: string,
+        ocupar = false,
+    ): Promise<{ mesaAtualizada: Prisma.MesaGetPayload<{}>; estavaOcupada: boolean; ipAdicionado: boolean }> {
+        const mesaAtual = await prisma.mesa.findUnique({ where: { id: mesaId } });
+        if (!mesaAtual) {
+            throw new NotFoundException('Mesa não encontrada');
+        }
+
+        const ipsAtivos = mesaAtual.ipsAtivos ?? [];
+        const ipJaPresente = ip ? ipsAtivos.includes(ip) : true;
+        const podeRegistrarIp = ip && !ipJaPresente && (mesaAtual.ocupada || ocupar);
+
+        if (podeRegistrarIp && ipsAtivos.length >= 2) {
+            throw new BadRequestException('Mesa já está em uso por dois dispositivos.');
+        }
+
+        let novosIps = ipsAtivos;
+        if (!mesaAtual.ocupada && ocupar) {
+            novosIps = ip ? [ip] : [];
+        } else if (podeRegistrarIp) {
+            novosIps = [...ipsAtivos, ip];
+        }
+
+        const data: Prisma.MesaUpdateInput = {};
+
+        if (!mesaAtual.ocupada && ocupar) {
+            data.ocupada = true;
+            data.contaSolicitada = false;
+        }
+
+        if (novosIps !== ipsAtivos) {
+            data.ipsAtivos = { set: novosIps };
+        }
+
+        const mesaAtualizada = Object.keys(data).length
+            ? await prisma.mesa.update({ where: { id: mesaId }, data })
+            : mesaAtual;
+
+        const ipAdicionado = Boolean(ip && !ipsAtivos.includes(ip) && novosIps.includes(ip));
+
+        return {
+            mesaAtualizada,
+            estavaOcupada: mesaAtual.ocupada,
+            ipAdicionado,
+        };
+    }
+
     private formatarPedido(pedido: any) {
         return {
             id: pedido.id,
@@ -74,7 +124,7 @@ export class PedidosService {
         return pedidos.map(p => this.formatarPedido(p));
     }
 
-    async criar(dto: CriarPedidoDto, restauranteId: string) {
+    async criar(dto: CriarPedidoDto, restauranteId: string, ipCliente?: string) {
         if (!restauranteId) {
             throw new BadRequestException('Restaurante não informado');
         }
@@ -105,46 +155,44 @@ export class PedidosService {
             });
         }
 
-        const pedidoCriado = await this.prisma.pedido.create({
-            data: {
-                idMesa: mesa.id,
-                restauranteId: restaurante.id,
-                status: PedidoStatus.pendente,
-                encerrado: false, // Default
-                itens: {
-                    create: itensPreparados,
-                },
-            },
-            include: {
-                mesa: true,
-                itens: { include: { produto: true } },
-            },
-        });
+        const { pedidoCriado, mesaAtualizada } = await this.prisma.$transaction(async (tx) => {
+            const registroMesa = await this.registrarIpNaMesa(tx, mesa.id, ipCliente, true);
 
-        // Marca mesa como ocupada se necessário
-        const mesaFicouOcupada = !mesa.ocupada;
-        if (mesaFicouOcupada) {
-            await this.prisma.mesa.update({
-                where: { id: mesa.id },
-                data: { ocupada: true, contaSolicitada: false },
+            const pedido = await tx.pedido.create({
+                data: {
+                    idMesa: mesa.id,
+                    restauranteId: restaurante.id,
+                    status: PedidoStatus.pendente,
+                    encerrado: false,
+                    itens: {
+                        create: itensPreparados,
+                    },
+                },
+                include: {
+                    mesa: true,
+                    itens: { include: { produto: true } },
+                },
             });
-        }
+
+            return {
+                pedidoCriado: pedido,
+                mesaAtualizada: registroMesa.mesaAtualizada,
+            };
+        });
 
         const pedidoFormatado = this.formatarPedido(pedidoCriado);
 
         this.pedidosGateway.emitirNovoPedido(restauranteId, pedidoFormatado);
-        if (mesaFicouOcupada) {
-            this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesa.id, {
-                idMesa: mesa.id,
-                ocupada: true,
-                contaSolicitada: false,
-                numeroMesa: mesa.numero,
-            });
-        }
+        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesaAtualizada.id, {
+            idMesa: mesaAtualizada.id,
+            ocupada: mesaAtualizada.ocupada,
+            contaSolicitada: mesaAtualizada.contaSolicitada,
+            numeroMesa: mesaAtualizada.numero,
+        });
         return pedidoFormatado;
     }
 
-    async editar(id: string, dto: EditarPedidoDto, restauranteId: string) {
+    async editar(id: string, dto: EditarPedidoDto, restauranteId: string, ipCliente?: string) {
         if (!restauranteId) throw new BadRequestException('Restaurante não informado');
 
         const pedidoExistente = await this.prisma.pedido.findUnique({
@@ -174,6 +222,8 @@ export class PedidosService {
         if (pedidoExistente.mesa?.contaSolicitada) {
             throw new BadRequestException('Conta solicitada, edição bloqueada');
         }
+
+        await this.registrarIpNaMesa(this.prisma, pedidoExistente.idMesa, ipCliente);
 
         const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
         if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
@@ -249,7 +299,7 @@ export class PedidosService {
         return pedidoFormatado;
     }
 
-    async statusPublico(id: string, restauranteId: string) {
+    async statusPublico(id: string, restauranteId: string, ipCliente?: string) {
         if (!restauranteId) throw new BadRequestException('Restaurante não informado');
         const pedido = await this.prisma.pedido.findUnique({
             where: { id },
@@ -260,6 +310,8 @@ export class PedidosService {
         if (pedido.restauranteId !== restauranteId) {
             throw new UnauthorizedException('Pedido pertence a outro restaurante');
         }
+
+        await this.registrarIpNaMesa(this.prisma, pedido.idMesa, ipCliente);
 
         // Se encerrado, não aplicamos limite de tempo para ver a comanda histórica, 
         // mas o frontend pode decidir não mostrar.

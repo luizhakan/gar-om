@@ -41,6 +41,26 @@ export class MesasService {
         throw new NotFoundException('Mesa não encontrada ou não pertence ao restaurante');
     }
 
+    private async validarOuRegistrarIp(mesa: Prisma.MesaGetPayload<{}>, ip?: string) {
+        if (!ip || ip === 'desconhecido' || !mesa.ocupada) {
+            return mesa;
+        }
+
+        const ipsAtivos = mesa.ipsAtivos ?? [];
+        if (ipsAtivos.includes(ip)) {
+            return mesa;
+        }
+
+        if (ipsAtivos.length >= 2) {
+            throw new BadRequestException('Mesa já está em uso por dois dispositivos.');
+        }
+
+        return this.prisma.mesa.update({
+            where: { id: mesa.id },
+            data: { ipsAtivos: { push: ip } },
+        });
+    }
+
     async listar(restauranteId: string) {
         const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
         if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
@@ -163,22 +183,23 @@ export class MesasService {
         await this.prisma.mesa.delete({ where: { id: mesa.id } });
     }
 
-    async solicitarConta(id: string, restauranteId: string) {
+    async solicitarConta(id: string, restauranteId: string, ip?: string) {
         const mesa = await this.garantirMesa(id, restauranteId);
-        if (!mesa.ocupada) {
+        const mesaValidada = await this.validarOuRegistrarIp(mesa, ip);
+        if (!mesaValidada.ocupada) {
             throw new BadRequestException('Mesa não está ocupada');
         }
 
         const mesaAtualizada = await this.prisma.mesa.update({
-            where: { id: mesa.id },
+            where: { id: mesaValidada.id },
             data: { contaSolicitada: true, ocupada: true },
         });
 
-        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesa.id, { 
-            idMesa: mesa.id, 
+        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesaValidada.id, { 
+            idMesa: mesaValidada.id, 
             ocupada: mesaAtualizada.ocupada,
             contaSolicitada: mesaAtualizada.contaSolicitada,
-            numeroMesa: mesa.numero,
+            numeroMesa: mesaValidada.numero,
         });
 
         return mesaAtualizada;
@@ -208,6 +229,7 @@ export class MesasService {
             data: {
                 ocupada: false,
                 contaSolicitada: false,
+                ipsAtivos: { set: [] },
             },
         });
 
@@ -221,26 +243,28 @@ export class MesasService {
         return mesaAtualizada;
     }
 
-    async statusPublico(id: string, restauranteId: string) {
+    async statusPublico(id: string, restauranteId: string, ip?: string) {
         const mesa = await this.garantirMesa(id, restauranteId);
+        const mesaValidada = await this.validarOuRegistrarIp(mesa, ip);
         return {
-            ocupada: mesa.ocupada,
-            contaSolicitada: mesa.contaSolicitada,
+            ocupada: mesaValidada.ocupada,
+            contaSolicitada: mesaValidada.contaSolicitada,
         };
     }
 
-    async obterComanda(id: string, restauranteId: string) {
+    async obterComanda(id: string, restauranteId: string, ip?: string) {
         const mesa = await this.garantirMesa(id, restauranteId);
+        const mesaValidada = await this.validarOuRegistrarIp(mesa, ip);
         
         // Se a mesa não está ocupada, não há comanda ativa
-        if (!mesa.ocupada) {
+        if (!mesaValidada.ocupada) {
             return [];
         }
 
         // Retorna apenas pedidos NÃO encerrados
         const pedidos = await this.prisma.pedido.findMany({
             where: {
-                idMesa: mesa.id,
+                idMesa: mesaValidada.id,
                 restauranteId,
                 encerrado: false,
             },
@@ -254,7 +278,7 @@ export class MesasService {
 
         return pedidos.map(pedido => ({
             id: pedido.id,
-            idMesa: String(mesa.numero),
+            idMesa: String(mesaValidada.numero),
             restauranteId: pedido.restauranteId,
             status: pedido.status,
             encerrado: pedido.encerrado,

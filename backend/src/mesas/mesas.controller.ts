@@ -18,6 +18,7 @@ import type { AuthTokenPayload } from '../auth/token.util';
 import { AdicionarMesaDto } from './dto/adicionar-mesa.dto';
 import { ConfigurarMesasDto } from './dto/configurar-mesas.dto';
 import type { Request } from 'express';
+import { extrairIpCliente } from '../utils/ip.util';
 
 @Controller('mesas')
 export class MesasController {
@@ -46,19 +47,29 @@ export class MesasController {
     }
 
     @Get(':id/status-publico')
-    statusPublico(@Param('id') id: string, @Headers('x-restaurante-id') restauranteId?: string) {
+    statusPublico(
+        @Param('id') id: string,
+        @Headers('x-restaurante-id') restauranteId?: string,
+        @Req() req?: Request,
+    ) {
         if (!restauranteId) {
             throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
         }
-        return this.mesasService.statusPublico(id, restauranteId);
+        const ip = req ? extrairIpCliente(req) : undefined;
+        return this.mesasService.statusPublico(id, restauranteId, ip);
     }
 
     @Get(':id/comanda')
-    obterComanda(@Param('id') id: string, @Headers('x-restaurante-id') restauranteId?: string) {
+    obterComanda(
+        @Param('id') id: string,
+        @Headers('x-restaurante-id') restauranteId?: string,
+        @Req() req?: Request,
+    ) {
         if (!restauranteId) {
             throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
         }
-        return this.mesasService.obterComanda(id, restauranteId);
+        const ip = req ? extrairIpCliente(req) : undefined;
+        return this.mesasService.obterComanda(id, restauranteId, ip);
     }
 
     @UseGuards(AuthGuard)
@@ -100,10 +111,15 @@ export class MesasController {
     }
 
     @Patch(':id/solicitar-conta')
-    solicitarConta(@Param('id') id: string, @Headers('x-restaurante-id') restauranteId?: string) {
+    solicitarConta(
+        @Param('id') id: string,
+        @Headers('x-restaurante-id') restauranteId?: string,
+        @Req() req?: Request,
+    ) {
         if (!restauranteId) {
             throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
         }
-        return this.mesasService.solicitarConta(id, restauranteId);
+        const ip = req ? extrairIpCliente(req) : undefined;
+        return this.mesasService.solicitarConta(id, restauranteId, ip);
     }
 }

@@ -111,6 +111,7 @@ model Mesa {
   codigoQr      String
   ocupada       Boolean     @default(false)
   contaSolicitada Boolean   @default(false)
+  ipsAtivos     String[]    @default([])
   restauranteId String
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
   pedidos       Pedido[]

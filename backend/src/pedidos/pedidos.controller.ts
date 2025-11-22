@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Headers, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler'; // 1. Importar Throttler
 import { PedidosService } from './pedidos.service';
 import { CriarPedidoDto } from './dto/criar-pedido.dto';
@@ -7,6 +7,8 @@ import { AuthGuard, Roles } from '../auth/auth.guard';
 import { UsuarioAutenticado } from '../auth/auth-user.decorator';
 import type { AuthTokenPayload } from '../auth/token.util';
 import { EditarPedidoDto } from './dto/editar-pedido.dto';
+import type { Request } from 'express';
+import { extrairIpCliente } from '../utils/ip.util';
 
 @Controller('pedidos')
 export class PedidosController {
@@ -22,12 +24,17 @@ export class PedidosController {
     @UseGuards(ThrottlerGuard) 
     @Throttle({ default: { limit: 3, ttl: 60000 } }) // Máximo 3 pedidos por minuto por IP
     @Post()
-    criar(@Body() dto: CriarPedidoDto, @Headers('x-restaurante-id') restauranteId?: string) {
+    criar(
+        @Body() dto: CriarPedidoDto,
+        @Headers('x-restaurante-id') restauranteId?: string,
+        @Req() req?: Request,
+    ) {
         if (!restauranteId) {
             throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
         }
 
-        return this.pedidosService.criar(dto, restauranteId);
+        const ip = req ? extrairIpCliente(req) : undefined;
+        return this.pedidosService.criar(dto, restauranteId, ip);
     }
 
     @Patch(':id')
@@ -35,20 +42,27 @@ export class PedidosController {
         @Param('id') id: string,
         @Body() dto: EditarPedidoDto,
         @Headers('x-restaurante-id') restauranteId?: string,
+        @Req() req?: Request,
     ) {
         if (!restauranteId) {
             throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
         }
 
-        return this.pedidosService.editar(id, dto, restauranteId);
+        const ip = req ? extrairIpCliente(req) : undefined;
+        return this.pedidosService.editar(id, dto, restauranteId, ip);
     }
 
     @Get(':id/status-publico')
-    statusPublico(@Param('id') id: string, @Headers('x-restaurante-id') restauranteId?: string) {
+    statusPublico(
+        @Param('id') id: string,
+        @Headers('x-restaurante-id') restauranteId?: string,
+        @Req() req?: Request,
+    ) {
         if (!restauranteId) {
             throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
         }
-        return this.pedidosService.statusPublico(id, restauranteId);
+        const ip = req ? extrairIpCliente(req) : undefined;
+        return this.pedidosService.statusPublico(id, restauranteId, ip);
     }
 
     @UseGuards(AuthGuard)
