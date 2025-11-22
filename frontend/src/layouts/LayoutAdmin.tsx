@@ -59,20 +59,26 @@ function ConteudoLayoutAdmin() {
                                 <NavLink to="/admin/categorias" className={linkAtivo}>
                                     🗂️ Categorias
                                 </NavLink>
-                            <NavLink to="/admin/produtos" className={linkAtivo}>
-                                🍔 Produtos
-                            </NavLink>
-                            <NavLink to="/admin/mesas" className={linkAtivo}>
-                                🪑 Mesas & QR Code
-                            </NavLink>
-                            <NavLink to="/admin/cozinha" className={linkAtivo}>
-                                🍳 Usuário da Cozinha
-                            </NavLink>
-                        </nav>
-                    </div>
-                </aside>
-            </>
-        )}
+                                <NavLink to="/admin/produtos" className={linkAtivo}>
+                                    🍔 Produtos
+                                </NavLink>
+                                <NavLink to="/admin/mesas" className={linkAtivo}>
+                                    🪑 Mesas & QR Code
+                                </NavLink>
+                                <NavLink to="/admin/cozinha" className={linkAtivo}>
+                                    🍳 Usuário da Cozinha
+                                </NavLink>
+                            </nav>
+
+                            <div className={styles.sidebarRodape}>
+                                <button className={`${styles.botaoSair} ${styles.botaoSairSidebar}`} onClick={logout}>
+                                    Sair
+                                </button>
+                            </div>
+                        </div>
+                    </aside>
+                </>
+            )}
 
             <main className={styles.main}>
                 <div className={styles.container}>

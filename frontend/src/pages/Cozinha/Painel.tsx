@@ -5,7 +5,7 @@ import { CardPedido } from '../../components/CardPedido';
 import { useAlertaSonoro } from '../../hooks/useAlertaSonoro';
 import { Botao } from '../../components/Botao';
 import { ServicoAuth } from '../../services/ServicoAuth';
-import { definirSessao, obterRestauranteId, obterToken } from '../../utils/sessao';
+import { definirSessao, limparSessao, obterRestauranteId, obterToken } from '../../utils/sessao';
 import styles from './styles.module.css';
 import { useWakeLock } from '../../hooks/useWakeLock';
 
@@ -68,6 +68,18 @@ function ConteudoPainelCozinha() {
         }
     };
 
+    const handleLogout = () => {
+        limparSessao();
+        setRestauranteId(undefined);
+        setToken(undefined);
+        setLogin('');
+        setSenha('');
+        setErroLogin('');
+        setAudioAtivado(false);
+        setMostrarModalSom(true);
+        limparNotificacao();
+    };
+
     if ((restauranteId ?? '') === '' || (token ?? '') === '') {
         return (
             <div className={styles.container}>
@@ -126,20 +138,31 @@ function ConteudoPainelCozinha() {
             <header className={styles.cabecalho}>
                 <div className={styles.conteudoCabecalho}>
                     <h1 className={styles.titulo}>👨‍🍳 Painel da Cozinha</h1>
-                    <div className={styles.estatisticas}>
-                        {!audioAtivado && (
-                            <Botao variante="secundario" tamanho="pequeno" onClick={() => { void handleAtivarSom(); }}>
-                                🔊 Ativar Som
-                            </Botao>
-                        )}
-                        <div className={styles.badge}>
-                            <span className={styles.badgeNumero}>{pedidosNaoConfirmados.length}</span>
-                            <span className={styles.badgeLabel}>Novos</span>
+                    <div className={styles.acoesCabecalho}>
+                        <div className={styles.estatisticas}>
+                            {!audioAtivado && (
+                                <Botao variante="secundario" tamanho="pequeno" onClick={() => { void handleAtivarSom(); }}>
+                                    🔊 Ativar Som
+                                </Botao>
+                            )}
+                            <div className={styles.badge}>
+                                <span className={styles.badgeNumero}>{pedidosNaoConfirmados.length}</span>
+                                <span className={styles.badgeLabel}>Novos</span>
+                            </div>
+                            <div className={styles.badge}>
+                                <span className={styles.badgeNumero}>{pedidosPendentes.length}</span>
+                                <span className={styles.badgeLabel}>Total</span>
+                            </div>
                         </div>
-                        <div className={styles.badge}>
-                            <span className={styles.badgeNumero}>{pedidosPendentes.length}</span>
-                            <span className={styles.badgeLabel}>Total</span>
-                        </div>
+
+                        <Botao
+                            variante="perigo"
+                            tamanho="medio"
+                            className={styles.botaoLogout}
+                            onClick={handleLogout}
+                        >
+                            Sair
+                        </Botao>
                     </div>
                 </div>
                 <div className={styles.legenda}>

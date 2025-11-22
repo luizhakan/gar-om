@@ -107,6 +107,14 @@
     align-items: center;
 }
 
+.acoesCabecalho {
+    display: flex;
+    align-items: center;
+    gap: var(--espaco-md);
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
 .titulo {
     font-size: var(--tamanho-titulo-lg);
     font-weight: var(--peso-negrito);
@@ -119,6 +127,8 @@
     display: flex;
     gap: var(--espaco-md);
     align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .badge {
@@ -159,6 +169,10 @@
     gap: 0.4rem;
     color: var(--cor-texto-secundario);
     font-size: var(--tamanho-texto-sm);
+}
+
+.botaoLogout {
+    min-width: 6.5rem;
 }
 
 .ponto {
@@ -304,6 +318,11 @@
     .conteudoCabecalho {
         flex-direction: column;
         gap: var(--espaco-md);
+    }
+
+    .acoesCabecalho {
+        width: 100%;
+        justify-content: space-between;
     }
 
     .titulo {
