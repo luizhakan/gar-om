@@ -25,18 +25,27 @@ export class MesasController {
     constructor(private readonly mesasService: MesasService) {}
 
     private extrairBaseUrl(req: Request, baseUrl?: string): string {
-        const daEnv = process.env.FRONTEND_URL;
-        if (daEnv) return daEnv;
-
-        const forwardedProto = (req.headers['x-forwarded-proto'] as string | undefined)?.split(',')[0]?.trim();
-        const protocolo = forwardedProto || req.protocol || 'http';
-        const host = (req.headers['x-forwarded-host'] as string | undefined) || req.headers.host;
-
-        if (host) {
-            return `${protocolo}://${host}`;
+        // Prioriza a baseUrl recebida do frontend (window.location.origin)
+        if (baseUrl) {
+            try {
+                return new URL(baseUrl).origin;
+            } catch {
+                // Se a URL for inválida, continua para os fallbacks
+            }
         }
 
-        return baseUrl || 'http://localhost:5173';
+        // Fallback: tenta usar a variável de ambiente
+        const daEnv = process.env.FRONTEND_URL;
+        if (daEnv) {
+            try {
+                return new URL(daEnv).origin;
+            } catch {
+                // Se a URL da env for inválida, continua
+            }
+        }
+
+        // Fallback final: localhost
+        return 'http://localhost:5173';
     }
 
     @UseGuards(AuthGuard)

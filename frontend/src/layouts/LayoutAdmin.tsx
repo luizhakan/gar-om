@@ -1,14 +1,16 @@
 import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { ProvedorAdmin } from '../contexts/ContextoAdmin';
 import { useAdmin } from '../hooks/useAdmin';
+import { BloqueioAssinatura } from '../components/BloqueioAssinatura';
 import styles from './layoutAdmin.module.css';
 import { useEffect, useState } from 'react';
 
 function ConteudoLayoutAdmin() {
     const location = useLocation();
-    const { autenticado, logout } = useAdmin();
+    const { autenticado, logout, assinaturaBloqueada } = useAdmin();
     const estaNaRotaLogin = location.pathname === '/admin/login';
     const estaNaRotaRegistro = location.pathname === '/admin/registro';
+    const estaNaRotaAssinatura = location.pathname === '/admin/assinatura';
     const rotaPublica = estaNaRotaLogin || estaNaRotaRegistro;
     const [menuAberto, setMenuAberto] = useState(false);
 
@@ -20,12 +22,17 @@ function ConteudoLayoutAdmin() {
         return <Navigate to="/admin/login" replace />;
     }
 
+    // Bloqueia acesso se assinatura atrasada (exceto rota de assinatura)
+    const deveBloquear = assinaturaBloqueada && !estaNaRotaAssinatura && !rotaPublica;
+
     // NavLink precisa de função para className com ,?
     const linkAtivo = ({ isActive }: { isActive: boolean }) =>
         isActive ? `${styles.link} ${styles.linkAtivo}` : styles.link;
 
     return (
         <div className={`${styles.shell} ${rotaPublica ? styles.shellPublic : ''}`}>
+            {deveBloquear && <BloqueioAssinatura />}
+            
             {!rotaPublica && (
                 <>
                     <header className={styles.topbar}>
@@ -67,6 +74,9 @@ function ConteudoLayoutAdmin() {
                                 </NavLink>
                                 <NavLink to="/admin/cozinha" className={linkAtivo}>
                                     🍳 Usuário da Cozinha
+                                </NavLink>
+                                <NavLink to="/admin/assinatura" className={linkAtivo}>
+                                    💳 Assinatura
                                 </NavLink>
                             </nav>
 

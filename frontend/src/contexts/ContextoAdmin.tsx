@@ -8,6 +8,7 @@ import { ServicoMesas } from '../services/ServicoMesas';
 import { ServicoAuth } from '../services/ServicoAuth';
 import { ServicoRealtime } from '../services/ServicoRealtime';
 import { ServicoUsuariosCozinha } from '../services/ServicoUsuariosCozinha';
+import { ServicoPagamentos, verificarBloqueioAssinatura, type Restaurante } from '../services/ServicoPagamentos';
 import { definirSessao, limparSessao, obterEmailSessao, obterRestauranteId, obterTipoSessao, obterToken } from '../utils/sessao';
 import { useToast } from './ContextoToast';
 import { ServicoCategorias } from '../services/ServicoCategorias';
@@ -42,6 +43,40 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [usuarioCozinha, setUsuarioCozinha] = useState<UsuarioCozinha | null | undefined>(undefined);
     const [carregandoUsuarioCozinha, setCarregandoUsuarioCozinha] = useState(false);
+    const [restauranteInfo, setRestauranteInfo] = useState<Restaurante | null>(null);
+    const [carregandoRestaurante, setCarregandoRestaurante] = useState(false);
+    const [assinaturaBloqueada, setAssinaturaBloqueada] = useState(false);
+    const [diasAtrasoAssinatura, setDiasAtrasoAssinatura] = useState(0);
+
+    // Carrega informações do restaurante e verifica bloqueio
+    useEffect(() => {
+        if (!autenticado || restauranteId === undefined) {
+            setRestauranteInfo(null);
+            setAssinaturaBloqueada(false);
+            setDiasAtrasoAssinatura(0);
+            return;
+        }
+
+        setCarregandoRestaurante(true);
+        ServicoPagamentos.obterRestaurante()
+            .then((dados) => {
+                setRestauranteInfo(dados);
+                const { bloqueado, diasAtraso, mensagem } = verificarBloqueioAssinatura(dados);
+                setAssinaturaBloqueada(bloqueado);
+                setDiasAtrasoAssinatura(diasAtraso);
+                
+                if (bloqueado) {
+                    notificar(mensagem, 'erro');
+                }
+            })
+            .catch((erro: unknown) => {
+                console.error('[ContextoAdmin] Erro ao carregar restaurante:', erro);
+                notificar('Não foi possível verificar status da assinatura', 'erro');
+            })
+            .finally(() => {
+                setCarregandoRestaurante(false);
+            });
+    }, [autenticado, restauranteId, notificar]);
 
     useEffect(() => {
         if (!autenticado || restauranteId === undefined) return;
@@ -266,6 +301,10 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 autenticado,
                 login,
                 logout,
+                restauranteInfo,
+                carregandoRestaurante,
+                assinaturaBloqueada,
+                diasAtrasoAssinatura,
                 categorias,
                 criarCategoria,
                 produtos,

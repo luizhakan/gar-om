@@ -332,4 +332,22 @@ export class AuthService {
             refreshToken: novosTokens.refreshToken
         };
     }
+
+    async obterRestaurante(restauranteId: string) {
+        const restaurante = await this.prisma.restaurante.findUnique({
+            where: { id: restauranteId },
+            include: {
+                pagamentos: {
+                    orderBy: { createdAt: 'desc' },
+                    take: 10,
+                },
+            },
+        });
+
+        if (!restaurante) {
+            throw new NotFoundException('Restaurante não encontrado');
+        }
+
+        return restaurante;
+    }
 }

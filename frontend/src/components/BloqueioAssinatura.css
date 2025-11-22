@@ -1,0 +1,84 @@
+.bloqueio-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+}
+
+.bloqueio-modal {
+    background: white;
+    border-radius: 12px;
+    padding: 3rem;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bloqueio-icone {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.bloqueio-modal h1 {
+    color: #d32f2f;
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+.bloqueio-mensagem {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 1rem;
+}
+
+.bloqueio-mensagem strong {
+    color: #d32f2f;
+}
+
+.bloqueio-descricao {
+    color: #666;
+    margin-bottom: 2rem;
+    line-height: 1.5;
+}
+
+.btn-renovar-bloqueio {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
+
+.btn-renovar-bloqueio:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-renovar-bloqueio:active {
+    transform: translateY(0);
+}

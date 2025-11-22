@@ -30,6 +30,7 @@ model Restaurante {
   produtos                 Produto[]
   mesas                    Mesa[]
   pedidos                  Pedido[]
+  pagamentos               Pagamento[]
   trialStartedAt           DateTime            @default(now())
   trialEndsAt              DateTime            @default(now())
   subscriptionStatus       SubscriptionStatus  @default(trialing)
@@ -163,4 +164,54 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
   lastUsedAt DateTime @default(now())
+}
+
+// Modelos para integração com Mercado Pago - PAGAMENTO DE ASSINATURA DO RESTAURANTE
+enum PaymentStatus {
+  pending
+  approved
+  authorized
+  in_process
+  in_mediation
+  rejected
+  cancelled
+  refunded
+  charged_back
+}
+
+model Pagamento {
+  id                   String         @id @default(uuid())
+  restauranteId        String
+  mercadoPagoId        String?        @unique // ID do pagamento no Mercado Pago
+  status               PaymentStatus  @default(pending)
+  statusDetail         String?
+  transactionAmount    Float          // Valor da assinatura
+  paymentMethodId      String?
+  paymentTypeId        String?
+  installments         Int?
+  externalReference    String?        // Referência do plano/período
+  description          String?        // Ex: "Assinatura Mensal - Garçom"
+  payerEmail           String?
+  payerIdentification  Json?          // {type: "CPF/CNPJ", number: "123456789"}
+  cardToken            String?
+  idempotencyKey       String         @unique
+  planDurationMonths   Int            @default(1) // Duração do plano em meses
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+  restaurante          Restaurante    @relation(fields: [restauranteId], references: [id])
+  webhookEvents        WebhookEvent[]
+}
+
+model WebhookEvent {
+  id              String    @id @default(uuid())
+  pagamentoId     String?
+  eventType       String    // payment, merchant_order, etc
+  eventAction     String    // created, updated
+  resourceId      String
+  liveMode        Boolean
+  rawPayload      Json
+  processed       Boolean   @default(false)
+  processedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  pagamento       Pagamento? @relation(fields: [pagamentoId], references: [id])
 }

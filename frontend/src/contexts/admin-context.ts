@@ -4,11 +4,16 @@ import type { Categoria } from '../types/Categoria';
 import type { Mesa } from '../types/Mesa';
 import type { ProdutoNovo } from '../services/ServicoProdutos';
 import type { UsuarioCozinha } from '../types/UsuarioCozinha';
+import type { Restaurante } from '../services/ServicoPagamentos';
 
 export interface DadosContextoAdmin {
     autenticado: boolean;
     login: (email: string, senha: string) => Promise<void>;
     logout: () => void;
+    restauranteInfo: Restaurante | null;
+    carregandoRestaurante: boolean;
+    assinaturaBloqueada: boolean;
+    diasAtrasoAssinatura: number;
     categorias: Categoria[];
     criarCategoria: (nome: string, ordem: number) => Promise<void>;
     produtos: Produto[];

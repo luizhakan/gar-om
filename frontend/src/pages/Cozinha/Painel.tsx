@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { ProvedorPedidos } from '../../contexts/ContextoPedidos';
+import { ProvedorCozinha } from '../../contexts/ContextoCozinha';
 import { usePedidos } from '../../hooks/usePedidos';
+import { useCozinha } from '../../hooks/useCozinha';
 import { CardPedido } from '../../components/CardPedido';
 import { useAlertaSonoro } from '../../hooks/useAlertaSonoro';
 import { Botao } from '../../components/Botao';
@@ -12,6 +14,7 @@ import { useWakeLock } from '../../hooks/useWakeLock';
 function ConteudoPainelCozinha() {
     useWakeLock();
 
+    const { assinaturaBloqueada, diasAtrasoAssinatura } = useCozinha();
     const {
         pedidosPendentes,
         confirmarPedido,
@@ -62,6 +65,9 @@ function ConteudoPainelCozinha() {
             setRestauranteId(resp.cozinha.restauranteId);
             setToken(resp.token);
             setErroLogin('');
+            
+            // Força recarregamento da página para o contexto pegar os novos dados
+            window.location.reload();
         } catch (error) {
             console.error(error);
             setErroLogin('Falha no login da cozinha.');
@@ -107,6 +113,29 @@ function ConteudoPainelCozinha() {
                         {erroLogin && <p className={styles.erroLogin}>{erroLogin}</p>}
                         <Botao variante="primario" tamanho="grande" onClick={() => { void handleLoginCozinha(); }}>
                             Entrar
+                        </Botao>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // Exibe bloqueio de assinatura
+    if (assinaturaBloqueada) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.modalOverlay} style={{ zIndex: 10000 }}>
+                    <div className={styles.modalConteudo} style={{ border: '3px solid #f44336' }}>
+                        <div className={styles.modalIcone}>🔒</div>
+                        <h2 className={styles.modalTitulo} style={{ color: '#f44336' }}>Conta Bloqueada</h2>
+                        <p className={styles.modalTexto}>
+                            A assinatura está <strong style={{ color: '#f44336' }}>{diasAtrasoAssinatura} dias atrasada</strong>.
+                        </p>
+                        <p className={styles.modalTexto}>
+                            Entre em contato com o administrador para renovar a assinatura.
+                        </p>
+                        <Botao variante="secundario" tamanho="grande" onClick={handleLogout}>
+                            Sair
                         </Botao>
                     </div>
                 </div>
@@ -209,8 +238,10 @@ function ConteudoPainelCozinha() {
 
 export function PainelCozinha() {
     return (
-        <ProvedorPedidos>
-            <ConteudoPainelCozinha />
-        </ProvedorPedidos>
+        <ProvedorCozinha>
+            <ProvedorPedidos>
+                <ConteudoPainelCozinha />
+            </ProvedorPedidos>
+        </ProvedorCozinha>
     );
 }

@@ -9,16 +9,16 @@ export class MesasService {
 
     // Método auxiliar de segurança para garantir a URL correta
     private obterUrlBaseSegura(baseUrlRecebida?: string): string {
-        // Em produção, defina a variável FRONTEND_URL no .env
+        // Prioriza a URL recebida do frontend (window.location.origin)
+        // Em produção, pode definir FRONTEND_URL no .env como fallback
         // Ex: FRONTEND_URL=https://meu-app-garcom.com
-        const basePreferencial = process.env.FRONTEND_URL || baseUrlRecebida || 'http://localhost:5173';
-        const fallback = process.env.FRONTEND_URL || 'http://localhost:5173';
+        const urlParaUsar = baseUrlRecebida || process.env.FRONTEND_URL || 'http://localhost:5173';
 
         try {
             // Sempre normaliza para apenas protocolo + host, ignorando path/query
-            return new URL(basePreferencial).origin;
+            return new URL(urlParaUsar).origin;
         } catch {
-            return new URL(fallback).origin;
+            return 'http://localhost:5173';
         }
     }
 
@@ -71,7 +71,7 @@ export class MesasService {
         });
     }
 
-    // Correção: O parâmetro baseUrl recebido é ignorado por segurança
+    // Usa a baseUrl recebida do frontend
     async adicionar(numero: number, baseUrl: string, restauranteId: string) {
         const baseUrlSegura = this.obterUrlBaseSegura(baseUrl);
 
@@ -101,7 +101,7 @@ export class MesasService {
         });
     }
 
-    // Correção: O parâmetro baseUrl recebido é ignorado por segurança
+    // Usa a baseUrl recebida do frontend
     async configurar(quantidade: number, baseUrl: string, restauranteId: string) {
         const baseUrlSegura = this.obterUrlBaseSegura(baseUrl);
 

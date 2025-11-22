@@ -1,0 +1,281 @@
+.assinatura-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.assinatura-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.assinatura-header h1 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.restaurante-nome {
+    font-size: 1.1rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.card h2 {
+    font-size: 1.3rem;
+    color: #333;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 0.5rem;
+}
+
+/* Status Card */
+.status-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.status-card h2 {
+    color: white;
+    border-bottom-color: rgba(255, 255, 255, 0.2);
+}
+
+.status-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+}
+
+.dias-restantes {
+    font-size: 1.5rem;
+}
+
+.dias-restantes strong {
+    font-size: 2.5rem;
+    display: block;
+    font-weight: 700;
+}
+
+.datas {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1rem;
+    border-radius: 6px;
+}
+
+.datas p {
+    margin: 0.5rem 0;
+    font-size: 0.95rem;
+}
+
+.datas span {
+    font-weight: 600;
+    margin-right: 0.5rem;
+}
+
+.alerta-expiracao {
+    background: #ff6b6b;
+    color: white;
+    padding: 1rem;
+    border-radius: 6px;
+    margin-top: 1rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Ações Card */
+.acoes-card {
+    text-align: center;
+}
+
+.btn-renovar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    width: 100%;
+    max-width: 400px;
+}
+
+.btn-renovar:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-renovar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Pagamento Card */
+.pagamento-card {
+    border: 2px solid #667eea;
+}
+
+.valor-assinatura {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #667eea;
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.btn-cancelar {
+    background: #f44336;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.btn-cancelar:hover:not(:disabled) {
+    background: #d32f2f;
+}
+
+.btn-cancelar:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Mensagens */
+.mensagem {
+    padding: 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.erro-mensagem {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef5350;
+}
+
+.sucesso-mensagem {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #66bb6a;
+}
+
+.processando-mensagem {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffb74d;
+}
+
+/* Histórico Card */
+.tabela-container {
+    overflow-x: auto;
+}
+
+.tabela-pagamentos {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabela-pagamentos th,
+.tabela-pagamentos td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.tabela-pagamentos th {
+    background: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+}
+
+.tabela-pagamentos tbody tr:hover {
+    background: #fafafa;
+}
+
+.status-pagamento {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-approved {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-pending {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.status-rejected {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* Loading e Erro */
+.carregando,
+.erro {
+    text-align: center;
+    padding: 3rem;
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.erro {
+    color: #c62828;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+    .assinatura-container {
+        padding: 1rem;
+    }
+
+    .status-info {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .dias-restantes {
+        text-align: center;
+    }
+
+    .tabela-pagamentos {
+        font-size: 0.85rem;
+    }
+
+    .tabela-pagamentos th,
+    .tabela-pagamentos td {
+        padding: 0.5rem;
+    }
+}

@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Get, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler'; // Importar
 import { AdminRegisterDto } from './dto/admin-register.dto';
@@ -37,5 +37,12 @@ export class AuthAdminController {
         @Body() dto: AlterarSenhaAdminDto,
     ) {
         return this.authService.alterarSenhaAdmin(usuario.sub, dto);
+    }
+
+    @UseGuards(AuthGuard)
+    @Roles('admin')
+    @Get('restaurante')
+    obterRestaurante(@UsuarioAutenticado() usuario: AuthTokenPayload) {
+        return this.authService.obterRestaurante(usuario.restauranteId);
     }
 }

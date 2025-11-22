@@ -7,6 +7,7 @@ import { MesasAdmin } from './pages/Admin/Mesas';
 import { LoginAdmin } from './pages/Admin/Login';
 import { RegistrarAdmin } from './pages/Admin/Registrar';
 import { CozinhaAdmin } from './pages/Admin/Cozinha';
+import { Assinatura } from './pages/Admin/Assinatura';
 import { CardapioCliente } from './pages/Cliente/Cardapio';
 import { RevisarPedido } from './pages/Cliente/RevisarPedido';
 import { PainelCozinha } from './pages/Cozinha/Painel';
@@ -47,6 +48,10 @@ export const router = createBrowserRouter([
             {
                 path: 'cozinha',
                 element: <CozinhaAdmin />,
+            },
+            {
+                path: 'assinatura',
+                element: <Assinatura />,
             },
             {
                 path: 'login',
