@@ -39,7 +39,7 @@ export function Home() {
                         <div className={styles.copy}>
                             <h1 className={styles.titulo}>Cadastre seu restaurante e rode 14 dias grátis no piloto automático</h1>
                             <p className={styles.subtitulo}>
-                                Monte cardápio, mapa de mesas e KDS em minutos. Teste de 14 dias sem cartão
+                                Monte cardápio, mapa de mesas e KDS em minutos. Teste de 14 dias sem cartão.
                             </p>
 
                             <div className={styles.ctas}>
