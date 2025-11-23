@@ -61,6 +61,7 @@ export function RegistrarAdmin() {
                         className={styles.input}
                         placeholder="Maria Souza"
                         required
+                        autoFocus
                     />
 
                     <label className={styles.label} htmlFor="nomeRestaurante">Nome do Restaurante</label>
@@ -111,9 +112,9 @@ export function RegistrarAdmin() {
                     <Botao type="submit" variante="primario" tamanho="grande" className={styles.botao} disabled={carregando}>
                         {carregando ? 'Criando conta...' : 'Cadastrar'}
                     </Botao>
-                    <button type="button" className={styles.linkAlternativo} onClick={() => { void navigate('/admin/login'); }}>
+                    <Botao type="button" variante='primario' className={styles.linkAlternativo} onClick={() => { void navigate('/admin/login'); }}>
                         Já tenho conta
-                    </button>
+                    </Botao>
                 </form>
             </div>
         </div>

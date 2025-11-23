@@ -64,7 +64,6 @@ export function Home() {
                         </div>
 
                         <div className={styles.heroCard}>
-                            <div className={styles.tag}>Trial + cobrança pronta</div>
                             <p className={styles.cardTitle}>Fluxo completo para restaurante, cozinha e assinaturas</p>
                             <ul className={styles.cardList}>
                                 <li>Pedidos e status em tempo real</li>
@@ -72,7 +71,7 @@ export function Home() {
                                 <li>Mapa de mesas pronto para QR Code</li>
                             </ul>
                             <div className={styles.cardFooter}>
-                                <p className={styles.cardHighlight}>14 dias livres • ativa pagamento após o trial</p>
+                                <p className={styles.cardHighlight}>14 dias livres • ativa pagamento após o teste</p>
                             </div>
                         </div>
                     </div>
@@ -85,7 +84,7 @@ export function Home() {
                         <p className={styles.kicker}>O que vem pronto</p>
                         <h2>Do salão do restaurante à cozinha sem fricção</h2>
                         <p className={styles.sectionSubtitle}>
-                            Cada área já tem o painel que precisa. É só cadastrar e ligar o trial.
+                            Cada área já tem o painel que precisa. É só cadastrar e usar.
                         </p>
                     </div>
                     <div className={styles.featureGrid}>

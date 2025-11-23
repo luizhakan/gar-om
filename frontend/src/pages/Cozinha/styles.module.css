@@ -80,6 +80,7 @@
     border: 0.0625rem solid var(--cor-borda);
     background: var(--cor-fundo);
     color: var(--cor-texto-primario);
+    margin-bottom: 1rem;
 }
 
 .erroLogin {

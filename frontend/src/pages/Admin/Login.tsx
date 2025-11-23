@@ -53,6 +53,7 @@ export function LoginAdmin() {
                             className={styles.inputLogin}
                             placeholder="caixa@restaurante.com"
                             required
+                            autoFocus
                         />
 
                         <input
@@ -68,7 +69,7 @@ export function LoginAdmin() {
                         {erro && <p className={styles.erroLogin}>{erro}</p>}
 
                         <Botao type="submit" variante="primario" tamanho="grande">
-                            Entrar como Caixa
+                            Entrar
                         </Botao>
                     </form>
                 </div>

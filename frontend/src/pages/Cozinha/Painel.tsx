@@ -102,6 +102,7 @@ function ConteudoPainelCozinha() {
                             placeholder="nomerestaurante"
                             value={login}
                             onChange={(e) => { setLogin(e.target.value); }}
+                            autoFocus
                         />
                         <input
                             className={styles.inputLogin}
