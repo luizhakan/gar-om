@@ -103,6 +103,8 @@
 /* Ações Card */
 .acoes-card {
     text-align: center;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 .btn-renovar {
@@ -117,6 +119,8 @@
     transition: transform 0.2s, box-shadow 0.2s;
     width: 100%;
     max-width: 400px;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
 }
 
 .btn-renovar:hover:not(:disabled) {

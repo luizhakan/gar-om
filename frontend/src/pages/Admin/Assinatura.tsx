@@ -3,6 +3,7 @@ import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
 import type { ICardPaymentFormData } from '@mercadopago/sdk-react/esm/bricks/cardPayment/type';
 import { ServicoPagamentos, type Restaurante, type CreatePaymentDto } from '../../services/ServicoPagamentos';
 import './Assinatura.module.css';
+import { Botao } from '../../components/Botao';
 
 // Inicializar Mercado Pago SDK com a chave pública
 const MERCADO_PAGO_PUBLIC_KEY = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY as string;
@@ -116,6 +117,7 @@ export function Assinatura() {
         );
     }
 
+    const assinaturaInativa = restaurante.subscriptionStatus !== 'active' && restaurante.subscriptionStatus !== 'trialing';
     const diasRestantes = calcularDiasRestantes();
     const expirouOuProximoExpirar = diasRestantes <= 7;
 
@@ -154,15 +156,15 @@ export function Assinatura() {
             </div>
 
             {/* Botão de Renovação */}
-            {!mostrarFormulario && (
+            {assinaturaInativa && (
                 <div className="card acoes-card">
-                    <button 
+                    <Botao 
                         className="btn-renovar"
                         onClick={() => setMostrarFormulario(true)}
                         disabled={processando}
                     >
                         💳 Renovar Assinatura (R$ 50,00/mês)
-                    </button>
+                    </Botao>
                 </div>
             )}
 
