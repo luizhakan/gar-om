@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, Query } from '@nestjs/common';
 import { PagamentosService } from './pagamentos.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UsuarioAutenticado } from '../auth/auth-user.decorator';
@@ -12,7 +12,7 @@ export class PagamentosController {
     constructor(private readonly pagamentosService: PagamentosService) {}
 
     /**
-     * Cria um novo pagamento
+     * Cria um novo pagamento (método antigo com cartão)
      * POST /pagamentos
      */
     @Post()
@@ -28,6 +28,19 @@ export class PagamentosController {
         };
 
         return this.pagamentosService.createPayment(normalizedDto, usuario.restauranteId);
+    }
+
+    /**
+     * Cria uma preference de checkout do Mercado Pago (aceita PIX, boleto, cartão)
+     * POST /pagamentos/checkout
+     */
+    @Post('checkout')
+    async createCheckout(
+        @Body() body: { planDurationMonths?: number },
+        @UsuarioAutenticado() usuario: any,
+    ) {
+        const planDurationMonths = body.planDurationMonths || 1;
+        return this.pagamentosService.createCheckoutPreference(usuario.restauranteId, planDurationMonths);
     }
 
     /**

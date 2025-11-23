@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { MercadoPagoConfig, Payment } from 'mercadopago';
+import { MercadoPagoConfig, Payment, Preference } from 'mercadopago';
 
 @Injectable()
 export class MercadoPagoService {
     private readonly logger = new Logger(MercadoPagoService.name);
     private client: MercadoPagoConfig;
     private payment: Payment;
+    private preference: Preference;
 
     constructor() {
         const accessToken = process.env.MERCADO_PAGO_ACCESS_TOKEN;
@@ -22,6 +23,7 @@ export class MercadoPagoService {
         });
         
         this.payment = new Payment(this.client);
+        this.preference = new Preference(this.client);
     }
 
     /**
@@ -70,6 +72,62 @@ export class MercadoPagoService {
             return response;
         } catch (error) {
             this.logger.error(`Erro ao buscar pagamento ${paymentId}`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Cria uma preference de checkout para aceitar múltiplos meios de pagamento (incluindo PIX)
+     */
+    async createPreference(data: {
+        items: Array<{
+            id?: string;
+            title: string;
+            description?: string;
+            quantity: number;
+            unit_price: number;
+        }>;
+        payer?: {
+            email: string;
+            name?: string;
+            identification?: {
+                type: string;
+                number: string;
+            };
+        };
+        external_reference?: string;
+        notification_url?: string;
+        back_urls?: {
+            success?: string;
+            failure?: string;
+            pending?: string;
+        };
+        auto_return?: 'approved' | 'all';
+        payment_methods?: {
+            excluded_payment_types?: Array<{ id: string }>;
+            installments?: number;
+        };
+    }) {
+        try {
+            this.logger.log(`Criando preference: ${JSON.stringify(data)}`);
+            
+            // Adiciona ID ao item se não existir
+            const itemsComId = data.items.map((item, index) => ({
+                ...item,
+                id: item.id || `item-${index + 1}`,
+            }));
+
+            const response = await this.preference.create({
+                body: {
+                    ...data,
+                    items: itemsComId,
+                },
+            });
+
+            this.logger.log(`Preference criada com sucesso: ${response.id}`);
+            return response;
+        } catch (error) {
+            this.logger.error('Erro ao criar preference no Mercado Pago', error);
             throw error;
         }
     }

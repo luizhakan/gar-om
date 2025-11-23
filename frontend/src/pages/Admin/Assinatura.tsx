@@ -1,26 +1,44 @@
 import { useEffect, useState } from 'react';
-import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
-import type { ICardPaymentFormData } from '@mercadopago/sdk-react/esm/bricks/cardPayment/type';
-import { ServicoPagamentos, type Restaurante, type CreatePaymentDto } from '../../services/ServicoPagamentos';
+import { ServicoPagamentos, type Restaurante } from '../../services/ServicoPagamentos';
 import './Assinatura.module.css';
 import { Botao } from '../../components/Botao';
-
-// Inicializar Mercado Pago SDK com a chave pública
-const MERCADO_PAGO_PUBLIC_KEY = import.meta.env.VITE_MERCADO_PAGO_PUBLIC_KEY as string;
-if (MERCADO_PAGO_PUBLIC_KEY) {
-    initMercadoPago(MERCADO_PAGO_PUBLIC_KEY);
-}
 
 export function Assinatura() {
     const [restaurante, setRestaurante] = useState<Restaurante | null>(null);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState('');
-    const [mostrarFormulario, setMostrarFormulario] = useState(false);
     const [processando, setProcessando] = useState(false);
     const [sucesso, setSucesso] = useState(false);
 
     useEffect(() => {
         carregarDados();
+        
+        // Verifica se retornou do checkout com sucesso
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get('status');
+        
+        if (status === 'success') {
+            setSucesso(true);
+            setTimeout(() => {
+                setSucesso(false);
+                // Remove o parâmetro da URL
+                window.history.replaceState({}, '', window.location.pathname);
+            }, 5000);
+        } else if (status === 'failure') {
+            setErro('Pagamento não foi aprovado. Tente novamente.');
+            setTimeout(() => {
+                setErro('');
+                window.history.replaceState({}, '', window.location.pathname);
+            }, 5000);
+        } else if (status === 'pending') {
+            setSucesso(true);
+            setErro('Pagamento pendente de confirmação. Você será notificado quando for aprovado.');
+            setTimeout(() => {
+                setErro('');
+                setSucesso(false);
+                window.history.replaceState({}, '', window.location.pathname);
+            }, 5000);
+        }
     }, []);
 
     async function carregarDados() {
@@ -36,37 +54,24 @@ export function Assinatura() {
         }
     }
 
-    async function processarPagamento(formData: ICardPaymentFormData<unknown>) {
-        if (!restaurante) return;
-
+    async function abrirCheckout(planDurationMonths: number = 1) {
         try {
             setProcessando(true);
             setErro('');
 
-            const dto: CreatePaymentDto = {
-                token: formData.token,
-                transactionAmount: 50.00, // Valor da assinatura mensal
-                description: 'Assinatura Garçom - Renovação Mensal',
-                installments: formData.installments,
-                paymentMethodId: formData.payment_method_id,
-                payer: {
-                    email: restaurante.billingEmail,
-                },
-                planDurationMonths: 1,
-            };
-
-            await ServicoPagamentos.criarPagamento(dto);
-            setSucesso(true);
-            setMostrarFormulario(false);
+            const resultado = await ServicoPagamentos.criarCheckout(planDurationMonths);
             
-            // Recarrega os dados após 2 segundos
-            setTimeout(() => {
-                carregarDados();
-                setSucesso(false);
-            }, 2000);
+            // Redireciona para o checkout do Mercado Pago
+            // Em produção, usa initPoint; em sandbox/teste, pode usar sandboxInitPoint
+            const checkoutUrl = resultado.initPoint || resultado.sandboxInitPoint;
+            
+            if (checkoutUrl) {
+                window.location.href = checkoutUrl;
+            } else {
+                throw new Error('URL de checkout não disponível');
+            }
         } catch (err) {
-            setErro(err instanceof Error ? err.message : 'Erro ao processar pagamento.');
-        } finally {
+            setErro(err instanceof Error ? err.message : 'Erro ao criar checkout.');
             setProcessando(false);
         }
     }
@@ -158,45 +163,55 @@ export function Assinatura() {
             {/* Botão de Renovação */}
             {assinaturaInativa && (
                 <div className="card acoes-card">
-                    <Botao 
-                        className="btn-renovar"
-                        onClick={() => setMostrarFormulario(true)}
-                        disabled={processando}
-                    >
-                        💳 Renovar Assinatura (R$ 50,00/mês)
-                    </Botao>
-                </div>
-            )}
-
-            {/* Formulário de Pagamento */}
-            {mostrarFormulario && MERCADO_PAGO_PUBLIC_KEY && (
-                <div className="card pagamento-card">
-                    <h2>Pagamento da Assinatura</h2>
-                    <p className="valor-assinatura">Valor: R$ 50,00/mês</p>
+                    <h2>Renovar Assinatura</h2>
+                    <p>Escolha o plano que melhor se adequa às suas necessidades:</p>
                     
-                    <CardPayment
-                        initialization={{
-                            amount: 50.00,
-                            payer: {
-                                email: restaurante.billingEmail,
-                            },
-                        }}
-                        onSubmit={async (formData) => {
-                            await processarPagamento(formData);
-                        }}
-                        onError={(error) => {
-                            console.error('Erro no CardPayment:', error);
-                            setErro('Erro ao processar pagamento. Tente novamente.');
-                        }}
-                    />
-
-                    <button 
-                        className="btn-cancelar"
-                        onClick={() => setMostrarFormulario(false)}
-                        disabled={processando}
-                    >
-                        Cancelar
-                    </button>
+                    <div className="planos-container">
+                        <div className="plano">
+                            <h3>Plano Mensal</h3>
+                            <p className="preco">R$ 50,00/mês</p>
+                            <Botao 
+                                className="btn-renovar"
+                                onClick={() => abrirCheckout(1)}
+                                disabled={processando}
+                            >
+                                💳 Pagar com PIX, Boleto ou Cartão
+                            </Botao>
+                        </div>
+                        
+                        <div className="plano destaque">
+                            <div className="badge-destaque">Mais Popular</div>
+                            <h3>Plano Trimestral</h3>
+                            <p className="preco">R$ 135,00</p>
+                            <p className="economia">(Economize 10% - R$ 45,00/mês)</p>
+                            <Botao 
+                                className="btn-renovar"
+                                onClick={() => abrirCheckout(3)}
+                                disabled={processando}
+                            >
+                                💳 Pagar com PIX, Boleto ou Cartão
+                            </Botao>
+                        </div>
+                        
+                        <div className="plano">
+                            <h3>Plano Anual</h3>
+                            <p className="preco">R$ 480,00</p>
+                            <p className="economia">(Economize 20% - R$ 40,00/mês)</p>
+                            <Botao 
+                                className="btn-renovar"
+                                onClick={() => abrirCheckout(12)}
+                                disabled={processando}
+                            >
+                                💳 Pagar com PIX, Boleto ou Cartão
+                            </Botao>
+                        </div>
+                    </div>
+                    
+                    <div className="info-pagamento">
+                        <p>✅ Pagamento 100% seguro via Mercado Pago</p>
+                        <p>✅ Aceita PIX, Boleto Bancário e Cartão de Crédito</p>
+                        <p>✅ Ativação imediata após confirmação do pagamento</p>
+                    </div>
                 </div>
             )}
 
@@ -249,13 +264,6 @@ export function Assinatura() {
                             </tbody>
                         </table>
                     </div>
-                </div>
-            )}
-
-            {/* Aviso sobre chave do Mercado Pago */}
-            {!MERCADO_PAGO_PUBLIC_KEY && (
-                <div className="mensagem erro-mensagem">
-                    ⚠️ Chave pública do Mercado Pago não configurada. Configure a variável VITE_MERCADO_PAGO_PUBLIC_KEY
                 </div>
             )}
         </div>

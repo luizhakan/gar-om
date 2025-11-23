@@ -103,4 +103,18 @@ export const ServicoPagamentos = {
             method: 'GET',
         });
     },
+
+    /**
+     * Cria uma preference de checkout do Mercado Pago (aceita PIX, boleto, cartão)
+     */
+    async criarCheckout(planDurationMonths: number = 1): Promise<{ 
+        preferenceId: string; 
+        initPoint: string; 
+        sandboxInitPoint: string;
+    }> {
+        return requestAutenticado('/pagamentos/checkout', {
+            method: 'POST',
+            body: JSON.stringify({ planDurationMonths }),
+        });
+    },
 };

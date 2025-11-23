@@ -104,6 +104,82 @@ export class PagamentosService {
     }
 
     /**
+     * Cria uma preference de checkout do Mercado Pago (aceita PIX, boleto, cartão, etc)
+     */
+    async createCheckoutPreference(restauranteId: string, planDurationMonths: number = 1) {
+        // Verifica se o restaurante existe
+        const restaurante = await this.prisma.restaurante.findUnique({
+            where: { id: restauranteId },
+        });
+
+        if (!restaurante) {
+            throw new NotFoundException('Restaurante não encontrado');
+        }
+
+        // Valor baseado na duração do plano
+        const valorMensal = 50.00;
+        let valorTotal = valorMensal * planDurationMonths;
+        // Aplica descontos: 20% para 12 meses, 10% para 3 meses
+        let desconto = 0;
+        if (planDurationMonths === 12) {
+            desconto = 0.20;
+        } else if (planDurationMonths === 3) {
+            desconto = 0.10;
+        }
+        if (desconto > 0) {
+            valorTotal = Number((valorTotal * (1 - desconto)).toFixed(2));
+        }
+
+        valorTotal = 1.00;
+
+        // URL de notificação (webhook)
+        const notificationUrl = process.env.MERCADO_PAGO_WEBHOOK_URL || 
+            `${process.env.API_BASE_URL}/webhooks/mercadopago`;
+
+        // URLs de retorno
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+
+        try {
+            // Cria preference no Mercado Pago
+            const preference = await this.mercadoPago.createPreference({
+                items: [
+                    {
+                        title: `Assinatura Garçom - ${planDurationMonths} ${planDurationMonths === 1 ? 'mês' : 'meses'}`,
+                        description: `Assinatura do sistema Garçom para ${restaurante.nome}`,
+                        quantity: 1,
+                        unit_price: valorTotal,
+                    }
+                ],
+                payer: {
+                    email: restaurante.billingEmail || 'teste@teste.com',
+                    name: restaurante.nome,
+                },
+                external_reference: `sub-${restauranteId}-${Date.now()}`,
+                notification_url: notificationUrl,
+                back_urls: {
+                    success: `${frontendUrl}/admin/assinatura?status=success`,
+                    failure: `${frontendUrl}/admin/assinatura?status=failure`,
+                    pending: `${frontendUrl}/admin/assinatura?status=pending`,
+                },
+                payment_methods: {
+                    installments: planDurationMonths,
+                },
+            });
+
+            this.logger.log(`Preference criada: ${preference.id} para restaurante ${restauranteId}`);
+
+            return {
+                preferenceId: preference.id,
+                initPoint: preference.init_point,
+                sandboxInitPoint: preference.sandbox_init_point,
+            };
+        } catch (error) {
+            this.logger.error('Erro ao criar preference', error);
+            throw new BadRequestException('Erro ao criar checkout');
+        }
+    }
+
+    /**
      * Atualiza a assinatura do restaurante após pagamento aprovado
      */
     private async updateRestauranteSubscription(restauranteId: string, durationMonths: number) {
@@ -167,12 +243,46 @@ export class PagamentosService {
                     // Busca informações atualizadas do pagamento
                     const mpPayment = await this.mercadoPago.getPayment(paymentId);
 
-                    // Atualiza o pagamento no banco
-                    const pagamento = await this.prisma.pagamento.findUnique({
+                    // Busca o pagamento no banco
+                    let pagamento = await this.prisma.pagamento.findUnique({
                         where: { mercadoPagoId: paymentId.toString() }
                     });
 
+                    // Se não existe pagamento salvo, cria um novo (caso seja do checkout)
+                    if (!pagamento && mpPayment.external_reference) {
+                        // Extrai o restauranteId da external_reference (formato: sub-{restauranteId}-{timestamp})
+                        const match = mpPayment.external_reference.match(/^sub-([a-f0-9-]+)/);
+                        if (match) {
+                            const restauranteId = match[1];
+                            
+                            // Cria o pagamento no banco
+                            pagamento = await this.prisma.pagamento.create({
+                                data: {
+                                    restauranteId,
+                                    mercadoPagoId: paymentId.toString(),
+                                    status: this.mapMercadoPagoStatus(mpPayment.status),
+                                    statusDetail: mpPayment.status_detail,
+                                    transactionAmount: mpPayment.transaction_amount || 0,
+                                    paymentMethodId: mpPayment.payment_method_id,
+                                    paymentTypeId: mpPayment.payment_type_id,
+                                    externalReference: mpPayment.external_reference,
+                                    description: mpPayment.description,
+                                    payerEmail: mpPayment.payer?.email,
+                                    payerIdentification: mpPayment.payer?.identification ? {
+                                        type: mpPayment.payer.identification.type,
+                                        number: mpPayment.payer.identification.number,
+                                    } : undefined,
+                                    idempotencyKey: `webhook-${paymentId}`,
+                                    planDurationMonths: 1,
+                                }
+                            });
+
+                            this.logger.log(`Pagamento criado via webhook: ${pagamento.id}`);
+                        }
+                    }
+
                     if (pagamento) {
+                        // Atualiza o status do pagamento
                         await this.prisma.pagamento.update({
                             where: { id: pagamento.id },
                             data: {
@@ -190,6 +300,14 @@ export class PagamentosService {
                                 processedAt: new Date(),
                             }
                         });
+
+                        // Se pagamento aprovado, atualiza a assinatura
+                        if (mpPayment.status === 'approved') {
+                            await this.updateRestauranteSubscription(
+                                pagamento.restauranteId, 
+                                pagamento.planDurationMonths
+                            );
+                        }
 
                         this.logger.log(`Pagamento ${pagamento.id} atualizado via webhook`);
                     }

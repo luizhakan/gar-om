@@ -140,12 +140,25 @@ export class AuthService {
 
     async loginAdmin(dto: LoginDto) {
         const admin = await this.prisma.admin.findUnique({ where: { email: dto.email } });
+        const dataAtual = new Date();
         if (!admin) throw new NotFoundException('Credenciais inválidas');
 
         const ok = await bcrypt.compare(dto.senha, admin.senhaHash);
         if (!ok) throw new UnauthorizedException('Credenciais inválidas');
 
         const tokens = await this.gerarTokensRotativos(admin.id, 'admin', admin.restauranteId);
+        const restaurante = await this.prisma.restaurante.findUnique({ where: { id: admin.restauranteId } });
+
+        if (restaurante && restaurante.trialEndsAt < dataAtual) {
+            console.log('Trial expirado, atualizando status para past_due');
+
+            await this.prisma.restaurante.update({
+                where: { id: restaurante.id },
+                data: { subscriptionStatus: SubscriptionStatus.past_due },
+            });
+        }
+
+        console.log(restaurante);
 
         return {
             token: tokens.accessToken,
