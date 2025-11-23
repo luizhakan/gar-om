@@ -77,7 +77,7 @@ jobs:
               # CASO 2: Mudança no Backend
               if [[ "${{ steps.changes.outputs.backend }}" == 'true' ]]; then
                 echo "⚙️ Backend alterado. Reconstruindo imagem..."
-                docker-compose build backend
+                docker-compose up -d --build backend
                 
                 echo "🔄 Reiniciando container do backend..."
                 docker-compose up -d --no-recreate backend || docker-compose up -d backend
@@ -90,7 +90,7 @@ jobs:
               # CASO 3: Mudança no Frontend
               if [[ "${{ steps.changes.outputs.frontend }}" == 'true' ]]; then
                 echo "🎨 Frontend alterado. Reconstruindo imagem..."
-                docker-compose build frontend
+                docker-compose up -d --build frontend
                 
                 echo "🔄 Reiniciando container do frontend..."
                 docker-compose up -d --no-recreate frontend || docker-compose up -d frontend
