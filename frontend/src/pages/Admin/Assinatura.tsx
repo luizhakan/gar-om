@@ -64,7 +64,7 @@ export function Assinatura() {
                 setSucesso(false);
             }, 2000);
         } catch (err) {
-            setErro(err instanceof Error ? err.message : 'Erro ao processar pagamento');
+            setErro(err instanceof Error ? err.message : 'Erro ao processar pagamento.');
         } finally {
             setProcessando(false);
         }
