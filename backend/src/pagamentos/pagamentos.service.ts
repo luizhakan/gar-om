@@ -130,8 +130,6 @@ export class PagamentosService {
             valorTotal = Number((valorTotal * (1 - desconto)).toFixed(2));
         }
 
-        valorTotal = 1.00;
-
         // URL de notificação (webhook)
         const notificationUrl = process.env.MERCADO_PAGO_WEBHOOK_URL || 
             `${process.env.API_BASE_URL}/webhooks/mercadopago`;
