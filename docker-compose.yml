@@ -37,7 +37,7 @@ services:
       CORS_ORIGIN: https://garcomagil.com,https://www.garcomagil.com,https://admin.garcomagil.com
       MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-your_access_token_here}
       MERCADO_PAGO_PUBLIC_KEY: ${MERCADO_PAGO_PUBLIC_KEY:-your_public_key_here}
-      MERCADO_PAGO_WEBHOOK_URL: https://garcomagil.com/api/webhook/mercado-pago
+      MERCADO_PAGO_WEBHOOK_URL: https://garcomagil.com/api/webhooks/mercadopago
     command: sh -c "npx prisma migrate deploy && node dist/main.js"
     depends_on:
       - db

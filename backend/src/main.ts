@@ -9,7 +9,9 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 import { corsWhitelist } from './whitelist';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule);
+    const app = await NestFactory.create(AppModule, {
+        bodyParser: true, // Habilita body parser
+    });
     app.useWebSocketAdapter(new IoAdapter(app));
     app.use(helmet());
 
