@@ -260,9 +260,11 @@ export class PagamentosService {
                     // Se não existe pagamento salvo, cria um novo (caso seja do checkout)
                     if (!pagamento && mpPayment.external_reference) {
                         // Extrai o restauranteId da external_reference (formato: sub-{restauranteId}-{timestamp})
-                        const match = mpPayment.external_reference.match(/^sub-([a-f0-9-]+)/);
+                        // UUID tem formato: 8-4-4-4-12 caracteres hexadecimais
+                        const match = mpPayment.external_reference.match(/^sub-([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/);
                         if (match) {
                             const restauranteId = match[1];
+                            this.logger.log(`RestauranteId extraído: ${restauranteId}`);
                             
                             // Verifica se o restaurante existe
                             const restauranteExiste = await this.prisma.restaurante.findUnique({
