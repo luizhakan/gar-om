@@ -240,13 +240,22 @@ export class PagamentosService {
                 const paymentId = webhookData.data?.id;
 
                 if (paymentId) {
+                    this.logger.log(`Processando pagamento ID: ${paymentId}`);
+                    
                     // Busca informações atualizadas do pagamento
                     const mpPayment = await this.mercadoPago.getPayment(paymentId);
+                    this.logger.log(`Dados do pagamento MP: ${JSON.stringify(mpPayment)}`);
 
                     // Busca o pagamento no banco
                     let pagamento = await this.prisma.pagamento.findUnique({
                         where: { mercadoPagoId: paymentId.toString() }
                     });
+
+                    if (pagamento) {
+                        this.logger.log(`Pagamento encontrado no banco: ${pagamento.id}`);
+                    } else {
+                        this.logger.log(`Pagamento não encontrado no banco. External reference: ${mpPayment.external_reference}`);
+                    }
 
                     // Se não existe pagamento salvo, cria um novo (caso seja do checkout)
                     if (!pagamento && mpPayment.external_reference) {
@@ -254,6 +263,16 @@ export class PagamentosService {
                         const match = mpPayment.external_reference.match(/^sub-([a-f0-9-]+)/);
                         if (match) {
                             const restauranteId = match[1];
+                            
+                            // Verifica se o restaurante existe
+                            const restauranteExiste = await this.prisma.restaurante.findUnique({
+                                where: { id: restauranteId }
+                            });
+
+                            if (!restauranteExiste) {
+                                this.logger.warn(`Restaurante ${restauranteId} não encontrado. Ignorando webhook.`);
+                                return { success: true, message: 'Restaurante não encontrado' };
+                            }
                             
                             // Cria o pagamento no banco
                             pagamento = await this.prisma.pagamento.create({

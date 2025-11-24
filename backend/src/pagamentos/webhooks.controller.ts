@@ -21,8 +21,15 @@ export class WebhooksController {
         @Body() body: any,
         @Headers('x-signature') xSignature: string,
         @Headers('x-request-id') xRequestId: string,
+        @Headers() headers: any,
     ) {
-        this.logger.log(`Webhook recebido: ${JSON.stringify(body)}`);
+        // Log completo de tudo que chega
+        this.logger.log('========== WEBHOOK MERCADO PAGO ==========');
+        this.logger.log(`Body recebido: ${JSON.stringify(body, null, 2)}`);
+        this.logger.log(`Headers recebidos: ${JSON.stringify(headers, null, 2)}`);
+        this.logger.log(`x-signature: ${xSignature}`);
+        this.logger.log(`x-request-id: ${xRequestId}`);
+        this.logger.log('==========================================');
 
         // Extrai o data.id do query parameter ou body
         const dataId = body?.data?.id;
