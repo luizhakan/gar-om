@@ -117,7 +117,7 @@ export class PagamentosService {
         }
 
         // Valor baseado na duração do plano
-        const valorMensal = 1.00;
+        const valorMensal = 100.00;
         let valorTotal = valorMensal * planDurationMonths;
         // Aplica descontos: 20% para 12 meses, 10% para 3 meses
         let desconto = 0;

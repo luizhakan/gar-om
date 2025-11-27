@@ -169,7 +169,7 @@ export function Assinatura() {
                     <div className="planos-container">
                         <div className="plano">
                             <h3>Plano Mensal</h3>
-                            <p className="preco">R$ 50,00/mês</p>
+                            <p className="preco">R$ 100,00/mês</p>
                             <Botao 
                                 className="btn-renovar"
                                 onClick={() => abrirCheckout(1)}
@@ -182,8 +182,8 @@ export function Assinatura() {
                         <div className="plano destaque">
                             <div className="badge-destaque">Mais Popular</div>
                             <h3>Plano Trimestral</h3>
-                            <p className="preco">R$ 135,00</p>
-                            <p className="economia">(Economize 10% - R$ 45,00/mês)</p>
+                            <p className="preco">R$ 270,00</p>
+                            <p className="economia">(Economize 10% - R$ 90,00/mês)</p>
                             <Botao 
                                 className="btn-renovar"
                                 onClick={() => abrirCheckout(3)}
@@ -195,8 +195,8 @@ export function Assinatura() {
                         
                         <div className="plano">
                             <h3>Plano Anual</h3>
-                            <p className="preco">R$ 480,00</p>
-                            <p className="economia">(Economize 20% - R$ 40,00/mês)</p>
+                            <p className="preco">R$ 960,00</p>
+                            <p className="economia">(Economize 20% - R$ 80,00/mês)</p>
                             <Botao 
                                 className="btn-renovar"
                                 onClick={() => abrirCheckout(12)}
