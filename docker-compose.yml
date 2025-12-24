@@ -83,33 +83,16 @@ services:
       - "443:443"
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/www/certbot
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot
     restart: unless-stopped
-
-  certbot:
-    image: certbot/certbot:latest
-    environment:
-      CERTBOT_DOMAIN: ${CERTBOT_DOMAIN:-garcomagil.com}
-      CERTBOT_EMAIL: ${CERTBOT_EMAIL:-seu-email@dominio.com}
-    volumes:
-      - certbot-etc:/etc/letsencrypt
-      - certbot-var:/var/www/certbot
-    entrypoint: /bin/sh
-    command: >
-      -c "set -e;
-          if [ ! -f /etc/letsencrypt/live/$${CERTBOT_DOMAIN}/fullchain.pem ]; then
-            certbot certonly --webroot -w /var/www/certbot \
-              -d $${CERTBOT_DOMAIN} --email $${CERTBOT_EMAIL} \
-              --agree-tos --no-eff-email --non-interactive || true;
-          fi;
-          while :; do
-            certbot renew --webroot -w /var/www/certbot --quiet || true;
-            sleep 12h;
-          done"
-    restart: unless-stopped
+    networks:
+      - default
+      - proxy
 
 volumes:
   garcom_db_data:
-  certbot-etc:
-  certbot-var:
+
+networks:
+  proxy:
+    external: true
