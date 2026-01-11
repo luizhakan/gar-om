@@ -57,6 +57,18 @@ export const ServicoMesas = {
         return mapearMesaApi(data);
     },
 
+    async adicionarMesasEmLote(inicio: number, fim: number): Promise<Mesa[]> {
+        const data = await requestAutenticado<MesaApi[]>('/mesas/lote', {
+            method: 'POST',
+            body: JSON.stringify({
+                inicio,
+                fim,
+                baseUrl: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173',
+            }),
+        });
+        return data.map(mapearMesaApi);
+    },
+
     async configurarMesas(total: number): Promise<Mesa[]> {
         const data = await requestAutenticado<MesaApi[]>('/mesas/configurar', {
             method: 'POST',

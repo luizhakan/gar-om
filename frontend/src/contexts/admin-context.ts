@@ -23,6 +23,7 @@ export interface DadosContextoAdmin {
     alternarDisponibilidade: (idProduto: string) => Promise<void>;
     mesas: Mesa[];
     adicionarMesa: (numero: number) => Promise<void>;
+    adicionarMesasEmLote: (inicio: number, fim: number) => Promise<void>;
     excluirMesa: (id: string) => Promise<void>;
     definirNumeroMesas: (total: number) => Promise<void>;
     fecharMesa: (id: string) => Promise<void>;

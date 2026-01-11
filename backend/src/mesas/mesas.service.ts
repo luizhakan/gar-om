@@ -107,6 +107,55 @@ export class MesasService {
         });
     }
 
+    async adicionarEmLote(inicio: number, fim: number, baseUrl: string, restauranteId: string) {
+        if (inicio > fim) {
+            throw new BadRequestException('O número inicial não pode ser maior que o final.');
+        }
+
+        const baseUrlSegura = this.obterUrlBaseSegura(baseUrl);
+
+        const restaurante = await this.prisma.restaurante.findUnique({ where: { id: restauranteId } });
+        if (!restaurante) throw new NotFoundException('Restaurante não encontrado');
+
+        const mesasExistentes = await this.prisma.mesa.findMany({
+            where: {
+                restauranteId,
+                numero: { gte: inicio, lte: fim },
+            },
+            select: { numero: true },
+        });
+
+        if (mesasExistentes.length > 0) {
+            const numeros = mesasExistentes.map(m => m.numero).join(', ');
+            throw new BadRequestException(`As seguintes mesas já existem: ${numeros}`);
+        }
+
+        const novasMesas = [];
+        for (let numero = inicio; numero <= fim; numero++) {
+            const urlMesa = new URL(baseUrlSegura);
+            urlMesa.pathname = `/mesa/${numero}`;
+            urlMesa.searchParams.set('restauranteId', restauranteId);
+
+            novasMesas.push({
+                numero,
+                codigoQr: urlMesa.toString(),
+                ocupada: false,
+                contaSolicitada: false,
+                restauranteId,
+            });
+        }
+
+        await this.prisma.mesa.createMany({ data: novasMesas });
+
+        return this.prisma.mesa.findMany({
+            where: {
+                restauranteId,
+                numero: { gte: inicio, lte: fim },
+            },
+            orderBy: { numero: 'asc' },
+        });
+    }
+
     // Usa a baseUrl recebida do frontend
     async configurar(quantidade: number, baseUrl: string, restauranteId: string) {
         const baseUrlSegura = this.obterUrlBaseSegura(baseUrl);

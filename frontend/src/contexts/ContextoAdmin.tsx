@@ -241,6 +241,12 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
         notificar('Mesa adicionada com sucesso', 'sucesso');
     }
 
+    async function adicionarMesasEmLote(inicio: number, fim: number) {
+        const novasMesas = await ServicoMesas.adicionarMesasEmLote(inicio, fim);
+        setMesas(lista => [...lista, ...novasMesas]);
+        notificar(`${novasMesas.length} mesas adicionadas com sucesso`, 'sucesso');
+    }
+
     async function fecharMesa(id: string) {
         const mesa = await ServicoMesas.fecharMesa(id);
         setMesas(lista => lista.map(m => m.id === mesa.id ? mesa : m));
@@ -314,6 +320,7 @@ export function ProvedorAdmin({ children }: ProvedorAdminProps) {
                 alternarDisponibilidade,
                 mesas,
                 adicionarMesa,
+                adicionarMesasEmLote,
                 excluirMesa,
                 definirNumeroMesas,
                 fecharMesa,

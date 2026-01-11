@@ -65,9 +65,23 @@ function escaparHtml(valor: string): string {
 }
 
 export function MesasAdmin() {
-    const { mesas, adicionarMesa, excluirMesa, definirNumeroMesas, gerarLinkMesa, fecharMesa } = useAdmin();
+    const { 
+        mesas, 
+        adicionarMesa, 
+        adicionarMesasEmLote,
+        excluirMesa, 
+        gerarLinkMesa, 
+        fecharMesa 
+    } = useAdmin();
+
+    const proximoNumeroSugerido = useMemo(() => {
+        if (mesas.length === 0) return 1;
+        return Math.max(...mesas.map(m => m.numero)) + 1;
+    }, [mesas]);
+
     const [numeroMesa, setNumeroMesa] = useState(1);
-    const [totalMesas, setTotalMesas] = useState(Math.max(1, mesas.length || 1));
+    const [loteInicio, setLoteInicio] = useState(1);
+    const [loteFim, setLoteFim] = useState(1);
     const [mensagem, setMensagem] = useState('');
     const [mesaConta, setMesaConta] = useState<{ id: string; numero: number } | null>(null);
     const [pedidosConta, setPedidosConta] = useState<Pedido[]>([]);
@@ -100,8 +114,10 @@ export function MesasAdmin() {
     const mesaSelecionada = mesaConta ? mesas.find(m => m.id === mesaConta.id) : undefined;
 
     useEffect(() => {
-        setTotalMesas(Math.max(1, mesas.length || 1));
-    }, [mesas.length]);
+        setNumeroMesa(proximoNumeroSugerido);
+        setLoteInicio(proximoNumeroSugerido);
+        setLoteFim(proximoNumeroSugerido);
+    }, [proximoNumeroSugerido]);
 
     async function handleSubmit(event: FormEvent) {
         event.preventDefault();
@@ -110,7 +126,6 @@ export function MesasAdmin() {
         try {
             await adicionarMesa(numeroMesa);
             setMensagem(`Mesa ${numeroMesa} adicionada com sucesso.`);
-            setNumeroMesa(1);
         } catch (erro) {
             console.error('[MesasAdmin] Falha ao adicionar mesa', erro);
             setMensagem('Erro ao adicionar mesa. Tente novamente.');
@@ -118,14 +133,15 @@ export function MesasAdmin() {
         setTimeout(() => { setMensagem(''); }, 2200);
     }
 
-    async function handleConfigurar(event: FormEvent) {
+    async function handleSubmitLote(event: FormEvent) {
         event.preventDefault();
         try {
-            await definirNumeroMesas(totalMesas);
-            setMensagem(`Total de mesas atualizado para ${totalMesas}.`);
+            await adicionarMesasEmLote(loteInicio, loteFim);
+            setMensagem(`Mesas selecionadas adicionadas com sucesso.`);
         } catch (erro) {
-            console.error('[MesasAdmin] Falha ao configurar mesas', erro);
-            setMensagem('Erro ao atualizar mesas. Tente novamente.');
+            console.error('[MesasAdmin] Falha ao adicionar lote', erro);
+            const msg = erro instanceof Error ? erro.message : 'Erro ao adicionar lote de mesas.';
+            setMensagem(msg);
         }
         setTimeout(() => { setMensagem(''); }, 2200);
     }
@@ -405,27 +421,44 @@ export function MesasAdmin() {
                 <section className={styles.formCard}>
                     <div>
                         <p className={styles.sectionLabel}>Configuração em massa</p>
-                        <h2 className={styles.sectionTitle}>Definir total de mesas</h2>
+                        <h2 className={styles.sectionTitle}>Adicionar por intervalo</h2>
                     </div>
                     <form
                         className={styles.form}
                         onSubmit={(event) => {
-                            void handleConfigurar(event);
+                            void handleSubmitLote(event);
                         }}
                     >
-                        <label className={styles.label} htmlFor="total-mesas">
-                            Total de mesas no salão
-                        </label>
-                        <input
-                            id="total-mesas"
-                            type="number"
-                            min={1}
-                            value={totalMesas}
-                            onChange={e => { setTotalMesas(Number(e.target.value)); }}
-                            className={styles.input}
-                        />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <div>
+                                <label className={styles.label} htmlFor="lote-inicio">
+                                    De
+                                </label>
+                                <input
+                                    id="lote-inicio"
+                                    type="number"
+                                    min={1}
+                                    value={loteInicio}
+                                    onChange={e => { setLoteInicio(Number(e.target.value)); }}
+                                    className={styles.input}
+                                />
+                            </div>
+                            <div>
+                                <label className={styles.label} htmlFor="lote-fim">
+                                    Até
+                                </label>
+                                <input
+                                    id="lote-fim"
+                                    type="number"
+                                    min={loteInicio}
+                                    value={loteFim}
+                                    onChange={e => { setLoteFim(Number(e.target.value)); }}
+                                    className={styles.input}
+                                />
+                            </div>
+                        </div>
                         <Botao type="submit" variante="secundario" tamanho="grande">
-                            Sincronizar Mesas
+                            Adicionar Mesas
                         </Botao>
                         {mensagem && <p className={styles.mensagem}>{mensagem}</p>}
                     </form>
