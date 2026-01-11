@@ -22,15 +22,17 @@ function garantirRestauranteId() {
     return restauranteId;
 }
 
-async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
+async function requestApi<T>(path: string, init?: RequestInit, restauranteId?: string): Promise<T> {
     garantirBase();
-    garantirRestauranteId();
-    return requestAutenticado<T>(path, init);
+    const restauranteIdFinal = restauranteId ?? garantirRestauranteId();
+    return requestAutenticado<T>(path, init, {
+        extraHeaders: { 'x-restaurante-id': restauranteIdFinal },
+    });
 }
 
 export const ServicoCategorias = {
-    async listar(): Promise<Categoria[]> {
-        const data = await requestApi<CategoriaApi[]>('/categorias');
+    async listar(restauranteId?: string): Promise<Categoria[]> {
+        const data = await requestApi<CategoriaApi[]>('/categorias', undefined, restauranteId);
         return data.map((item) => ({
             id: item.id,
             nome: item.nome,
