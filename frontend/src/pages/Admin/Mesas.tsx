@@ -433,7 +433,7 @@ export function MesasAdmin() {
             </div>
 
             <section className={styles.lista}>
-                <div className={styles.header}>
+                <div className={styles.listaHeader}>
                     <h2 className={styles.sectionTitle}>Mesas ativas</h2>
                     <div className={styles.filtros}>
                         <button 
