@@ -273,6 +273,8 @@ export class ComandasService {
             data: { status: DispositivoStatus.aprovado, ativo: true },
         });
 
+        this.pedidosGateway.emitirAtualizacaoComanda(restauranteId, comanda.id);
+
         return { id: dispositivo.id, status: DispositivoStatus.aprovado };
     }
 
@@ -297,6 +299,8 @@ export class ComandasService {
             where: { id: dispositivo.id },
             data: { status: DispositivoStatus.recusado, ativo: false, master: false },
         });
+
+        this.pedidosGateway.emitirAtualizacaoComanda(restauranteId, comanda.id);
 
         return { id: dispositivo.id, status: DispositivoStatus.recusado };
     }
