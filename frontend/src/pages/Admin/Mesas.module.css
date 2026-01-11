@@ -342,6 +342,69 @@
     align-items: center;
 }
 
+.comandaResumo {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--raio-borda-md);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.comandaCodigo {
+    margin: 0 0 0.35rem;
+    font-weight: 700;
+}
+
+.comandaStatus {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+}
+
+.comandaLista {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-top: 0.5rem;
+}
+
+.comandaItem {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--raio-borda-md);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.comandaItemTitulo {
+    margin: 0 0 0.2rem;
+    font-weight: 700;
+}
+
+.comandaItemSub {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+    font-size: 0.9rem;
+}
+
+.comandaItemAcoes {
+    display: flex;
+    align-items: center;
+}
+
+.comandaHint {
+    color: var(--cor-texto-secundario);
+    margin: 0.4rem 0;
+}
+
+.comandaErro {
+    color: var(--cor-erro);
+    margin: 0.4rem 0;
+}
+
 @media (max-width: 720px) {
     .header,
     .formCard {

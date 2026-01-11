@@ -4,7 +4,7 @@ import type { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
 import { env } from '../config/env';
 import { ServicoAuth } from './ServicoAuth';
-import { atualizarTokensSessao, limparSessao, obterRefreshToken, obterRestauranteId, obterTipoSessao, obterToken } from '../utils/sessao';
+import { atualizarTokensSessao, limparSessao, obterComandaId, obterRefreshToken, obterRestauranteId, obterTipoSessao, obterToken, obterTokenComanda } from '../utils/sessao';
 
 const httpBase = env.apiBaseUrl ?? 'http://localhost:3001';
 const API_BASE = (() => {
@@ -25,6 +25,8 @@ function obterQueryParams(): Record<string, string> {
     const restauranteId = obterRestauranteId();
     const tipo = obterTipoSessao();
     const idMesa = (/\/mesa\/([^/]+)/.exec(window.location.pathname))?.[1];
+    const comandaId = obterComandaId();
+    const tokenComanda = obterTokenComanda();
 
     if (!restauranteId) return {};
 
@@ -35,6 +37,10 @@ function obterQueryParams(): Record<string, string> {
     if (tipo === 'admin' || tipo === 'cozinha') {
         payload.tipoUsuario = tipo;
         payload.token = obterToken() ?? '';
+    } else if (tipo === 'cliente' && comandaId && tokenComanda) {
+        payload.tipoUsuario = 'comanda';
+        payload.comandaId = comandaId;
+        payload.token = tokenComanda;
     } else if (tipo === 'cliente' && idMesa) {
         payload.tipoUsuario = 'mesa';
         payload.idMesa = idMesa;

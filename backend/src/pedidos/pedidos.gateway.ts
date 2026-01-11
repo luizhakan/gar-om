@@ -7,9 +7,11 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { validarToken } from '../auth/token.util';
 import { corsWhitelist } from '../whitelist';
+import { hashTokenComanda } from '../comandas/comanda.util';
 
 const ADMIN_ROOM = 'restaurante_admin_cozinha_';
 const MESA_ROOM = 'mesa_';
+const COMANDA_ROOM = 'comanda_';
 
 @Injectable()
 @WebSocketGateway({
@@ -35,17 +37,29 @@ export class PedidosGateway implements OnGatewayConnection, OnGatewayDisconnect 
         this.server.to(ADMIN_ROOM + restauranteId).emit('novo-pedido', payload);
     }
 
-    public emitirAtualizacaoPedido(restauranteId: string, idMesa: string, payload: unknown) {
+    public emitirAtualizacaoPedido(
+        restauranteId: string,
+        idMesa: string,
+        payload: unknown,
+        comandaId?: string,
+    ) {
         // 1. Para Cozinha/Admin
         this.server.to(ADMIN_ROOM + restauranteId).emit('status-atualizado', payload);
         // 2. Para Cliente da Mesa
-        this.server.to(MESA_ROOM + idMesa).emit('status-comanda-atualizado', payload);
+        const salaCliente = comandaId ? COMANDA_ROOM + comandaId : MESA_ROOM + idMesa;
+        this.server.to(salaCliente).emit('status-comanda-atualizado', payload);
     }
     
-    public emitirAtualizacaoMesa(restauranteId: string, idMesa: string, payload: unknown) {
+    public emitirAtualizacaoMesa(
+        restauranteId: string,
+        idMesa: string,
+        payload: unknown,
+        comandaId?: string,
+    ) {
         // Envia para Admin e para o Cliente da Mesa
         this.server.to(ADMIN_ROOM + restauranteId).emit('mesa-status-atualizado', payload);
-        this.server.to(MESA_ROOM + idMesa).emit('mesa-status-atualizado', payload);
+        const salaCliente = comandaId ? COMANDA_ROOM + comandaId : MESA_ROOM + idMesa;
+        this.server.to(salaCliente).emit('mesa-status-atualizado', payload);
     }
 
     // --- Lógica de Conexão (Rooms) ---
@@ -55,6 +69,7 @@ export class PedidosGateway implements OnGatewayConnection, OnGatewayDisconnect 
         const tipoUsuario = client.handshake.query.tipoUsuario as string | undefined;
         const token = (client.handshake.auth?.token ?? client.handshake.query.token) as string | undefined;
         const idMesaParam = client.handshake.query.idMesa as string | undefined;
+        const comandaId = client.handshake.query.comandaId as string | undefined;
 
         try {
             if (!restauranteId || !tipoUsuario) {
@@ -75,6 +90,39 @@ export class PedidosGateway implements OnGatewayConnection, OnGatewayDisconnect 
                 const room = ADMIN_ROOM + restauranteId;
                 await client.join(room);
                 this.logger.log(`[WS] ${tipoUsuario} conectado à sala: ${room}`);
+                return;
+            }
+
+            if (tipoUsuario === 'comanda') {
+                if (!comandaId || !token) {
+                    throw new UnauthorizedException('Comanda ou token ausente');
+                }
+
+                const comanda = await this.prisma.comanda.findFirst({
+                    where: { id: comandaId, restauranteId },
+                });
+
+                if (!comanda) {
+                    throw new ForbiddenException('Comanda não pertence ao restaurante informado');
+                }
+
+                const tokenHash = hashTokenComanda(token);
+                const dispositivo = await this.prisma.comandaDispositivo.findFirst({
+                    where: {
+                        comandaId: comanda.id,
+                        tokenHash,
+                        status: 'aprovado',
+                        ativo: true,
+                    },
+                });
+
+                if (!dispositivo) {
+                    throw new ForbiddenException('Token da comanda inválido');
+                }
+
+                const room = COMANDA_ROOM + comanda.id;
+                await client.join(room);
+                this.logger.log(`[WS] Cliente de comanda conectado à sala: ${room}`);
                 return;
             }
 

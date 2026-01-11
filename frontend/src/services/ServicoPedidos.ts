@@ -1,7 +1,7 @@
 import type { Pedido, StatusPedido } from '../types/Pedido';
 import { gerarIdAleatorio } from '../utils/formatadores';
 import { env } from '../config/env';
-import { obterRestauranteId, obterToken } from '../utils/sessao';
+import { definirComandaSessao, obterRestauranteId, obterToken, obterTokenComanda } from '../utils/sessao';
 import { requestAutenticado } from './requestAutenticado';
 
 interface PedidoApi {
@@ -45,10 +45,13 @@ async function requestStatusPublico(idPedido: string): Promise<PedidoApi> {
         throw new Error('Restaurante não definido na sessão');
     }
 
+    const tokenComanda = obterTokenComanda();
+
     const resposta = await fetch(`${API_BASE}/pedidos/${idPedido}/status-publico`, {
         headers: {
             'Content-Type': 'application/json',
             'x-restaurante-id': restauranteId ?? '',
+            ...(tokenComanda ? { 'x-comanda-token': tokenComanda } : {}),
         },
     });
 
@@ -59,12 +62,17 @@ async function requestStatusPublico(idPedido: string): Promise<PedidoApi> {
     return JSON.parse(texto) as PedidoApi;
 }
 
-async function requestApi<T>(path: string, init?: RequestInit, tokenOverride?: string): Promise<T> {
+async function requestApi<T>(
+    path: string,
+    init?: RequestInit,
+    tokenOverride?: string,
+    extraHeaders?: Record<string, string>,
+): Promise<T> {
     if (!usarApi) {
         throw new Error('API não configurada');
     }
 
-    return requestAutenticado<T>(path, init, undefined, tokenOverride);
+    return requestAutenticado<T>(path, init, { extraHeaders }, tokenOverride);
 }
 
 function obterPedidosStorage(): Pedido[] {
@@ -134,11 +142,18 @@ export const ServicoPedidos = {
         const restauranteId = obterRestauranteId();
 
         if (usarApi) {
-            const data = await requestApi<PedidoApi>('/pedidos', {
+            const tokenComanda = obterTokenComanda();
+            const data = await requestApi<any>('/pedidos', {
                 method: 'POST',
                 body: JSON.stringify(pedido),
-            });
-            return mapearPedidoApi(data);
+            }, undefined, tokenComanda ? { 'x-comanda-token': tokenComanda } : undefined);
+
+            if (data?.comanda?.id && data?.comanda?.token) {
+                definirComandaSessao(data.comanda.id, data.comanda.token, data.comanda.codigo);
+            }
+
+            const pedidoBase = data?.pedido ?? data;
+            return mapearPedidoApi(pedidoBase);
         }
 
         if ((restauranteId ?? '') === '') {
@@ -162,10 +177,11 @@ export const ServicoPedidos = {
 
     async editar(idPedido: string, pedido: Omit<Pedido, 'id' | 'status' | 'dataCriacao'>): Promise<Pedido> {
         if (usarApi) {
+            const tokenComanda = obterTokenComanda();
             const data = await requestApi<PedidoApi>(`/pedidos/${idPedido}`, {
                 method: 'PATCH',
                 body: JSON.stringify(pedido),
-            });
+            }, undefined, tokenComanda ? { 'x-comanda-token': tokenComanda } : undefined);
             return mapearPedidoApi(data);
         }
 

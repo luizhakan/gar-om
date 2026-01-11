@@ -21,6 +21,17 @@ enum SubscriptionStatus {
   blocked
 }
 
+enum ComandaStatus {
+  aberta
+  encerrada
+}
+
+enum DispositivoStatus {
+  pendente
+  aprovado
+  recusado
+}
+
 model Restaurante {
   id                       String              @id @default(uuid())
   nome                     String
@@ -30,6 +41,7 @@ model Restaurante {
   produtos                 Produto[]
   mesas                    Mesa[]
   pedidos                  Pedido[]
+  comandas                 Comanda[]
   pagamentos               Pagamento[]
   trialStartedAt           DateTime            @default(now())
   trialEndsAt              DateTime            @default(now())
@@ -116,6 +128,7 @@ model Mesa {
   restauranteId String
   restaurante   Restaurante @relation(fields: [restauranteId], references: [id])
   pedidos       Pedido[]
+  comandasAtuais Comanda[]  @relation("MesaAtual")
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
@@ -125,12 +138,14 @@ model Mesa {
 model Pedido {
   id              String        @id @default(uuid())
   idMesa          String
+  comandaId       String?
   restauranteId   String
   status          PedidoStatus  @default(pendente)
   encerrado       Boolean       @default(false)
   dataCriacao     DateTime      @default(now())
   dataAtualizacao DateTime?
   mesa            Mesa          @relation(fields: [idMesa], references: [id])
+  comanda         Comanda?      @relation(fields: [comandaId], references: [id])
   restaurante     Restaurante   @relation(fields: [restauranteId], references: [id])
   itens           ItemPedido[]
 }
@@ -144,6 +159,34 @@ model ItemPedido {
   precoUnitario  Float
   pedido         Pedido   @relation(fields: [pedidoId], references: [id])
   produto        Produto  @relation(fields: [produtoId], references: [id])
+}
+
+model Comanda {
+  id             String             @id @default(uuid())
+  codigo         String             @unique
+  restauranteId  String
+  mesaAtualId    String?
+  status         ComandaStatus      @default(aberta)
+  contaSolicitada Boolean           @default(false)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  restaurante    Restaurante        @relation(fields: [restauranteId], references: [id])
+  mesaAtual      Mesa?              @relation("MesaAtual", fields: [mesaAtualId], references: [id])
+  pedidos        Pedido[]
+  dispositivos   ComandaDispositivo[]
+}
+
+model ComandaDispositivo {
+  id            String            @id @default(uuid())
+  comandaId     String
+  apelido       String?
+  tokenHash     String?
+  master        Boolean           @default(false)
+  status        DispositivoStatus @default(pendente)
+  ativo         Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  comanda       Comanda           @relation(fields: [comandaId], references: [id])
 }
 
 // Adicione este model no final do arquivo

@@ -74,6 +74,7 @@ describe('MesasService', () => {
         it('encerra mesa e arquiva pedidos', async () => {
             // Mock mesa ocupada e com conta pedida
             prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', numero: 10, ocupada: true, contaSolicitada: true });
+            prisma.comanda.findFirst.mockResolvedValue({ id: 'comanda-1' });
             prisma.pedido.updateMany.mockResolvedValue({ count: 1 });
             prisma.mesa.update.mockResolvedValue({ id: 'mesa-1', numero: 10, ocupada: false, contaSolicitada: false });
             
@@ -81,7 +82,7 @@ describe('MesasService', () => {
 
             // Verifica se marcou pedidos como encerrados
             expect(prisma.pedido.updateMany).toHaveBeenCalledWith({
-                where: { idMesa: 'mesa-1', restauranteId: 'rest-1', encerrado: false },
+                where: { comandaId: 'comanda-1', encerrado: false },
                 data: { encerrado: true }
             });
 
@@ -102,6 +103,7 @@ describe('MesasService', () => {
     describe('obterComanda', () => {
         it('retorna apenas pedidos não encerrados', async () => {
             prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', numero: 10, ocupada: true });
+            prisma.comanda.findFirst.mockResolvedValue({ id: 'comanda-1' });
             prisma.pedido.findMany.mockResolvedValue([
                 { id: 'ped-1', itens: [] }
             ]);
@@ -110,15 +112,16 @@ describe('MesasService', () => {
 
             expect(prisma.pedido.findMany).toHaveBeenCalledWith(expect.objectContaining({
                 where: expect.objectContaining({
-                    idMesa: 'mesa-1',
+                    comandaId: 'comanda-1',
                     encerrado: false // Ponto crucial
                 })
             }));
             expect(resultado).toHaveLength(1);
         });
 
-        it('retorna lista vazia se mesa não estiver ocupada', async () => {
+        it('retorna lista vazia se não houver comanda ativa', async () => {
             prisma.mesa.findFirst.mockResolvedValue({ id: 'mesa-1', ocupada: false });
+            prisma.comanda.findFirst.mockResolvedValue(null);
             const resultado = await service.obterComanda('mesa-1', 'rest-1');
             expect(resultado).toEqual([]);
             expect(prisma.pedido.findMany).not.toHaveBeenCalled();

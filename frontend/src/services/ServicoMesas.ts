@@ -1,6 +1,7 @@
 import type { Mesa } from '../types/Mesa';
 import type { Pedido } from '../types/Pedido';
 import { requestAutenticado } from './requestAutenticado';
+import { obterTokenComanda } from '../utils/sessao';
 
 interface MesaApi {
     id: string;
@@ -81,6 +82,11 @@ export const ServicoMesas = {
     },
 
     async solicitarConta(idMesa: string): Promise<void> {
-        await requestAutenticado(`/mesas/${idMesa}/solicitar-conta`, { method: 'PATCH' });
+        const tokenComanda = obterTokenComanda();
+        await requestAutenticado(
+            `/mesas/${idMesa}/solicitar-conta`,
+            { method: 'PATCH' },
+            tokenComanda ? { extraHeaders: { 'x-comanda-token': tokenComanda } } : undefined,
+        );
     },
 };

@@ -10,6 +10,7 @@ import { CozinhaAdmin } from './pages/Admin/Cozinha';
 import { Assinatura } from './pages/Admin/Assinatura';
 import { CardapioCliente } from './pages/Cliente/Cardapio';
 import { RevisarPedido } from './pages/Cliente/RevisarPedido';
+import { EntrarComanda } from './pages/Cliente/EntrarComanda';
 import { PainelCozinha } from './pages/Cozinha/Painel';
 import { LayoutCliente } from './layouts/LayoutCliente';
 import { LayoutAdmin } from './layouts/LayoutAdmin';
@@ -77,6 +78,11 @@ export const router = createBrowserRouter([
                 element: <RevisarPedido />,
             },
         ],
+    },
+    {
+        path: '/comanda/entrar',
+        element: <EntrarComanda />,
+        errorElement: <PaginaErro />,
     },
     {
         path: '/cozinha',

@@ -4,6 +4,7 @@ import { ProdutosModule } from './produtos/produtos.module';
 import { CategoriasModule } from './categorias/categorias.module';
 import { MesasModule } from './mesas/mesas.module';
 import { PedidosModule } from './pedidos/pedidos.module';
+import { ComandasModule } from './comandas/comandas.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { MasterModule } from './master/master.module';
@@ -23,6 +24,7 @@ import { PagamentosModule } from './pagamentos/pagamentos.module';
         CategoriasModule,
         MesasModule,
         PedidosModule,
+        ComandasModule,
         PagamentosModule,
     ],
 })

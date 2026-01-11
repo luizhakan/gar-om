@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCarrinho } from '../../hooks/useCarrinho';
 import { ControleQuantidade } from '../../components/ControleQuantidade';
 import { Botao } from '../../components/Botao';
 import { formatarMoeda } from '../../utils/formatadores';
 import { ServicoPedidos } from '../../services/ServicoPedidos';
-import { ServicoMesas } from '../../services/ServicoMesas';
-import { definirSessao } from '../../utils/sessao';
+import { ServicoComandas } from '../../services/ServicoComandas';
+import { definirSessao, limparComandaSessao, obterCodigoComanda, obterComandaId } from '../../utils/sessao';
 import styles from './RevisarPedido.module.css';
 import type { Pedido } from '../../types/Pedido';
 import { ServicoRealtime } from '../../services/ServicoRealtime'; // <-- NOVO
+import type { ComandaResumo, DispositivoComanda } from '../../types/Comanda';
 
 // Constantes
 const CHAVE_PEDIDO_EDITAVEL = 'garcom_pedido_editavel';
@@ -41,6 +42,14 @@ export function RevisarPedido() {
     const [comanda, setComanda] = useState<Pedido[]>([]);
     const [contaSolicitada, setContaSolicitada] = useState(false);
     const [carregando, setCarregando] = useState(true);
+    const [comandaInfo, setComandaInfo] = useState<ComandaResumo | null>(null);
+    const [dispositivos, setDispositivos] = useState<DispositivoComanda[]>([]);
+    const [mostrarModalTroca, setMostrarModalTroca] = useState(false);
+    const [mostrarModalSolicitacoes, setMostrarModalSolicitacoes] = useState(false);
+    const [carregandoSolicitacoes, setCarregandoSolicitacoes] = useState(false);
+    const [erroSolicitacoes, setErroSolicitacoes] = useState('');
+    const [versaoSessao, setVersaoSessao] = useState(0);
+    const [numeroMesaTroca, setNumeroMesaTroca] = useState(1);
 
     // Verificação de sessão encerrada (se o usuário ainda tem dados locais de uma sessão fechada)
     useEffect(() => {
@@ -64,6 +73,12 @@ export function RevisarPedido() {
         };
         
         void verificarSessaoAtiva();
+    }, []);
+
+    useEffect(() => {
+        const handler = () => { setVersaoSessao((valor) => valor + 1); };
+        window.addEventListener('sessao-atualizada', handler);
+        return () => { window.removeEventListener('sessao-atualizada', handler); };
     }, []);
 
     // Soma do que já foi pedido (backend - comanda ativa)
@@ -91,6 +106,16 @@ export function RevisarPedido() {
 
     const totalComanda = itensComandaAgrupados.reduce((acc, item) => acc + item.total, 0);
     const totalGeral = totalCarrinho + totalComanda;
+    const numeroMesaAtual = comandaInfo?.mesaAtual?.numero ?? idMesa ?? '';
+    const codigoComanda = comandaInfo?.codigo ?? obterCodigoComanda();
+    const ehMaster = comandaInfo?.dispositivoAtual?.master ?? false;
+    const pendentes = dispositivos.filter(dispositivo => dispositivo.status === 'pendente');
+    const linkComanda = (codigoComanda && restauranteId && typeof window !== 'undefined')
+        ? `${window.location.origin}/comanda/entrar?codigo=${encodeURIComponent(codigoComanda)}&restauranteId=${encodeURIComponent(restauranteId)}`
+        : '';
+    const qrComanda = linkComanda !== ''
+        ? `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(linkComanda)}`
+        : '';
 
     useEffect(() => {
         if (restauranteId !== null && restauranteId !== '') {
@@ -98,59 +123,69 @@ export function RevisarPedido() {
         }
     }, [restauranteId]);
 
-    // Carregar comanda do servidor e status da mesa
-useEffect(() => {
-    if (!idMesa || !restauranteId) return;
+    const carregarDados = useCallback(async () => {
+        if (!restauranteId) return;
+        setCarregando(true);
 
-    // Função para carregar dados (usada na inicialização e nos eventos WS)
-    const carregarDados = async () => {
         try {
-            // 1. Status da Mesa
-            const status = await ServicoMesas.obterStatusPublico(idMesa);
-            setContaSolicitada(status.contaSolicitada);
+            const comandaId = obterComandaId();
+            if (comandaId) {
+                const resumo = await ServicoComandas.obterResumo(comandaId);
+                setComandaInfo(resumo);
+                setContaSolicitada(resumo.contaSolicitada);
 
-            // 2. Comanda
-            const pedidosAnteriores = await ServicoMesas.obterComanda(idMesa);
-            setComanda(pedidosAnteriores);
-            setCarregando(false);
-
+                const pedidosAnteriores = await ServicoComandas.obterPedidos(comandaId);
+                setComanda(pedidosAnteriores);
+            } else {
+                setComandaInfo(null);
+                setContaSolicitada(false);
+                setComanda([]);
+            }
         } catch (erro) {
             console.error('[RevisarPedido] Erro ao carregar dados', erro);
+            limparComandaSessao();
+            setComandaInfo(null);
+            setContaSolicitada(false);
+            setComanda([]);
+        } finally {
             setCarregando(false);
         }
-    };
+    }, [restauranteId]);
 
-    // --- Lógica WebSocket (NOVA) ---
-    const socket = ServicoRealtime.conectar();
-    void carregarDados(); // Carrega estado inicial
+    // Carregar comanda do servidor e status da mesa
+    useEffect(() => {
+        if (!idMesa || !restauranteId) return;
 
-    const onComandaAtualizada = () => {
-         console.log('[WS] Evento de comanda/mesa recebido, recarregando...');
-         void carregarDados(); // Recarrega os dados completos
-    };
+        const socket = ServicoRealtime.conectar();
+        void carregarDados();
 
-    // Assina os eventos específicos desta mesa
-    socket.on('status-comanda-atualizado', onComandaAtualizada); // Se o status de um pedido mudar
-    socket.on('mesa-status-atualizado', onComandaAtualizada); // Se a conta for solicitada/mesa fechada
+        const onComandaAtualizada = () => {
+            console.log('[WS] Evento de comanda/mesa recebido, recarregando...');
+            void carregarDados();
+        };
 
-    // Cleanup: remove listeners e desconecta, substituindo o clearInterval
-    return () => {
-        socket.off('status-comanda-atualizado', onComandaAtualizada);
-        socket.off('mesa-status-atualizado', onComandaAtualizada);
-        ServicoRealtime.desconectar();
-    };
-}, [idMesa, restauranteId]); //
+        socket.on('status-comanda-atualizado', onComandaAtualizada);
+        socket.on('mesa-status-atualizado', onComandaAtualizada);
+
+        return () => {
+            socket.off('status-comanda-atualizado', onComandaAtualizada);
+            socket.off('mesa-status-atualizado', onComandaAtualizada);
+            ServicoRealtime.desconectar();
+        };
+    }, [carregarDados, idMesa, restauranteId, versaoSessao]);
 
     const handleVoltarCardapio = () => {
+        const numeroMesaAtual = comandaInfo?.mesaAtual?.numero ?? idMesa ?? '';
         const sufixoBusca = searchParams.toString();
-        void navigate(`/mesa/${idMesa ?? ''}${sufixoBusca ? `?${sufixoBusca}` : ''}`);
+        void navigate(`/mesa/${String(numeroMesaAtual)}${sufixoBusca ? `?${sufixoBusca}` : ''}`);
     };
 
     const handleEnviarPedido = async () => {
         if (itensCarrinho.length === 0) return;
         
+        const numeroMesaAtual = comandaInfo?.mesaAtual?.numero ?? idMesa ?? '0';
         const payload = {
-            idMesa: idMesa ?? '0',
+            idMesa: String(numeroMesaAtual),
             itens: itensCarrinho.map(item => ({
                 idProduto: item.idProduto,
                 quantidade: item.quantidade,
@@ -172,15 +207,11 @@ useEffect(() => {
             setMensagemSucesso('Pedido enviado para a cozinha! 🍳');
             limparCarrinho();
             
-            // Recarrega a comanda imediatamente
-            if (idMesa) {
-                const atualizada = await ServicoMesas.obterComanda(idMesa);
-                setComanda(atualizada);
-            }
+            await carregarDados();
 
             const sufixoBusca = searchParams.toString();
             setTimeout(() => { 
-                void navigate(`/mesa/${idMesa ?? ''}${sufixoBusca ? `?${sufixoBusca}` : ''}`); 
+                void navigate(`/mesa/${String(numeroMesaAtual)}${sufixoBusca ? `?${sufixoBusca}` : ''}`); 
             }, 2000);
         } catch (erro) {
             console.error('[RevisarPedido] Falha ao enviar', erro);
@@ -189,13 +220,91 @@ useEffect(() => {
     };
 
     const handleSolicitarConta = async () => {
-        if (!restauranteId || !idMesa) return;
+        const comandaId = obterComandaId();
+        if (!restauranteId || !comandaId) return;
         try {
-            await ServicoMesas.solicitarConta(idMesa);
+            await ServicoComandas.solicitarConta(comandaId);
             setContaSolicitada(true);
             setMensagemSucesso('Conta solicitada. Aguarde o garçom.');
         } catch (erro) {
             console.error('[RevisarPedido] Erro conta', erro);
+        }
+    };
+
+    const abrirModalTroca = () => {
+        const numeroAtual = Number(comandaInfo?.mesaAtual?.numero ?? idMesa ?? 1);
+        setNumeroMesaTroca(Number.isFinite(numeroAtual) ? numeroAtual : 1);
+        setMostrarModalTroca(true);
+    };
+
+    const confirmarTrocaMesa = async () => {
+        const comandaId = obterComandaId();
+        if (!comandaId) return;
+        try {
+            const atualizada = await ServicoComandas.trocarMesa(numeroMesaTroca, comandaId);
+            setComandaInfo(atualizada);
+            await carregarDados();
+            const sufixoBusca = searchParams.toString();
+            const numeroMesaAtual = atualizada.mesaAtual?.numero ?? numeroMesaTroca;
+            void navigate(`/mesa/${String(numeroMesaAtual)}${sufixoBusca ? `?${sufixoBusca}` : ''}`);
+            setMensagemSucesso('Mesa atualizada com sucesso.');
+            setMostrarModalTroca(false);
+        } catch (erro) {
+            console.error('[RevisarPedido] Erro ao trocar mesa', erro);
+        }
+    };
+
+    const carregarSolicitacoes = useCallback(async () => {
+        const comandaId = obterComandaId();
+        if (!comandaId) return;
+        setCarregandoSolicitacoes(true);
+        setErroSolicitacoes('');
+        try {
+            const lista = await ServicoComandas.listarDispositivos(comandaId);
+            setDispositivos(lista);
+        } catch (erro) {
+            console.error('[RevisarPedido] Erro ao carregar solicitacoes', erro);
+            setErroSolicitacoes('Não foi possível carregar as solicitações.');
+        } finally {
+            setCarregandoSolicitacoes(false);
+        }
+    }, []);
+
+    const abrirModalSolicitacoes = () => {
+        setMostrarModalSolicitacoes(true);
+        void carregarSolicitacoes();
+    };
+
+    const aprovarSolicitacao = async (idDispositivo: string) => {
+        const comandaId = obterComandaId();
+        if (!comandaId) return;
+        try {
+            await ServicoComandas.aprovarDispositivo(comandaId, idDispositivo);
+            await carregarSolicitacoes();
+        } catch (erro) {
+            console.error('[RevisarPedido] Erro ao aprovar dispositivo', erro);
+        }
+    };
+
+    const recusarSolicitacao = async (idDispositivo: string) => {
+        const comandaId = obterComandaId();
+        if (!comandaId) return;
+        try {
+            await ServicoComandas.recusarDispositivo(comandaId, idDispositivo);
+            await carregarSolicitacoes();
+        } catch (erro) {
+            console.error('[RevisarPedido] Erro ao recusar dispositivo', erro);
+        }
+    };
+
+    const revogarDispositivo = async (idDispositivo: string) => {
+        const comandaId = obterComandaId();
+        if (!comandaId) return;
+        try {
+            await ServicoComandas.revogarDispositivo(comandaId, idDispositivo);
+            await carregarSolicitacoes();
+        } catch (erro) {
+            console.error('[RevisarPedido] Erro ao revogar dispositivo', erro);
         }
     };
 
@@ -236,7 +345,47 @@ useEffect(() => {
                     <h1 className={styles.titulo}>
                         {carrinhoVazio ? 'Minha Comanda' : 'Confirmar Pedido'}
                     </h1>
-                    <p className={styles.subtitulo}>Mesa {idMesa}</p>
+                    <p className={styles.subtitulo}>Mesa {numeroMesaAtual}</p>
+                    {comandaInfo && codigoComanda ? (
+                        <div className={styles.comandaBox}>
+                            <div>
+                                <p className={styles.comandaRotulo}>Comanda</p>
+                                <p className={styles.comandaCodigo}>{codigoComanda}</p>
+                                <p className={styles.comandaHint}>Use o código para autorizar outros clientes.</p>
+                                <div className={styles.comandaAcoes}>
+                                    <Botao
+                                        variante="secundario"
+                                        tamanho="pequeno"
+                                        onClick={() => { void navigator.clipboard.writeText(codigoComanda); }}
+                                    >
+                                        Copiar código
+                                    </Botao>
+                                    <Botao
+                                        variante="primario"
+                                        tamanho="pequeno"
+                                        onClick={abrirModalTroca}
+                                        disabled={contaSolicitada}
+                                    >
+                                        Trocar mesa
+                                    </Botao>
+                                    {ehMaster && (
+                                        <Botao
+                                            variante="secundario"
+                                            tamanho="pequeno"
+                                            onClick={abrirModalSolicitacoes}
+                                        >
+                                            Solicitações ({pendentes.length})
+                                        </Botao>
+                                    )}
+                                </div>
+                            </div>
+                            {qrComanda !== '' && (
+                                <div className={styles.comandaQr}>
+                                    <img src={qrComanda} alt="QR Code da comanda" />
+                                </div>
+                            )}
+                        </div>
+                    ) : null}
                 </div>
             </header>
 
@@ -347,6 +496,148 @@ useEffect(() => {
                     </Botao>
                 </div>
             </main>
+
+            {mostrarModalTroca && (
+                <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+                    <div className={styles.modal}>
+                        <header className={styles.modalCabecalho}>
+                            <div>
+                                <p className={styles.modalRotulo}>Comanda</p>
+                                <h2 className={styles.modalTitulo}>Trocar mesa</h2>
+                                <p className={styles.modalHint}>A nova mesa não pode estar ocupada.</p>
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.modalFechar}
+                                onClick={() => { setMostrarModalTroca(false); }}
+                                aria-label="Fechar modal de troca de mesa"
+                            >
+                                ×
+                            </button>
+                        </header>
+
+                        <label className={styles.modalLabel} htmlFor="numero-mesa-troca">
+                            Número da mesa
+                        </label>
+                        <input
+                            id="numero-mesa-troca"
+                            type="number"
+                            min={1}
+                            value={numeroMesaTroca}
+                            onChange={(event) => { setNumeroMesaTroca(Number(event.target.value)); }}
+                            className={styles.modalInput}
+                        />
+
+                        <div className={styles.modalAcoes}>
+                            <Botao variante="secundario" onClick={() => { setMostrarModalTroca(false); }}>
+                                Cancelar
+                            </Botao>
+                            <Botao variante="primario" onClick={() => { void confirmarTrocaMesa(); }}>
+                                Confirmar troca
+                            </Botao>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {mostrarModalSolicitacoes && (
+                <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+                    <div className={styles.modal}>
+                        <header className={styles.modalCabecalho}>
+                            <div>
+                                <p className={styles.modalRotulo}>Comanda</p>
+                                <h2 className={styles.modalTitulo}>Solicitações de acesso</h2>
+                                <p className={styles.modalHint}>Aprove ou recuse novos dispositivos.</p>
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.modalFechar}
+                                onClick={() => { setMostrarModalSolicitacoes(false); }}
+                                aria-label="Fechar modal de solicitações"
+                            >
+                                ×
+                            </button>
+                        </header>
+
+                        {erroSolicitacoes && <p className={styles.modalErro}>{erroSolicitacoes}</p>}
+                        {carregandoSolicitacoes && <p className={styles.modalHint}>Carregando solicitações...</p>}
+
+                        {!carregandoSolicitacoes && (
+                            <>
+                                <div className={styles.modalLista}>
+                                    {pendentes.length === 0 ? (
+                                        <p className={styles.modalVazio}>Nenhuma solicitação pendente.</p>
+                                    ) : (
+                                        pendentes.map(dispositivo => (
+                                            <div key={dispositivo.id} className={styles.modalItem}>
+                                                <div>
+                                                    <p className={styles.modalItemTitulo}>
+                                                        {dispositivo.apelido ?? 'Dispositivo sem apelido'}
+                                                    </p>
+                                                    <p className={styles.modalItemSub}>
+                                                        Status: {dispositivo.status}
+                                                    </p>
+                                                </div>
+                                                <div className={styles.modalItemAcoes}>
+                                                    <Botao
+                                                        variante="secundario"
+                                                        tamanho="pequeno"
+                                                        onClick={() => { void recusarSolicitacao(dispositivo.id); }}
+                                                    >
+                                                        Recusar
+                                                    </Botao>
+                                                    <Botao
+                                                        variante="primario"
+                                                        tamanho="pequeno"
+                                                        onClick={() => { void aprovarSolicitacao(dispositivo.id); }}
+                                                    >
+                                                        Aprovar
+                                                    </Botao>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+
+                                <div className={styles.modalLista}>
+                                    {dispositivos.filter(dispositivo => dispositivo.status === 'aprovado' && !dispositivo.master && dispositivo.ativo).map(dispositivo => (
+                                        <div key={dispositivo.id} className={styles.modalItem}>
+                                            <div>
+                                                <p className={styles.modalItemTitulo}>
+                                                    {dispositivo.apelido ?? 'Dispositivo sem apelido'}
+                                                </p>
+                                                <p className={styles.modalItemSub}>Acesso aprovado</p>
+                                            </div>
+                                            <div className={styles.modalItemAcoes}>
+                                                <Botao
+                                                    variante="perigo"
+                                                    tamanho="pequeno"
+                                                    onClick={() => { void revogarDispositivo(dispositivo.id); }}
+                                                >
+                                                    Revogar
+                                                </Botao>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        <div className={styles.modalAcoes}>
+                            <Botao variante="secundario" onClick={() => { void carregarSolicitacoes(); }}>
+                                Atualizar
+                            </Botao>
+                            <button
+                                type="button"
+                                className={styles.modalFecharSecundario}
+                                onClick={() => { setMostrarModalSolicitacoes(false); }}
+                            >
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

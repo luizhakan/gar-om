@@ -1,7 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ComandaStatus, DispositivoStatus } from '@prisma/client';
 import type { Prisma } from '@prisma/client';
 import { PedidosGateway } from '../pedidos/pedidos.gateway';
+import { hashTokenComanda } from '../comandas/comanda.util';
 
 @Injectable()
 export class MesasService {
@@ -41,24 +43,28 @@ export class MesasService {
         throw new NotFoundException('Mesa não encontrada ou não pertence ao restaurante');
     }
 
-    private async validarOuRegistrarIp(mesa: Prisma.MesaGetPayload<{}>, ip?: string) {
-        if (!ip || ip === 'desconhecido' || !mesa.ocupada) {
-            return mesa;
+    private async validarOuRegistrarIp(mesa: Prisma.MesaGetPayload<{}>, _ip?: string) {
+        return mesa;
+    }
+
+    private async validarTokenComanda(comandaId: string, tokenComanda?: string) {
+        if (!tokenComanda) {
+            throw new BadRequestException('Token da comanda é obrigatório');
         }
 
-        const ipsAtivos = mesa.ipsAtivos ?? [];
-        if (ipsAtivos.includes(ip)) {
-            return mesa;
-        }
-
-        if (ipsAtivos.length >= 2) {
-            throw new BadRequestException('Mesa já está em uso por dois dispositivos.');
-        }
-
-        return this.prisma.mesa.update({
-            where: { id: mesa.id },
-            data: { ipsAtivos: { push: ip } },
+        const tokenHash = hashTokenComanda(tokenComanda);
+        const dispositivo = await this.prisma.comandaDispositivo.findFirst({
+            where: {
+                comandaId,
+                tokenHash,
+                status: DispositivoStatus.aprovado,
+                ativo: true,
+            },
         });
+
+        if (!dispositivo) {
+            throw new BadRequestException('Token da comanda inválido');
+        }
     }
 
     async listar(restauranteId: string) {
@@ -183,24 +189,43 @@ export class MesasService {
         await this.prisma.mesa.delete({ where: { id: mesa.id } });
     }
 
-    async solicitarConta(id: string, restauranteId: string, ip?: string) {
+    async solicitarConta(id: string, restauranteId: string, tokenComanda?: string) {
         const mesa = await this.garantirMesa(id, restauranteId);
-        const mesaValidada = await this.validarOuRegistrarIp(mesa, ip);
-        if (!mesaValidada.ocupada) {
-            throw new BadRequestException('Mesa não está ocupada');
-        }
+        const mesaValidada = await this.validarOuRegistrarIp(mesa);
 
-        const mesaAtualizada = await this.prisma.mesa.update({
-            where: { id: mesaValidada.id },
-            data: { contaSolicitada: true, ocupada: true },
+        const comanda = await this.prisma.comanda.findFirst({
+            where: {
+                restauranteId,
+                mesaAtualId: mesaValidada.id,
+                status: ComandaStatus.aberta,
+            },
         });
 
-        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesaValidada.id, { 
-            idMesa: mesaValidada.id, 
+        if (!comanda) {
+            throw new BadRequestException('Mesa sem comanda ativa');
+        }
+
+        await this.validarTokenComanda(comanda.id, tokenComanda);
+
+        const mesaAtualizada = await this.prisma.$transaction(async (tx) => {
+            await tx.comanda.update({
+                where: { id: comanda.id },
+                data: { contaSolicitada: true },
+            });
+
+            return tx.mesa.update({
+                where: { id: mesaValidada.id },
+                data: { contaSolicitada: true, ocupada: true },
+            });
+        });
+
+        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesaValidada.id, {
+            idMesa: mesaValidada.id,
             ocupada: mesaAtualizada.ocupada,
             contaSolicitada: mesaAtualizada.contaSolicitada,
             numeroMesa: mesaValidada.numero,
-        });
+            comandaId: comanda.id,
+        }, comanda.id);
 
         return mesaAtualizada;
     }
@@ -211,18 +236,48 @@ export class MesasService {
         if (!mesa.ocupada) {
             throw new BadRequestException('Mesa já está livre');
         }
-        
-        // Encerra todos os pedidos ativos desta mesa
-        await this.prisma.pedido.updateMany({
+
+        const comanda = await this.prisma.comanda.findFirst({
             where: {
-                idMesa: mesa.id,
                 restauranteId,
-                encerrado: false,
-            },
-            data: {
-                encerrado: true,
+                mesaAtualId: mesa.id,
+                status: ComandaStatus.aberta,
             },
         });
+
+        if (comanda) {
+            await this.prisma.$transaction(async (tx) => {
+                await tx.pedido.updateMany({
+                    where: {
+                        comandaId: comanda.id,
+                        encerrado: false,
+                    },
+                    data: { encerrado: true },
+                });
+
+                await tx.comanda.update({
+                    where: { id: comanda.id },
+                    data: { status: ComandaStatus.encerrada, contaSolicitada: false },
+                });
+
+                await tx.comandaDispositivo.updateMany({
+                    where: { comandaId: comanda.id },
+                    data: { ativo: false, master: false },
+                });
+            });
+        } else {
+            // Encerra todos os pedidos ativos desta mesa (fallback legado)
+            await this.prisma.pedido.updateMany({
+                where: {
+                    idMesa: mesa.id,
+                    restauranteId,
+                    encerrado: false,
+                },
+                data: {
+                    encerrado: true,
+                },
+            });
+        }
 
         const mesaAtualizada = await this.prisma.mesa.update({
             where: { id: mesa.id },
@@ -233,12 +288,13 @@ export class MesasService {
             },
         });
 
-        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesa.id, { 
-            idMesa: mesa.id, 
+        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesa.id, {
+            idMesa: mesa.id,
             ocupada: mesaAtualizada.ocupada,
             contaSolicitada: mesaAtualizada.contaSolicitada,
             numeroMesa: mesa.numero,
-        });
+            comandaId: comanda?.id,
+        }, comanda?.id);
 
         return mesaAtualizada;
     }
@@ -255,16 +311,22 @@ export class MesasService {
     async obterComanda(id: string, restauranteId: string, ip?: string) {
         const mesa = await this.garantirMesa(id, restauranteId);
         const mesaValidada = await this.validarOuRegistrarIp(mesa, ip);
-        
-        // Se a mesa não está ocupada, não há comanda ativa
-        if (!mesaValidada.ocupada) {
+
+        const comanda = await this.prisma.comanda.findFirst({
+            where: {
+                restauranteId,
+                mesaAtualId: mesaValidada.id,
+                status: ComandaStatus.aberta,
+            },
+        });
+
+        if (!comanda) {
             return [];
         }
 
-        // Retorna apenas pedidos NÃO encerrados
         const pedidos = await this.prisma.pedido.findMany({
             where: {
-                idMesa: mesaValidada.id,
+                comandaId: comanda.id,
                 restauranteId,
                 encerrado: false,
             },
