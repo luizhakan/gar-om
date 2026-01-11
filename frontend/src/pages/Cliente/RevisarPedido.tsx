@@ -265,7 +265,17 @@ export function RevisarPedido() {
             setMostrarModalTroca(false);
         } catch (erro) {
             console.error('[RevisarPedido] Erro ao trocar mesa', erro);
-            const mensagem = erro instanceof Error && erro.message ? erro.message : 'Não foi possível trocar de mesa.';
+            let mensagem = 'Não foi possível trocar de mesa.';
+            
+            if (erro instanceof Error && erro.message) {
+                try {
+                    const erroParseado = JSON.parse(erro.message) as { message?: string };
+                    mensagem = erroParseado.message ?? mensagem;
+                } catch {
+                    mensagem = erro.message;
+                }
+            }
+            
             setErroTrocaMesa(mensagem);
         } finally {
             setTrocandoMesa(false);
