@@ -17,6 +17,7 @@ import { SubscriptionGuard } from '../auth/subscription.guard';
 import { UsuarioAutenticado } from '../auth/auth-user.decorator';
 import type { AuthTokenPayload } from '../auth/token.util';
 import { AdicionarMesaDto } from './dto/adicionar-mesa.dto';
+import { AdicionarMesasLoteDto } from './dto/adicionar-mesas-lote.dto';
 import { ConfigurarMesasDto } from './dto/configurar-mesas.dto';
 import type { Request } from 'express';
 import { extrairIpCliente } from '../utils/ip.util';
@@ -94,6 +95,18 @@ export class MesasController {
     ) {
         const baseUrl = this.extrairBaseUrl(req, dto.baseUrl);
         return this.mesasService.adicionar(dto.numero, baseUrl, usuario.restauranteId);
+    }
+
+    @UseGuards(AuthGuard, SubscriptionGuard)
+    @Roles('admin')
+    @Post('lote')
+    adicionarEmLote(
+        @Body() dto: AdicionarMesasLoteDto,
+        @UsuarioAutenticado() usuario: AuthTokenPayload,
+        @Req() req: Request,
+    ) {
+        const baseUrl = this.extrairBaseUrl(req, dto.baseUrl);
+        return this.mesasService.adicionarEmLote(dto.inicio, dto.fim, baseUrl, usuario.restauranteId);
     }
 
     @UseGuards(AuthGuard, SubscriptionGuard)
