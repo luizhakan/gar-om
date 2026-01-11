@@ -20,10 +20,17 @@ function obterComandaIdObrigatorio(): string {
 }
 
 export const ServicoComandas = {
-    async solicitarAcesso(codigo: string, apelido?: string): Promise<{ idDispositivo: string }> {
+    async solicitarAcesso(codigo: string, apelido?: string): Promise<{ idDispositivo: string; codigoComanda?: string }> {
         return requestAutenticado('/comandas/solicitar-acesso', {
             method: 'POST',
             body: JSON.stringify({ codigo, apelido }),
+        });
+    },
+
+    async solicitarAcessoMesa(idMesa: string, apelido?: string): Promise<{ idDispositivo: string; codigoComanda: string }> {
+        return requestAutenticado('/comandas/solicitar-acesso-mesa', {
+            method: 'POST',
+            body: JSON.stringify({ idMesa, apelido }),
         });
     },
 

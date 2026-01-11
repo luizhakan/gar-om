@@ -99,7 +99,40 @@ export class ComandasService {
             },
         });
 
-        return { idDispositivo: dispositivo.id };
+        this.pedidosGateway.emitirAtualizacaoComanda(restauranteId, comanda.id);
+
+        return { idDispositivo: dispositivo.id, codigoComanda: comanda.codigo };
+    }
+
+    async solicitarAcessoMesa(idMesa: string, restauranteId: string, apelido?: string) {
+        const numeroMesa = Number(idMesa);
+        const mesa = await this.prisma.mesa.findFirst({
+            where: {
+                restauranteId,
+                OR: [
+                    { id: idMesa },
+                    ...(Number.isInteger(numeroMesa) ? [{ numero: numeroMesa }] : []),
+                ],
+            },
+        });
+
+        if (!mesa) {
+            throw new NotFoundException('Mesa não encontrada');
+        }
+
+        const comanda = await this.prisma.comanda.findFirst({
+            where: {
+                mesaAtualId: mesa.id,
+                restauranteId,
+                status: ComandaStatus.aberta,
+            },
+        });
+
+        if (!comanda) {
+            throw new NotFoundException('Não há comanda aberta para esta mesa');
+        }
+
+        return this.solicitarAcesso(comanda.codigo, restauranteId, apelido);
     }
 
     async consultarSolicitacao(idDispositivo: string, codigo: string, restauranteId: string) {
