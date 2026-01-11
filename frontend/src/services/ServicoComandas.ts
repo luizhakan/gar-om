@@ -104,6 +104,16 @@ export const ServicoComandas = {
         });
     },
 
+    async reabrirConta(comandaId?: string): Promise<ComandaResumo> {
+        const id = comandaId ?? obterComandaIdObrigatorio();
+        const token = obterTokenComandaObrigatorio();
+        return requestAutenticado<ComandaResumo>(`/comandas/${id}/reabrir-conta`, {
+            method: 'PATCH',
+        }, {
+            extraHeaders: { 'x-comanda-token': token },
+        });
+    },
+
     async obterComandaPorMesa(idMesa: string): Promise<ComandaResumo & { dispositivos: DispositivoComanda[] }> {
         return requestAutenticado(`/comandas/por-mesa/${idMesa}`, undefined, { includeContentType: false });
     },

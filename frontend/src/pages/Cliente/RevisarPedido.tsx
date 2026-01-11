@@ -256,6 +256,18 @@ export function RevisarPedido() {
         }
     };
 
+    const handleReabrirConta = async () => {
+        const comandaId = obterComandaId();
+        if (!restauranteId || !comandaId) return;
+        try {
+            await ServicoComandas.reabrirConta(comandaId);
+            setContaSolicitada(false);
+            setMensagemSucesso('Comanda reaberta com sucesso!');
+        } catch (erro) {
+            console.error('[RevisarPedido] Erro ao reabrir conta', erro);
+        }
+    };
+
     const abrirModalTroca = () => {
         const numeroAtual = Number(comandaInfo?.mesaAtual?.numero ?? idMesa ?? 1);
         setNumeroMesaTroca(Number.isFinite(numeroAtual) ? numeroAtual : 1);
@@ -543,6 +555,17 @@ export function RevisarPedido() {
                     >
                         {contaSolicitada ? 'Conta Solicitada (Aguarde)' : 'Fechar Conta 🧾'}
                     </Botao>
+
+                    {contaSolicitada && ehMaster && (
+                        <Botao
+                            variante="secundario"
+                            tamanho="grande"
+                            onClick={() => { void handleReabrirConta(); }}
+                            style={{ marginTop: '1rem', backgroundColor: '#e74c3c', color: 'white', border: 'none' }}
+                        >
+                            Reabrir Comanda (Ainda não paguei) 🔓
+                        </Botao>
+                    )}
                 </div>
             </main>
 

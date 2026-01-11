@@ -450,6 +450,43 @@ export class ComandasService {
         return this.mapearComanda(atualizado);
     }
 
+    async reabrirConta(comandaId: string, restauranteId: string, tokenComanda?: string) {
+        const comanda = await this.obterComandaAtiva(comandaId, restauranteId);
+        await this.validarDispositivo(comanda.id, tokenComanda, true);
+
+        if (!comanda.contaSolicitada) {
+            throw new BadRequestException('A conta não está solicitada');
+        }
+
+        const mesaAtualId = comanda.mesaAtualId;
+        if (!mesaAtualId) {
+            throw new BadRequestException('Comanda sem mesa vinculada');
+        }
+
+        const atualizado = await this.prisma.$transaction(async (tx) => {
+            await tx.mesa.update({
+                where: { id: mesaAtualId },
+                data: { contaSolicitada: false },
+            });
+
+            return tx.comanda.update({
+                where: { id: comanda.id },
+                data: { contaSolicitada: false },
+                include: { mesaAtual: true },
+            });
+        });
+
+        this.pedidosGateway.emitirAtualizacaoMesa(restauranteId, mesaAtualId, {
+            idMesa: mesaAtualId,
+            ocupada: true,
+            contaSolicitada: false,
+            numeroMesa: atualizado.mesaAtual?.numero,
+            comandaId: atualizado.id,
+        });
+
+        return this.mapearComanda(atualizado);
+    }
+
     async obterComandaPorMesa(mesaId: string, restauranteId: string) {
         const comanda = await this.prisma.comanda.findFirst({
             where: {
