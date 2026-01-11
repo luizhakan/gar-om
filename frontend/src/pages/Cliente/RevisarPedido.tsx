@@ -194,7 +194,7 @@ export function RevisarPedido() {
         };
 
         try {
-            const pedidoCriado = await ServicoPedidos.criar(payload);
+            const pedidoCriado = await ServicoPedidos.criar(payload, restauranteId ?? undefined);
             
             // Salva localmente para referência de edição rápida (se necessário)
             const info = {

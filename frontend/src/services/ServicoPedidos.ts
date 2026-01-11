@@ -139,16 +139,23 @@ export const ServicoPedidos = {
         return obterPedidosStorage();
     },
 
-    async criar(pedido: Omit<Pedido, 'id' | 'status' | 'dataCriacao'>): Promise<Pedido> {
+    async criar(
+        pedido: Omit<Pedido, 'id' | 'status' | 'dataCriacao'>,
+        restauranteIdOverride?: string,
+    ): Promise<Pedido> {
         const dataCriacao = new Date().toISOString();
-        const restauranteId = obterRestauranteId();
+        const restauranteId = restauranteIdOverride ?? obterRestauranteId();
 
         if (usarApi) {
             const tokenComanda = obterTokenComanda();
+            const extraHeaders = {
+                ...(tokenComanda ? { 'x-comanda-token': tokenComanda } : {}),
+                ...(restauranteIdOverride ? { 'x-restaurante-id': restauranteIdOverride } : {}),
+            };
             const data = await requestApi<any>('/pedidos', {
                 method: 'POST',
                 body: JSON.stringify(pedido),
-            }, undefined, tokenComanda ? { 'x-comanda-token': tokenComanda } : undefined);
+            }, undefined, Object.keys(extraHeaders).length ? extraHeaders : undefined);
 
             if (data?.comanda?.id && data?.comanda?.token) {
                 definirComandaSessao(data.comanda.id, data.comanda.token, data.comanda.codigo);
