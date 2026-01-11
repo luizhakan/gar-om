@@ -62,6 +62,11 @@ export class PedidosGateway implements OnGatewayConnection, OnGatewayDisconnect 
         this.server.to(salaCliente).emit('mesa-status-atualizado', payload);
     }
 
+    public emitirAtualizacaoComanda(restauranteId: string, comandaId: string) {
+        // Envia para todos na sala da comanda (master e outros dispositivos aprovados)
+        this.server.to(COMANDA_ROOM + comandaId).emit('status-comanda-atualizado', { comandaId });
+    }
+
     // --- Lógica de Conexão (Rooms) ---
 
     async handleConnection(client: Socket) {

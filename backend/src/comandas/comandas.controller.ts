@@ -1,6 +1,7 @@
 import { BadRequestException, Body, Controller, Get, Headers, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ComandasService } from './comandas.service';
 import { SolicitarAcessoDto } from './dto/solicitar-acesso.dto';
+import { SolicitarAcessoMesaDto } from './dto/solicitar-acesso-mesa.dto';
 import { TrocarMesaDto } from './dto/trocar-mesa.dto';
 import { AuthGuard, Roles } from '../auth/auth.guard';
 import { SubscriptionGuard } from '../auth/subscription.guard';
@@ -20,6 +21,17 @@ export class ComandasController {
             throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
         }
         return this.comandasService.solicitarAcesso(dto.codigo, restauranteId, dto.apelido);
+    }
+
+    @Post('solicitar-acesso-mesa')
+    solicitarAcessoMesa(
+        @Body() dto: SolicitarAcessoMesaDto,
+        @Headers('x-restaurante-id') restauranteId?: string,
+    ) {
+        if (!restauranteId) {
+            throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
+        }
+        return this.comandasService.solicitarAcessoMesa(dto.idMesa, restauranteId, dto.apelido);
     }
 
     @Get('dispositivos/:id/status')

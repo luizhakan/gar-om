@@ -138,6 +138,12 @@ export function RevisarPedido() {
 
                 const pedidosAnteriores = await ServicoComandas.obterPedidos(comandaId);
                 setComanda(pedidosAnteriores);
+
+                // Carrega dispositivos para saber se há pendentes (master)
+                if (resumo.dispositivoAtual?.master) {
+                    const listaDispositivos = await ServicoComandas.listarDispositivos(comandaId);
+                    setDispositivos(listaDispositivos);
+                }
             } else {
                 setComandaInfo(null);
                 setContaSolicitada(false);
@@ -217,9 +223,23 @@ export function RevisarPedido() {
             }, 2000);
         } catch (erro) {
             console.error('[RevisarPedido] Falha ao enviar', erro);
+            const erroComCodigo = erro as { code?: string; message?: string } | Error | null | undefined;
+            const codigoErro =
+                typeof erroComCodigo === 'object' && erroComCodigo !== null && 'code' in erroComCodigo
+                    ? (erroComCodigo as { code?: string }).code
+                    : undefined;
             const mensagem = erro instanceof Error && erro.message !== ''
                 ? erro.message
                 : 'Erro ao processar pedido. Tente novamente.';
+            
+            // Se o erro for de token ausente (mesa já ocupada), redireciona para entrar na comanda
+            if (codigoErro === 'TOKEN_COMANDA_AUSENTE' || mensagem.includes('Token da comanda ausente')) {
+                const numMesa = idMesa ?? '0';
+                const rid = restauranteId ?? '';
+                void navigate(`/comanda/entrar?restauranteId=${encodeURIComponent(rid)}&idMesa=${encodeURIComponent(numMesa)}`);
+                return;
+            }
+            
             alert(mensagem);
         }
     };
