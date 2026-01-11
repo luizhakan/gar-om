@@ -80,6 +80,20 @@ export function MesasAdmin() {
     const [carregandoComanda, setCarregandoComanda] = useState(false);
     const [erroComanda, setErroComanda] = useState('');
     const [mesaComandaId, setMesaComandaId] = useState<string | null>(null);
+    const [filtroStatus, setFiltroStatus] = useState<'todas' | 'livres' | 'ocupadas' | 'conta'>('todas');
+
+    const mesaJaExiste = useMemo(() => 
+        mesas.some(m => m.numero === numeroMesa), 
+    [mesas, numeroMesa]);
+
+    const mesasFiltradas = useMemo(() => {
+        return mesas.filter(mesa => {
+            if (filtroStatus === 'livres') return !mesa.ocupada;
+            if (filtroStatus === 'ocupadas') return mesa.ocupada;
+            if (filtroStatus === 'conta') return mesa.contaSolicitada;
+            return true;
+        }).sort((a, b) => a.numero - b.numero);
+    }, [mesas, filtroStatus]);
 
     const contaLinhas = useMemo(() => agruparItensDaConta(pedidosConta), [pedidosConta]);
     const totalConta = useMemo(() => contaLinhas.reduce((acc, item) => acc + item.total, 0), [contaLinhas]);
@@ -91,6 +105,8 @@ export function MesasAdmin() {
 
     async function handleSubmit(event: FormEvent) {
         event.preventDefault();
+        if (mesaJaExiste) return;
+
         try {
             await adicionarMesa(numeroMesa);
             setMensagem(`Mesa ${numeroMesa} adicionada com sucesso.`);
@@ -348,77 +364,120 @@ export function MesasAdmin() {
                 </div>
             </header>
 
-            <section className={styles.formCard}>
-                <div>
-                    <p className={styles.sectionLabel}>Nova mesa</p>
-                    <h2 className={styles.sectionTitle}>Adicionar nova mesa</h2>
-                </div>
-                <form
-                    className={styles.form}
-                    onSubmit={(event) => {
-                        void handleSubmit(event);
-                    }}
-                >
-                    <label className={styles.label} htmlFor="numero-mesa">
-                        Número da mesa
-                    </label>
-                    <input
-                        id="numero-mesa"
-                        type="number"
-                        min={1}
-                        value={numeroMesa}
-                        onChange={e => { setNumeroMesa(Number(e.target.value)); }}
-                        className={styles.input}
-                    />
-                    <Botao type="submit" variante="primario" tamanho="grande">
-                        Adicionar Mesa
-                    </Botao>
-                    {mensagem && <p className={styles.mensagem}>{mensagem}</p>}
-                </form>
-            </section>
+            <div className={styles.configGrid}>
+                <section className={styles.formCard}>
+                    <div>
+                        <p className={styles.sectionLabel}>Nova mesa</p>
+                        <h2 className={styles.sectionTitle}>Adicionar mesa única</h2>
+                    </div>
+                    <form
+                        className={styles.form}
+                        onSubmit={(event) => {
+                            void handleSubmit(event);
+                        }}
+                    >
+                        <label className={styles.label} htmlFor="numero-mesa">
+                            Número
+                        </label>
+                        <input
+                            id="numero-mesa"
+                            type="number"
+                            min={1}
+                            value={numeroMesa}
+                            onChange={e => { setNumeroMesa(Number(e.target.value)); }}
+                            className={styles.input}
+                        />
+                        {mesaJaExiste && (
+                            <p className={styles.mensagem}>A mesa {numeroMesa} já cadastrada.</p>
+                        )}
+                        <Botao 
+                            type="submit" 
+                            variante="primario" 
+                            tamanho="grande"
+                            disabled={mesaJaExiste}
+                        >
+                            Adicionar
+                        </Botao>
+                        {mensagem && <p className={styles.mensagem}>{mensagem}</p>}
+                    </form>
+                </section>
 
-            <section className={styles.formCard}>
-                <div>
-                    <p className={styles.sectionLabel}>Configurar QR Codes</p>
-                    <h2 className={styles.sectionTitle}>Definir quantidade total de mesas</h2>
-                    <p className={styles.subtitulo}>Recria os QR Codes para o número informado, garantindo o restaurante correto.</p>
-                </div>
-                <form
-                    className={styles.form}
-                    onSubmit={(event) => {
-                        void handleConfigurar(event);
-                    }}
-                >
-                    <label className={styles.label} htmlFor="total-mesas">
-                        Quantidade total de mesas
-                    </label>
-                    <input
-                        id="total-mesas"
-                        type="number"
-                        min={1}
-                        value={totalMesas}
-                        onChange={e => { setTotalMesas(Number(e.target.value)); }}
-                        className={styles.input}
-                    />
-                    <Botao type="submit" variante="secundario" tamanho="grande">
-                        Atualizar QR Codes
-                    </Botao>
-                    {mensagem && <p className={styles.mensagem}>{mensagem}</p>}
-                </form>
-            </section>
+                <section className={styles.formCard}>
+                    <div>
+                        <p className={styles.sectionLabel}>Configuração em massa</p>
+                        <h2 className={styles.sectionTitle}>Definir total de mesas</h2>
+                    </div>
+                    <form
+                        className={styles.form}
+                        onSubmit={(event) => {
+                            void handleConfigurar(event);
+                        }}
+                    >
+                        <label className={styles.label} htmlFor="total-mesas">
+                            Total de mesas no salão
+                        </label>
+                        <input
+                            id="total-mesas"
+                            type="number"
+                            min={1}
+                            value={totalMesas}
+                            onChange={e => { setTotalMesas(Number(e.target.value)); }}
+                            className={styles.input}
+                        />
+                        <Botao type="submit" variante="secundario" tamanho="grande">
+                            Sincronizar Mesas
+                        </Botao>
+                        {mensagem && <p className={styles.mensagem}>{mensagem}</p>}
+                    </form>
+                </section>
+            </div>
 
             <section className={styles.lista}>
-                <h2 className={styles.sectionTitle}>Mesas ativas</h2>
-                {mesas.length === 0 ? (
-                    <p className={styles.vazio}>Nenhuma mesa configurada ainda.</p>
+                <div className={styles.listaHeader}>
+                    <h2 className={styles.sectionTitle}>Mesas ativas</h2>
+                    <div className={styles.filtros}>
+                        <button 
+                            className={`${styles.filtroBotao} ${filtroStatus === 'todas' ? styles.filtroBotaoAtivo : ''}`}
+                            onClick={() => { setFiltroStatus('todas'); }}
+                        >
+                            Todas ({mesas.length})
+                        </button>
+                        <button 
+                            className={`${styles.filtroBotao} ${filtroStatus === 'livres' ? styles.filtroBotaoAtivo : ''}`}
+                            onClick={() => { setFiltroStatus('livres'); }}
+                        >
+                            Livres ({mesas.filter(m => !m.ocupada).length})
+                        </button>
+                        <button 
+                            className={`${styles.filtroBotao} ${filtroStatus === 'ocupadas' ? styles.filtroBotaoAtivo : ''}`}
+                            onClick={() => { setFiltroStatus('ocupadas'); }}
+                        >
+                            Ocupadas ({mesas.filter(m => m.ocupada).length})
+                        </button>
+                        <button 
+                            className={`${styles.filtroBotao} ${filtroStatus === 'conta' ? styles.filtroBotaoAtivo : ''}`}
+                            onClick={() => { setFiltroStatus('conta'); }}
+                        >
+                            Conta Pendente ({mesas.filter(m => m.contaSolicitada).length})
+                        </button>
+                    </div>
+                </div>
+
+                {mesasFiltradas.length === 0 ? (
+                    <p className={styles.vazio}>
+                        {mesas.length === 0 ? 'Nenhuma mesa configurada ainda.' : 'Nenhuma mesa encontrada para este filtro.'}
+                    </p>
                 ) : (
                     <div className={styles.grid}>
-                        {mesas.map(mesa => {
+                        {mesasFiltradas.map(mesa => {
                             const link = gerarLinkMesa(mesa.numero);
                             const imgSrc = `https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(link)}`;
 
                             return (
-                                <div key={mesa.id} className={styles.card}>
+                                <div 
+                                    key={mesa.id} 
+                                    className={`${styles.card} ${mesa.contaSolicitada ? styles.cardAlerta : ''}`}
+                                >
                                     <div className={styles.qrWrapper}>
                                         <img src={imgSrc} alt={`QR Code mesa ${String(mesa.numero)}`} />
                                     </div>

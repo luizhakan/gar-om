@@ -46,6 +46,14 @@
     box-shadow: var(--sombra-suave);
     position: relative;
     overflow: hidden;
+    height: 100%;
+}
+
+.configGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+    gap: var(--espaco-lg);
+    align-items: stretch;
 }
 
 .sectionLabel {
@@ -115,6 +123,20 @@
     align-items: center;
     text-align: center;
     box-shadow: var(--sombra-suave);
+    transition: all 0.3s ease;
+}
+
+.cardAlerta {
+    border-color: #ffd166;
+    background: linear-gradient(145deg, rgba(251, 191, 36, 0.1), rgba(13, 18, 26, 0.92));
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.15);
+    animation: pulsagemAlert 2s infinite ease-in-out;
+}
+
+@keyframes pulsagemAlert {
+    0% { border-color: rgba(251, 191, 36, 0.45); transform: scale(1); }
+    50% { border-color: #ffd166; transform: scale(1.01); }
+    100% { border-color: rgba(251, 191, 36, 0.45); transform: scale(1); }
 }
 
 .qrWrapper {
@@ -184,6 +206,34 @@
 
 .vazio {
     color: var(--cor-texto-secundario);
+}
+
+.filtros {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.filtroBotao {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--cor-borda);
+    color: var(--cor-texto-secundario);
+    padding: 0.5rem 1rem;
+    border-radius: var(--raio-borda-md);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.filtroBotao:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.filtroBotaoAtivo {
+    background: var(--cor-primaria-fundo);
+    border-color: var(--cor-primaria);
+    color: var(--cor-primaria);
 }
 
 .contaErro {
