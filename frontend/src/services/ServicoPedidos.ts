@@ -1,12 +1,13 @@
 import type { Pedido, StatusPedido } from '../types/Pedido';
 import { gerarIdAleatorio } from '../utils/formatadores';
 import { env } from '../config/env';
-import { definirComandaSessao, obterRestauranteId, obterToken, obterTokenComanda } from '../utils/sessao';
+import { definirComandaSessao, obterCodigoComanda, obterRestauranteId, obterToken, obterTokenComanda } from '../utils/sessao';
 import { requestAutenticado } from './requestAutenticado';
 
 interface PedidoApi {
     id: string;
     idMesa: string;
+    comandaId?: string;
     restauranteId: string;
     status: StatusPedido;
     dataCriacao: string;
@@ -119,6 +120,7 @@ function mapearPedidoApi(payload: PedidoApi): Pedido {
     return {
         id: payload.id,
         idMesa: payload.idMesa,
+        comandaId: payload.comandaId,
         restauranteId: payload.restauranteId,
         status: payload.status,
         itens,
@@ -150,6 +152,9 @@ export const ServicoPedidos = {
 
             if (data?.comanda?.id && data?.comanda?.token) {
                 definirComandaSessao(data.comanda.id, data.comanda.token, data.comanda.codigo);
+            } else if (data?.comandaId && tokenComanda) {
+                const codigoComanda = obterCodigoComanda();
+                definirComandaSessao(data.comandaId, tokenComanda, codigoComanda);
             }
 
             const pedidoBase = data?.pedido ?? data;

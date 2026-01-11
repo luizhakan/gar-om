@@ -45,6 +45,7 @@ export class PedidosService {
         return {
             id: pedido.id,
             idMesa: pedido.mesa?.numero ? String(pedido.mesa.numero) : pedido.idMesa,
+            comandaId: pedido.comandaId ?? undefined,
             restauranteId: pedido.restauranteId,
             status: pedido.status,
             encerrado: pedido.encerrado, // Novo campo
