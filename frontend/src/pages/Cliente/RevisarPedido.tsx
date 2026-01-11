@@ -51,6 +51,7 @@ export function RevisarPedido() {
     const [versaoSessao, setVersaoSessao] = useState(0);
     const [numeroMesaTroca, setNumeroMesaTroca] = useState<number | ''>(1);
     const [trocandoMesa, setTrocandoMesa] = useState(false);
+    const [erroTrocaMesa, setErroTrocaMesa] = useState('');
 
     // Verificação de sessão encerrada (se o usuário ainda tem dados locais de uma sessão fechada)
     useEffect(() => {
@@ -238,6 +239,7 @@ export function RevisarPedido() {
     const abrirModalTroca = () => {
         const numeroAtual = Number(comandaInfo?.mesaAtual?.numero ?? idMesa ?? 1);
         setNumeroMesaTroca(Number.isFinite(numeroAtual) ? numeroAtual : 1);
+        setErroTrocaMesa('');
         setMostrarModalTroca(true);
     };
 
@@ -247,6 +249,7 @@ export function RevisarPedido() {
         if (!comandaId || !Number.isFinite(numeroMesaTrocaNumero) || numeroMesaTrocaNumero < 1) return;
         const inicioTroca = Date.now();
         setTrocandoMesa(true);
+        setErroTrocaMesa('');
         try {
             const atualizada = await ServicoComandas.trocarMesa(numeroMesaTrocaNumero, comandaId);
             const tempoRestanteMs = Math.max(0, 600 - (Date.now() - inicioTroca));
@@ -262,10 +265,13 @@ export function RevisarPedido() {
             setMostrarModalTroca(false);
         } catch (erro) {
             console.error('[RevisarPedido] Erro ao trocar mesa', erro);
+            const mensagem = erro instanceof Error && erro.message ? erro.message : 'Não foi possível trocar de mesa.';
+            setErroTrocaMesa(mensagem);
         } finally {
             setTrocandoMesa(false);
         }
     };
+
 
     const carregarSolicitacoes = useCallback(async () => {
         const comandaId = obterComandaId();
@@ -528,6 +534,8 @@ export function RevisarPedido() {
                                 ×
                             </button>
                         </header>
+
+                        {erroTrocaMesa && <p className={styles.modalErro}>{erroTrocaMesa}</p>}
 
                         <label className={styles.modalLabel} htmlFor="numero-mesa-troca">
                             Número da mesa
