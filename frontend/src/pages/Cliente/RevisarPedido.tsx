@@ -50,6 +50,7 @@ export function RevisarPedido() {
     const [erroSolicitacoes, setErroSolicitacoes] = useState('');
     const [versaoSessao, setVersaoSessao] = useState(0);
     const [numeroMesaTroca, setNumeroMesaTroca] = useState(1);
+    const [trocandoMesa, setTrocandoMesa] = useState(false);
 
     // Verificação de sessão encerrada (se o usuário ainda tem dados locais de uma sessão fechada)
     useEffect(() => {
@@ -243,6 +244,7 @@ export function RevisarPedido() {
     const confirmarTrocaMesa = async () => {
         const comandaId = obterComandaId();
         if (!comandaId) return;
+        setTrocandoMesa(true);
         try {
             const atualizada = await ServicoComandas.trocarMesa(numeroMesaTroca, comandaId);
             setComandaInfo(atualizada);
@@ -254,6 +256,8 @@ export function RevisarPedido() {
             setMostrarModalTroca(false);
         } catch (erro) {
             console.error('[RevisarPedido] Erro ao trocar mesa', erro);
+        } finally {
+            setTrocandoMesa(false);
         }
     };
 
@@ -529,16 +533,28 @@ export function RevisarPedido() {
                             value={numeroMesaTroca}
                             onChange={(event) => { setNumeroMesaTroca(Number(event.target.value)); }}
                             className={styles.modalInput}
+                            disabled={trocandoMesa}
                         />
 
                         <div className={styles.modalAcoes}>
-                            <Botao variante="secundario" onClick={() => { setMostrarModalTroca(false); }}>
+                            <Botao
+                                variante="secundario"
+                                onClick={() => { setMostrarModalTroca(false); }}
+                                disabled={trocandoMesa}
+                            >
                                 Cancelar
                             </Botao>
-                            <Botao variante="primario" onClick={() => { void confirmarTrocaMesa(); }}>
-                                Confirmar troca
+                            <Botao
+                                variante="primario"
+                                onClick={() => { void confirmarTrocaMesa(); }}
+                                disabled={trocandoMesa}
+                            >
+                                {trocandoMesa ? 'Trocando...' : 'Confirmar troca'}
                             </Botao>
                         </div>
+                        {trocandoMesa && (
+                            <p className={styles.modalHint}>Atualizando mesa da comanda...</p>
+                        )}
                     </div>
                 </div>
             )}

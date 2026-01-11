@@ -386,6 +386,11 @@
 }
 
 @media (max-width: 48rem) {
+    .cabecalho {
+        position: static;
+        backdrop-filter: none;
+    }
+
     .itemPedido {
         grid-template-columns: 1fr;
         gap: var(--espaco-md);
