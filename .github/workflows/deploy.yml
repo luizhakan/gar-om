@@ -70,34 +70,34 @@ jobs:
             # Se mudou a estrutura, precisamos reiniciar tudo para garantir integridade.
             if [[ "${{ steps.changes.outputs.config }}" == 'true' || "${{ steps.changes.outputs.nginx }}" == 'true' ]]; then
               echo "⚠️ Mudança estrutural detectada (Config/Nginx). Reiniciando todo o stack..."
-              docker-compose down
-              docker-compose up -d --build
+              docker compose down
+              docker compose up -d --build
             
             else
               # CASO 2: Mudança no Backend
               if [[ "${{ steps.changes.outputs.backend }}" == 'true' ]]; then
                 echo "⚙️ Backend alterado. Reconstruindo imagem..."
-                docker-compose up -d --build backend
+                docker compose up -d --build backend
                 
                 echo "🔄 Reiniciando container do backend..."
-                docker-compose up -d --no-recreate backend || docker-compose up -d backend
+                docker compose up -d --no-recreate backend || docker compose up -d backend
                 
                 echo "Running Migrations..."
                 sleep 10
-                docker-compose exec -T backend npx prisma migrate deploy
+                docker compose exec -T backend npx prisma migrate deploy
               fi
 
               # CASO 3: Mudança no Frontend
               if [[ "${{ steps.changes.outputs.frontend }}" == 'true' ]]; then
                 echo "🎨 Frontend alterado. Reconstruindo imagem..."
-                docker-compose up -d --build frontend
+                docker compose up -d --build frontend
                 
                 echo "🔄 Reiniciando container do frontend..."
-                docker-compose up -d --no-recreate frontend || docker-compose up -d frontend
+                docker compose up -d --no-recreate frontend || docker compose up -d frontend
                 
                 # Reinicia o Nginx para garantir que os headers anti-cache sejam aplicados
                 echo "🔄 Recarregando configuração do Nginx..."
-                docker-compose exec -T nginx nginx -s reload || true
+                docker compose exec -T nginx nginx -s reload || true
               fi
             fi
 
