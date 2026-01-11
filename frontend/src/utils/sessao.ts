@@ -6,6 +6,9 @@ interface DadosSessao {
     token?: string;
     refreshToken?: string;
     email?: string;
+    comandaId?: string;
+    tokenComanda?: string;
+    codigoComanda?: string;
 }
 
 const CHAVE_SESSAO = 'garcom_sessao';
@@ -33,10 +36,22 @@ function lerSessaoCliente(): DadosSessao | undefined {
     try {
         const parsed = JSON.parse(bruto ?? '') as Partial<DadosSessao>;
         if ((parsed.restauranteId ?? '') === '') return undefined;
-        return { restauranteId: parsed.restauranteId as string, tipo: 'cliente' };
+        return {
+            restauranteId: parsed.restauranteId as string,
+            tipo: 'cliente',
+            comandaId: parsed.comandaId as string | undefined,
+            tokenComanda: parsed.tokenComanda as string | undefined,
+            codigoComanda: parsed.codigoComanda as string | undefined,
+        };
     } catch {
         return undefined;
     }
+}
+
+function salvarSessaoCliente(dados: DadosSessao) {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(CHAVE_SESSAO_CLIENTE, JSON.stringify(dados));
+    window.dispatchEvent(new Event('sessao-atualizada'));
 }
 
 export function definirSessao(
@@ -45,17 +60,32 @@ export function definirSessao(
     token?: string,
     email?: string,
     refreshToken?: string,
+    comandaId?: string,
+    tokenComanda?: string,
+    codigoComanda?: string,
 ) {
     if (typeof window === 'undefined') return;
     const dados: DadosSessao = { restauranteId, tipo, token, email, refreshToken };
 
     if (tipo === 'cliente') {
-        window.localStorage.setItem(CHAVE_SESSAO_CLIENTE, JSON.stringify({ restauranteId, tipo }));
+        const atual = lerSessaoCliente();
+        const mudouRestaurante = Boolean(atual?.restauranteId)
+            && Boolean(restauranteId)
+            && atual?.restauranteId !== restauranteId;
+        const comandaIdFinal = mudouRestaurante ? comandaId : (comandaId ?? atual?.comandaId);
+        const tokenComandaFinal = mudouRestaurante ? tokenComanda : (tokenComanda ?? atual?.tokenComanda);
+        const codigoComandaFinal = mudouRestaurante ? codigoComanda : (codigoComanda ?? atual?.codigoComanda);
+        salvarSessaoCliente({
+            restauranteId,
+            tipo,
+            comandaId: comandaIdFinal,
+            tokenComanda: tokenComandaFinal,
+            codigoComanda: codigoComandaFinal,
+        });
     } else {
         window.localStorage.setItem(CHAVE_SESSAO, JSON.stringify(dados));
+        window.dispatchEvent(new Event('sessao-atualizada'));
     }
-
-    window.dispatchEvent(new Event('sessao-atualizada'));
 }
 
 export function limparSessao() {
@@ -75,6 +105,36 @@ export function obterTipoSessao(): TipoSessao | undefined {
 
 export function obterToken(): string | undefined {
     return lerSessao()?.token;
+}
+
+export function obterComandaId(): string | undefined {
+    return lerSessaoCliente()?.comandaId;
+}
+
+export function obterTokenComanda(): string | undefined {
+    return lerSessaoCliente()?.tokenComanda;
+}
+
+export function obterCodigoComanda(): string | undefined {
+    return lerSessaoCliente()?.codigoComanda;
+}
+
+export function definirComandaSessao(comandaId: string, tokenComanda: string, codigoComanda?: string) {
+    const atual = lerSessaoCliente();
+    if (!atual?.restauranteId) return;
+    salvarSessaoCliente({
+        restauranteId: atual.restauranteId,
+        tipo: 'cliente',
+        comandaId,
+        tokenComanda,
+        codigoComanda,
+    });
+}
+
+export function limparComandaSessao() {
+    const atual = lerSessaoCliente();
+    if (!atual?.restauranteId) return;
+    salvarSessaoCliente({ restauranteId: atual.restauranteId, tipo: 'cliente' });
 }
 
 export function obterEmailSessao(): string | undefined {

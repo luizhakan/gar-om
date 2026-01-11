@@ -70,6 +70,8 @@ export class MesasController {
     }
 
     @Get(':id/comanda')
+    @UseGuards(AuthGuard, SubscriptionGuard)
+    @Roles('admin', 'cozinha')
     obterComanda(
         @Param('id') id: string,
         @Headers('x-restaurante-id') restauranteId?: string,
@@ -124,12 +126,11 @@ export class MesasController {
     solicitarConta(
         @Param('id') id: string,
         @Headers('x-restaurante-id') restauranteId?: string,
-        @Req() req?: Request,
+        @Headers('x-comanda-token') tokenComanda?: string,
     ) {
         if (!restauranteId) {
             throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
         }
-        const ip = req ? extrairIpCliente(req) : undefined;
-        return this.mesasService.solicitarConta(id, restauranteId, ip);
+        return this.mesasService.solicitarConta(id, restauranteId, tokenComanda);
     }
 }

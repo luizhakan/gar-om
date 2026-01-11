@@ -3,8 +3,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAdmin } from '../../hooks/useAdmin';
 import { Botao } from '../../components/Botao';
 import { ServicoMesas } from '../../services/ServicoMesas';
+import { ServicoComandas } from '../../services/ServicoComandas';
 import type { Mesa } from '../../types/Mesa';
 import type { Pedido } from '../../types/Pedido';
+import type { ComandaResumo, DispositivoComanda } from '../../types/Comanda';
 import { formatarMoeda } from '../../utils/formatadores';
 import styles from './Mesas.module.css';
 
@@ -73,6 +75,11 @@ export function MesasAdmin() {
     const [erroConta, setErroConta] = useState('');
     const [ultimaAtualizacaoConta, setUltimaAtualizacaoConta] = useState<Date | null>(null);
     const [mostrarContaModal, setMostrarContaModal] = useState(false);
+    const [comandaSelecionada, setComandaSelecionada] = useState<(ComandaResumo & { dispositivos: DispositivoComanda[] }) | null>(null);
+    const [mostrarComandaModal, setMostrarComandaModal] = useState(false);
+    const [carregandoComanda, setCarregandoComanda] = useState(false);
+    const [erroComanda, setErroComanda] = useState('');
+    const [mesaComandaId, setMesaComandaId] = useState<string | null>(null);
 
     const contaLinhas = useMemo(() => agruparItensDaConta(pedidosConta), [pedidosConta]);
     const totalConta = useMemo(() => contaLinhas.reduce((acc, item) => acc + item.total, 0), [contaLinhas]);
@@ -152,6 +159,46 @@ export function MesasAdmin() {
         }
     }, []);
 
+    const carregarComandaParaMesa = useCallback(async (mesaAlvo: Mesa) => {
+        setCarregandoComanda(true);
+        setErroComanda('');
+        setComandaSelecionada(null);
+        setMesaComandaId(mesaAlvo.id);
+        setMostrarComandaModal(true);
+
+        try {
+            const comanda = await ServicoComandas.obterComandaPorMesa(mesaAlvo.id);
+            setComandaSelecionada(comanda);
+        } catch (erro) {
+            console.error('[MesasAdmin] Erro ao carregar comanda', erro);
+            setErroComanda('Não foi possível carregar a comanda desta mesa.');
+        } finally {
+            setCarregandoComanda(false);
+        }
+    }, []);
+
+    const atualizarComandaSelecionada = useCallback(async () => {
+        if (!mesaComandaId) return;
+        setCarregandoComanda(true);
+        setErroComanda('');
+        try {
+            const comanda = await ServicoComandas.obterComandaPorMesa(mesaComandaId);
+            setComandaSelecionada(comanda);
+        } catch (erro) {
+            console.error('[MesasAdmin] Erro ao atualizar comanda', erro);
+            setErroComanda('Não foi possível atualizar a comanda.');
+        } finally {
+            setCarregandoComanda(false);
+        }
+    }, [mesaComandaId]);
+
+    const limparComandaEmFoco = useCallback(() => {
+        setComandaSelecionada(null);
+        setMostrarComandaModal(false);
+        setErroComanda('');
+        setMesaComandaId(null);
+    }, []);
+
     const limparContaEmFoco = useCallback(() => {
         setMesaConta(null);
         setPedidosConta([]);
@@ -228,6 +275,45 @@ export function MesasAdmin() {
 </html>`);
         popup.document.close();
     }, [contaLinhas, mesaConta, totalConta, ultimaAtualizacaoConta]);
+
+    const handleVirarMasterAdmin = useCallback(async () => {
+        if (!comandaSelecionada) return;
+        try {
+            await ServicoComandas.adminVirarMaster(comandaSelecionada.id);
+            await atualizarComandaSelecionada();
+            setMensagem('Admin definido como master da comanda.');
+        } catch (erro) {
+            console.error('[MesasAdmin] Erro ao virar master', erro);
+            setMensagem('Não foi possível assumir a comanda.');
+        }
+        setTimeout(() => { setMensagem(''); }, 2200);
+    }, [atualizarComandaSelecionada, comandaSelecionada]);
+
+    const handleDefinirMaster = useCallback(async (idDispositivo: string) => {
+        if (!comandaSelecionada) return;
+        try {
+            await ServicoComandas.adminDefinirMaster(comandaSelecionada.id, idDispositivo);
+            await atualizarComandaSelecionada();
+            setMensagem('Master atualizado com sucesso.');
+        } catch (erro) {
+            console.error('[MesasAdmin] Erro ao definir master', erro);
+            setMensagem('Não foi possível atualizar o master.');
+        }
+        setTimeout(() => { setMensagem(''); }, 2200);
+    }, [atualizarComandaSelecionada, comandaSelecionada]);
+
+    const handleEncerrarComanda = useCallback(async () => {
+        if (!comandaSelecionada) return;
+        try {
+            await ServicoComandas.adminEncerrar(comandaSelecionada.id);
+            setMensagem('Comanda encerrada com sucesso.');
+            limparComandaEmFoco();
+        } catch (erro) {
+            console.error('[MesasAdmin] Erro ao encerrar comanda', erro);
+            setMensagem('Não foi possível encerrar a comanda.');
+        }
+        setTimeout(() => { setMensagem(''); }, 2200);
+    }, [comandaSelecionada, limparComandaEmFoco]);
 
     useEffect(() => {
         if (mesaConta) {
@@ -352,6 +438,15 @@ export function MesasAdmin() {
                                         >
                                             Copiar link
                                         </Botao>
+                                        {mesa.ocupada && (
+                                            <Botao
+                                                variante="primario"
+                                                tamanho="pequeno"
+                                                onClick={() => { void carregarComandaParaMesa(mesa); }}
+                                            >
+                                                Gerenciar comanda
+                                            </Botao>
+                                        )}
                                         <Botao
                                             variante="perigo"
                                             tamanho="pequeno"
@@ -481,6 +576,94 @@ export function MesasAdmin() {
                                 className={styles.contaLimpar}
                                 onClick={limparContaEmFoco}
                                 disabled={carregandoConta}
+                            >
+                                Fechar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {mostrarComandaModal && (
+                <div className={styles.modalOverlay} role="dialog" aria-modal="true">
+                    <div className={styles.modalConta}>
+                        <header className={styles.modalCabecalho}>
+                            <div>
+                                <p className={styles.sectionLabel}>Comanda ativa</p>
+                                <h2 className={styles.modalTitulo}>Gerenciar comanda</h2>
+                                <p className={styles.subtitulo}>Assuma o master ou encerre a comanda.</p>
+                            </div>
+                            <div className={styles.modalTag}>
+                                {comandaSelecionada?.mesaAtual?.numero ? `Mesa ${comandaSelecionada.mesaAtual.numero}` : 'Mesa'}
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.modalFechar}
+                                onClick={limparComandaEmFoco}
+                                aria-label="Fechar modal de comanda"
+                            >
+                                ×
+                            </button>
+                        </header>
+
+                        {erroComanda && <p className={styles.comandaErro}>{erroComanda}</p>}
+                        {carregandoComanda && <p className={styles.comandaHint}>Carregando comanda...</p>}
+
+                        {comandaSelecionada ? (
+                            <>
+                                <div className={styles.comandaResumo}>
+                                    <div>
+                                        <p className={styles.comandaCodigo}>Código: {comandaSelecionada.codigo}</p>
+                                        <p className={styles.comandaStatus}>Status: {comandaSelecionada.status}</p>
+                                    </div>
+                                    <div className={styles.modalAcoes}>
+                                        <Botao variante="secundario" onClick={() => { void handleVirarMasterAdmin(); }}>
+                                            Virar master
+                                        </Botao>
+                                        <Botao variante="perigo" onClick={() => { void handleEncerrarComanda(); }}>
+                                            Encerrar comanda
+                                        </Botao>
+                                    </div>
+                                </div>
+
+                                <div className={styles.comandaLista}>
+                                    {comandaSelecionada.dispositivos.map(dispositivo => (
+                                        <div key={dispositivo.id} className={styles.comandaItem}>
+                                            <div>
+                                                <p className={styles.comandaItemTitulo}>
+                                                    {dispositivo.apelido ?? 'Dispositivo sem apelido'}
+                                                </p>
+                                                <p className={styles.comandaItemSub}>
+                                                    {dispositivo.master ? 'Master atual' : `Status: ${dispositivo.status}`}
+                                                </p>
+                                            </div>
+                                            <div className={styles.comandaItemAcoes}>
+                                                {!dispositivo.master && dispositivo.status === 'aprovado' && dispositivo.ativo && (
+                                                    <Botao
+                                                        variante="primario"
+                                                        tamanho="pequeno"
+                                                        onClick={() => { void handleDefinirMaster(dispositivo.id); }}
+                                                    >
+                                                        Definir master
+                                                    </Botao>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            !carregandoComanda && <p className={styles.comandaHint}>Nenhuma comanda encontrada.</p>
+                        )}
+
+                        <div className={styles.modalAcoes}>
+                            <Botao variante="secundario" onClick={() => { void atualizarComandaSelecionada(); }}>
+                                Atualizar
+                            </Botao>
+                            <button
+                                type="button"
+                                className={styles.contaLimpar}
+                                onClick={limparComandaEmFoco}
                             >
                                 Fechar
                             </button>

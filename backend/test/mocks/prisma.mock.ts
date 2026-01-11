@@ -22,6 +22,21 @@ export type PrismaMock = {
         updateMany: jest.Mock; 
         count: jest.Mock;      
     };
+    comanda: {
+        findFirst: jest.Mock;
+        findUnique: jest.Mock;
+        create: jest.Mock;
+        update: jest.Mock;
+    };
+    comandaDispositivo: {
+        findMany: jest.Mock;
+        findFirst: jest.Mock;
+        findUnique: jest.Mock;
+        create: jest.Mock;
+        update: jest.Mock;
+        updateMany: jest.Mock;
+    };
+    $transaction: jest.Mock;
     // Novo campo obrigatório para os testes de auth
     refreshToken: {
         create: jest.Mock;
@@ -32,7 +47,7 @@ export type PrismaMock = {
 };
 
 export function criarPrismaMock(): PrismaMock {
-    return {
+    const prisma: PrismaMock = {
         admin: { findUnique: jest.fn(), create: jest.fn() },
         usuarioCozinha: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
         restaurante: { findUnique: jest.fn(), findFirst: jest.fn(), create: jest.fn(), upsert: jest.fn() },
@@ -56,6 +71,21 @@ export function criarPrismaMock(): PrismaMock {
             updateMany: jest.fn(),
             count: jest.fn() 
         },
+        comanda: {
+            findFirst: jest.fn(),
+            findUnique: jest.fn(),
+            create: jest.fn(),
+            update: jest.fn(),
+        },
+        comandaDispositivo: {
+            findMany: jest.fn(),
+            findFirst: jest.fn(),
+            findUnique: jest.fn(),
+            create: jest.fn(),
+            update: jest.fn(),
+            updateMany: jest.fn(),
+        },
+        $transaction: jest.fn(),
         refreshToken: {
             create: jest.fn(),
             findUnique: jest.fn(),
@@ -63,4 +93,8 @@ export function criarPrismaMock(): PrismaMock {
             deleteMany: jest.fn(),
         },
     };
+
+    prisma.$transaction.mockImplementation(async (acao: (tx: PrismaMock) => unknown) => acao(prisma));
+
+    return prisma;
 }
