@@ -416,7 +416,7 @@
     }
 
     .conteudoPrincipal {
-        padding-bottom: 13rem;
+        padding-bottom: calc(18rem + env(safe-area-inset-bottom));
     }
 
     .comandaBox {
