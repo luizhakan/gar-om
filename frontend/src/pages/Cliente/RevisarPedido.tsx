@@ -49,7 +49,7 @@ export function RevisarPedido() {
     const [carregandoSolicitacoes, setCarregandoSolicitacoes] = useState(false);
     const [erroSolicitacoes, setErroSolicitacoes] = useState('');
     const [versaoSessao, setVersaoSessao] = useState(0);
-    const [numeroMesaTroca, setNumeroMesaTroca] = useState(1);
+    const [numeroMesaTroca, setNumeroMesaTroca] = useState<number | ''>(1);
     const [trocandoMesa, setTrocandoMesa] = useState(false);
 
     // Verificação de sessão encerrada (se o usuário ainda tem dados locais de uma sessão fechada)
@@ -243,14 +243,20 @@ export function RevisarPedido() {
 
     const confirmarTrocaMesa = async () => {
         const comandaId = obterComandaId();
-        if (!comandaId) return;
+        const numeroMesaTrocaNumero = Number(numeroMesaTroca);
+        if (!comandaId || !Number.isFinite(numeroMesaTrocaNumero) || numeroMesaTrocaNumero < 1) return;
+        const inicioTroca = Date.now();
         setTrocandoMesa(true);
         try {
-            const atualizada = await ServicoComandas.trocarMesa(numeroMesaTroca, comandaId);
+            const atualizada = await ServicoComandas.trocarMesa(numeroMesaTrocaNumero, comandaId);
+            const tempoRestanteMs = Math.max(0, 600 - (Date.now() - inicioTroca));
+            if (tempoRestanteMs > 0) {
+                await new Promise(resolve => setTimeout(resolve, tempoRestanteMs));
+            }
             setComandaInfo(atualizada);
             await carregarDados();
             const sufixoBusca = searchParams.toString();
-            const numeroMesaAtual = atualizada.mesaAtual?.numero ?? numeroMesaTroca;
+            const numeroMesaAtual = atualizada.mesaAtual?.numero ?? numeroMesaTrocaNumero;
             void navigate(`/mesa/${String(numeroMesaAtual)}${sufixoBusca ? `?${sufixoBusca}` : ''}`);
             setMensagemSucesso('Mesa atualizada com sucesso.');
             setMostrarModalTroca(false);
@@ -531,7 +537,10 @@ export function RevisarPedido() {
                             type="number"
                             min={1}
                             value={numeroMesaTroca}
-                            onChange={(event) => { setNumeroMesaTroca(Number(event.target.value)); }}
+                            onChange={(event) => {
+                                const valor = event.target.value;
+                                setNumeroMesaTroca(valor === '' ? '' : Number(valor));
+                            }}
                             className={styles.modalInput}
                             disabled={trocandoMesa}
                         />
@@ -547,7 +556,7 @@ export function RevisarPedido() {
                             <Botao
                                 variante="primario"
                                 onClick={() => { void confirmarTrocaMesa(); }}
-                                disabled={trocandoMesa}
+                                disabled={trocandoMesa || numeroMesaTroca === '' || Number(numeroMesaTroca) < 1}
                             >
                                 {trocandoMesa ? 'Trocando...' : 'Confirmar troca'}
                             </Botao>
