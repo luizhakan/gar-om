@@ -13,6 +13,7 @@ export interface ItemPedido {
 export interface Pedido {
     id: string;
     idMesa: string;
+    comandaId?: string;
     restauranteId?: string;
     itens: ItemPedido[];
     status: StatusPedido;
