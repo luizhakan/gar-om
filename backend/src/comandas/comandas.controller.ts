@@ -159,6 +159,18 @@ export class ComandasController {
         return this.comandasService.solicitarConta(id, restauranteId, tokenComanda);
     }
 
+    @Patch(':id/reabrir-conta')
+    reabrirConta(
+        @Param('id') id: string,
+        @Headers('x-restaurante-id') restauranteId?: string,
+        @Headers('x-comanda-token') tokenComanda?: string,
+    ) {
+        if (!restauranteId) {
+            throw new BadRequestException('Cabeçalho x-restaurante-id é obrigatório');
+        }
+        return this.comandasService.reabrirConta(id, restauranteId, tokenComanda);
+    }
+
     @UseGuards(AuthGuard, SubscriptionGuard)
     @Roles('admin')
     @Patch(':id/admin/virar-master')
