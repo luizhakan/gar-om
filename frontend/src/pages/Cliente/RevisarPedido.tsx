@@ -215,7 +215,10 @@ export function RevisarPedido() {
             }, 2000);
         } catch (erro) {
             console.error('[RevisarPedido] Falha ao enviar', erro);
-            alert('Erro ao processar pedido. Tente novamente.');
+            const mensagem = erro instanceof Error && erro.message !== ''
+                ? erro.message
+                : 'Erro ao processar pedido. Tente novamente.';
+            alert(mensagem);
         }
     };
 
