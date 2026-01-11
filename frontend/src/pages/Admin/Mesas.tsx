@@ -388,7 +388,7 @@ export function MesasAdmin() {
                             className={styles.input}
                         />
                         {mesaJaExiste && (
-                            <p className={styles.comandaErro}>A mesa {numeroMesa} já cadastrada.</p>
+                            <p className={styles.mensagem}>A mesa {numeroMesa} já cadastrada.</p>
                         )}
                         <Botao 
                             type="submit" 
