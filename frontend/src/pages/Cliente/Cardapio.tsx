@@ -42,8 +42,8 @@ export function CardapioCliente() {
         const carregar = async () => {
             try {
                 const [cats, prods] = await Promise.all([
-                    ServicoCategorias.listar(),
-                    ServicoProdutos.listar(),
+                    ServicoCategorias.listar(restauranteId),
+                    ServicoProdutos.listar(restauranteId),
                 ]);
                 setCategorias(cats);
                 setProdutos(prods.filter(p => p.disponivel));

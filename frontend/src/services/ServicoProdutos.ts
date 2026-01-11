@@ -18,11 +18,13 @@ export type ProdutoNovo = Omit<Produto, 'id' | 'restauranteId' | 'createdAt' | '
 const API_BASE = env.apiBaseUrl.replace(/\/$/, '');
 const usarApi = Boolean(API_BASE);
 
-async function requestApi<T>(path: string, init?: RequestInit): Promise<T> {
+async function requestApi<T>(path: string, init?: RequestInit, restauranteId?: string): Promise<T> {
     if (!usarApi) {
         throw new Error('API não configurada');
     }
-    return requestAutenticado<T>(path, init);
+    return requestAutenticado<T>(path, init, restauranteId
+        ? { extraHeaders: { 'x-restaurante-id': restauranteId } }
+        : undefined);
 }
 
 function mapearProdutoApi(payload: ProdutoApi): Produto {
@@ -44,11 +46,11 @@ function mapearProdutoApi(payload: ProdutoApi): Produto {
 }
 
 export const ServicoProdutos = {
-    async listar(): Promise<Produto[]> {
+    async listar(restauranteId?: string): Promise<Produto[]> {
         if (!usarApi) {
             throw new Error('API não configurada');
         }
-        const data = await requestApi<ProdutoApi[]>('/produtos');
+        const data = await requestApi<ProdutoApi[]>('/produtos', undefined, restauranteId);
         return data.map(mapearProdutoApi);
     },
 
