@@ -25,14 +25,54 @@ const estadoInicial: EstadoFormulario = {
 export function ProdutosAdmin() {
     const { produtos, categorias, criarProduto, atualizarProduto, removerProduto, alternarDisponibilidade, restauranteId } = useAdmin();
     const [form, setForm] = useState<EstadoFormulario>(estadoInicial);
+    const [modalAberto, setModalAberto] = useState(false);
+    const [busca, setBusca] = useState('');
+    const [filtroCategoria, setFiltroCategoria] = useState('');
 
     const categoriasOrdenadas = useMemo(
         () => [...categorias].sort((a, b) => a.ordem - b.ordem),
         [categorias]
     );
 
+    const produtosFiltrados = useMemo(() => {
+        return produtos.filter(p => {
+            const matchBusca = p.nome.toLowerCase().includes(busca.toLowerCase()) || 
+                              p.descricao?.toLowerCase().includes(busca.toLowerCase());
+            const matchCategoria = filtroCategoria === '' || p.idCategoria === filtroCategoria;
+            return matchBusca && matchCategoria;
+        });
+    }, [produtos, busca, filtroCategoria]);
+
+    const produtosAgrupados = useMemo(() => {
+        // Se houver busca ativa, não agrupamos para facilitar a visualização clara dos resultados
+        if (busca !== '') return { 'Resultados da busca': produtosFiltrados };
+
+        const grupos: Record<string, typeof produtos> = {};
+        
+        categoriasOrdenadas.forEach(cat => {
+            const produtosDaCat = produtosFiltrados.filter(p => p.idCategoria === cat.id);
+            if (produtosDaCat.length > 0) {
+                grupos[cat.nome] = produtosDaCat;
+            }
+        });
+
+        // Produtos sem categoria (se existirem)
+        const semCategoria = produtosFiltrados.filter(p => !categorias.some(c => c.id === p.idCategoria));
+        if (semCategoria.length > 0) {
+            grupos['Outros'] = semCategoria;
+        }
+
+        return grupos;
+    }, [produtosFiltrados, categoriasOrdenadas, categorias, busca]);
+
     function limparFormulario() {
         setForm(estadoInicial);
+        setModalAberto(false);
+    }
+
+    function abrirNovo() {
+        setForm(estadoInicial);
+        setModalAberto(true);
     }
 
     async function handleSubmit(event: FormEvent) {
@@ -85,6 +125,7 @@ export function ProdutosAdmin() {
             idCategoria: produto.idCategoria,
             disponivel: produto.disponivel,
         });
+        setModalAberto(true);
     }
 
     async function handleRemover(idProduto: string) {
@@ -103,116 +144,163 @@ export function ProdutosAdmin() {
                 <div>
                     <p className={styles.rotulo}>Catálogo</p>
                     <h1 className={styles.titulo}>Produtos</h1>
-                    <p className={styles.subtitulo}>Cadastre e pause itens do cardápio.</p>
+                    <p className={styles.subtitulo}>
+                        {produtos.length} {produtos.length === 1 ? 'item cadastrado' : 'itens cadastrados'} no total.
+                    </p>
                 </div>
+                <Botao onClick={abrirNovo}>
+                    + Novo Produto
+                </Botao>
             </header>
 
-            <section className={styles.formCard}>
-                <div>
-                    <p className={styles.sectionLabel}>{(form.id ?? '') !== '' ? 'Editar produto' : 'Novo produto'}</p>
-                    <h2 className={styles.sectionTitle}>{(form.id ?? '') !== '' ? 'Atualize os dados' : 'Preencha para adicionar'}</h2>
-                </div>
-                <form
-                    className={styles.form}
-                    onSubmit={(event) => {
-                        void handleSubmit(event);
-                    }}
-                >
-                    <div className={styles.col2}>
-                        <div className={styles.campo}>
-                            <label>Nome</label>
-                            <input
-                                value={form.nome}
-                                onChange={e => { setForm(f => ({ ...f, nome: e.target.value })); }}
-                                placeholder="Ex: X-Burger Clássico"
-                                required
-                            />
-                        </div>
-
-                        <div className={styles.campo}>
-                            <label>Preço (R$)</label>
-                            <input
-                                value={form.preco}
-                                onChange={e => { setForm(f => ({ ...f, preco: e.target.value })); }}
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                placeholder="25.00"
-                                required
-                            />
-                        </div>
-                    </div>
-
-                    <div className={styles.campo}>
-                        <label>Categoria</label>
-                        <select
-                            value={form.idCategoria}
-                            onChange={e => { setForm(f => ({ ...f, idCategoria: e.target.value })); }}
-                            required
-                        >
-                            <option value="">Selecione</option>
-                            {categoriasOrdenadas.map(cat => (
-                                <option key={cat.id} value={cat.id}>{cat.nome}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className={styles.campo}>
-                        <label>Descrição</label>
-                        <textarea
-                            value={form.descricao}
-                            onChange={e => { setForm(f => ({ ...f, descricao: e.target.value })); }}
-                            rows={3}
-                            placeholder="Detalhes para a cozinha ou cliente"
-                        />
-                    </div>
-
-                    <div className={styles.campoCheckbox}>
+            <section className={styles.toolbar}>
+                <div className={styles.filtros}>
+                    <div className={styles.buscaWrapper}>
                         <input
-                            id="disponivel"
-                            type="checkbox"
-                            checked={form.disponivel}
-                            onChange={e => { setForm(f => ({ ...f, disponivel: e.target.checked })); }}
+                            type="text"
+                            placeholder="Buscar por nome ou descrição..."
+                            value={busca}
+                            onChange={(e) => { setBusca(e.target.value); }}
                         />
-                        <label htmlFor="disponivel">Produto disponível imediatamente</label>
                     </div>
-
-                    <div className={styles.acoesForm}>
-                        {form.id !== undefined && form.id !== '' ? (
-                            <Botao variante="secundario" onClick={limparFormulario}>
-                                Cancelar edição
-                            </Botao>
-                        ) : null}
-                        <Botao type="submit">
-                            {(form.id ?? '') !== '' ? 'Salvar alterações' : 'Adicionar produto'}
-                        </Botao>
-                    </div>
-                </form>
+                    <select
+                        className={styles.filtroCategoria}
+                        value={filtroCategoria}
+                        onChange={(e) => { setFiltroCategoria(e.target.value); }}
+                    >
+                        <option value="">Todas as categorias</option>
+                        {categoriasOrdenadas.map(cat => (
+                            <option key={cat.id} value={cat.id}>{cat.nome}</option>
+                        ))}
+                    </select>
+                </div>
             </section>
 
-            <section className={styles.lista}>
-                <h2 className={styles.sectionTitle}>Itens cadastrados</h2>
-                {produtos.length === 0 ? (
-                    <p className={styles.vazio}>Nenhum produto cadastrado ainda.</p>
-                ) : (
-                    <div className={styles.grid}>
-                        {produtos.map(produto => {
-                            const categoria = categorias.find(cat => cat.id === produto.idCategoria);
-                            return (
-                                <CardProdutoAdmin
-                                    key={produto.id}
-                                    produto={produto}
-                                    categoria={categoria?.nome ?? 'Sem categoria'}
-                                    onEditar={() => { handleEditar(produto.id); }}
-                                    onRemover={() => { void handleRemover(produto.id); }}
-                                    onAlternarDisponivel={() => {
-                                        void alternarDisponibilidade(produto.id)
-                                            .catch((erro: unknown) => { console.error('[ProdutosAdmin] Falha ao alternar', erro); });
-                                    }}
+            {modalAberto && (
+                <div className={styles.overlay}>
+                    <section className={`${styles.formCard} ${styles.modal}`}>
+                        <div className={styles.modalHeader}>
+                            <div>
+                                <p className={styles.sectionLabel}>{(form.id ?? '') !== '' ? 'Editar produto' : 'Novo produto'}</p>
+                                <h2 className={styles.sectionTitle}>{(form.id ?? '') !== '' ? 'Atualize os dados' : 'Preencha para adicionar'}</h2>
+                            </div>
+                            <button 
+                                type="button"
+                                className={styles.botaoFechar}
+                                onClick={limparFormulario}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <form
+                            className={styles.form}
+                            onSubmit={(event) => {
+                                void handleSubmit(event);
+                            }}
+                        >
+                            <div className={styles.col2}>
+                                <div className={styles.campo}>
+                                    <label>Nome</label>
+                                    <input
+                                        value={form.nome}
+                                        onChange={e => { setForm(f => ({ ...f, nome: e.target.value })); }}
+                                        placeholder="Ex: X-Burger Clássico"
+                                        required
+                                        autoFocus
+                                    />
+                                </div>
+
+                                <div className={styles.campo}>
+                                    <label>Preço (R$)</label>
+                                    <input
+                                        value={form.preco}
+                                        onChange={e => { setForm(f => ({ ...f, preco: e.target.value })); }}
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        placeholder="25.00"
+                                        required
+                                    />
+                                </div>
+                            </div>
+
+                            <div className={styles.campo}>
+                                <label>Categoria</label>
+                                <select
+                                    value={form.idCategoria}
+                                    onChange={e => { setForm(f => ({ ...f, idCategoria: e.target.value })); }}
+                                    required
+                                >
+                                    <option value="">Selecione uma categoria</option>
+                                    {categoriasOrdenadas.map(cat => (
+                                        <option key={cat.id} value={cat.id}>{cat.nome}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className={styles.campo}>
+                                <label>Descrição</label>
+                                <textarea
+                                    value={form.descricao}
+                                    onChange={e => { setForm(f => ({ ...f, descricao: e.target.value })); }}
+                                    rows={3}
+                                    placeholder="Detalhes para a cozinha ou cliente"
                                 />
-                            );
-                        })}
-                    </div>
+                            </div>
+
+                            <div className={styles.campoCheckbox}>
+                                <input
+                                    id="disponivel"
+                                    type="checkbox"
+                                    checked={form.disponivel}
+                                    onChange={e => { setForm(f => ({ ...f, disponivel: e.target.checked })); }}
+                                />
+                                <label htmlFor="disponivel">Produto disponível imediatamente</label>
+                            </div>
+
+                            <div className={styles.acoesForm}>
+                                <Botao variante="secundario" onClick={limparFormulario}>
+                                    Cancelar
+                                </Botao>
+                                <Botao type="submit">
+                                    {(form.id ?? '') !== '' ? 'Salvar alterações' : 'Adicionar produto'}
+                                </Botao>
+                            </div>
+                        </form>
+                    </section>
+                </div>
+            )}
+
+            <section className={styles.lista}>
+                {produtosFiltrados.length === 0 ? (
+                    <p className={styles.vazio}>Nenhum produto encontrado.</p>
+                ) : (
+                    Object.entries(produtosAgrupados).map(([categoriaNome, itens]) => (
+                        <div key={categoriaNome} className={styles.grupoCategoria}>
+                            <h3 className={styles.categoriaTitulo}>
+                                {categoriaNome} 
+                                <span className={styles.contador}>{itens.length}</span>
+                            </h3>
+                            <div className={styles.grid}>
+                                {itens.map(produto => (
+                                    <CardProdutoAdmin
+                                        key={produto.id}
+                                        produto={produto}
+                                        categoria={categoriaNome === 'Resultados da busca' || categoriaNome === 'Outros' 
+                                            ? (categorias.find(c => c.id === produto.idCategoria)?.nome ?? 'Sem categoria')
+                                            : categoriaNome
+                                        }
+                                        onEditar={() => { handleEditar(produto.id); }}
+                                        onRemover={() => { void handleRemover(produto.id); }}
+                                        onAlternarDisponivel={() => {
+                                            void alternarDisponibilidade(produto.id)
+                                                .catch((erro: unknown) => { console.error('[ProdutosAdmin] Falha ao alternar', erro); });
+                                        }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    ))
                 )}
             </section>
         </div>
