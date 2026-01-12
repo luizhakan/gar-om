@@ -248,23 +248,24 @@ export function ProdutosAdmin() {
                                 />
                             </div>
 
-                            <div className={styles.campoCheckbox}>
-                                <input
-                                    id="disponivel"
-                                    type="checkbox"
-                                    checked={form.disponivel}
-                                    onChange={e => { setForm(f => ({ ...f, disponivel: e.target.checked })); }}
-                                />
-                                <label htmlFor="disponivel">Produto disponível imediatamente</label>
-                            </div>
+                            <div className={styles.formFooter}>
+                                <label className={styles.campoCheckbox}>
+                                    <input
+                                        type="checkbox"
+                                        checked={form.disponivel}
+                                        onChange={e => { setForm(f => ({ ...f, disponivel: e.target.checked })); }}
+                                    />
+                                    <span>Produto disponível imediatamente</span>
+                                </label>
 
-                            <div className={styles.acoesForm}>
-                                <Botao variante="secundario" onClick={limparFormulario}>
-                                    Cancelar
-                                </Botao>
-                                <Botao type="submit">
-                                    {(form.id ?? '') !== '' ? 'Salvar alterações' : 'Adicionar produto'}
-                                </Botao>
+                                <div className={styles.acoesForm}>
+                                    <Botao variante="secundario" onClick={limparFormulario}>
+                                        Cancelar
+                                    </Botao>
+                                    <Botao type="submit">
+                                        {(form.id ?? '') !== '' ? 'Salvar' : 'Adicionar'}
+                                    </Botao>
+                                </div>
                             </div>
                         </form>
                     </section>
