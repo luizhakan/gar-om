@@ -2,7 +2,7 @@
 
 > Campanha de aquisição do **Garçom Ágil**: assinatura anual com super desconto para os **10 primeiros** lojistas, oferecida **apenas durante o trial**, criando dupla urgência (tempo + escassez).
 
-Documento de planejamento — descreve o desenho acordado. Ainda **não implementado** na codebase.
+Documento de planejamento — descreve o desenho acordado. **Implementado em 2026-06-19.**
 
 ---
 
@@ -102,38 +102,38 @@ foundingNumber    Int?        // opcional: "Fundador #3", útil para marketing
 Marque conforme for entregando. A ordem respeita as dependências (banco → catálogo → backend → auth → frontend → validação).
 
 ### Fase 1 — Banco de dados
-- [ ] Adicionar `foundingMemberAt DateTime?` no model `Restaurante` (`backend/prisma/schema.prisma`)
-- [ ] Adicionar `foundingNumber Int?` no model `Restaurante` (opcional, p/ "Fundador #N")
-- [ ] Criar e aplicar a migration (`npx prisma migrate dev`)
-- [ ] Rodar `npx prisma generate` para atualizar o client
+- [x] Adicionar `foundingMemberAt DateTime?` no model `Restaurante` (`backend/prisma/schema.prisma`)
+- [x] Adicionar `foundingNumber Int?` no model `Restaurante` (opcional, p/ "Fundador #N")
+- [x] Criar e aplicar a migration (`npx prisma migrate dev`) — `20260619184331_add_founding_member_and_plan_code`
+- [x] Rodar `npx prisma generate` para atualizar o client
 
 ### Fase 2 — Catálogo de planos (server-side)
-- [ ] Criar `backend/src/pagamentos/planos.ts` com o mapa `planCode → { durationMonths, priceCents, label }` (`mensal`, `trimestral`, `anual`, `founder`)
-- [ ] Implementar função `precoEElegibilidade(planCode, restaurante)` que calcula preço e valida regras
-- [ ] Founder: só retornar R$ 500 se `trialing` E `trialEndsAt > agora` E `foundingMemberAt == null` E `count(fundadores) < 10`
+- [x] Criar `backend/src/pagamentos/planos.ts` com o mapa `planCode → { durationMonths, priceCents, label }` (`mensal`, `trimestral`, `anual`, `founder`)
+- [x] Implementar função `precoEElegibilidade(planCode, restaurante)` que calcula preço e valida regras
+- [x] Founder: só retornar R$ 500 se `trialing` E `trialEndsAt > agora` E `foundingMemberAt == null` E `count(fundadores) < 10`
 
 ### Fase 3 — Backend / pagamentos (`pagamentos.service.ts`)
-- [ ] `createCheckoutPreference`: receber `planCode` (não `planDurationMonths`)
-- [ ] `createCheckoutPreference`: calcular preço no backend pelo catálogo (nunca confiar no cliente)
-- [ ] `createCheckoutPreference`: validar vaga de fundador no ato
-- [ ] `createCheckoutPreference`: codificar `external_reference` como `sub-{restauranteId}-{planCode}-{ts}`
-- [ ] `updateRestauranteSubscription`: trocar `now + duração` por **`max(now, trialEndsAt) + duração`** (cumulativo)
-- [ ] `updateRestauranteSubscription`: se `planCode === 'founder'`, setar `foundingMemberAt`, `foundingNumber` e `planLabel = 'Fundador'`
-- [ ] `processWebhook`: extrair também o `planCode` do `external_reference` (hoje fixa `planDurationMonths: 1`)
-- [ ] `processWebhook`: revalidar `count < 10` na aprovação (consumo da vaga acontece aqui)
-- [ ] Novo endpoint `vagasFundador()` → `{ elegivel, vagasRestantes }` para a UI
+- [x] `createCheckoutPreference`: receber `planCode` (não `planDurationMonths`)
+- [x] `createCheckoutPreference`: calcular preço no backend pelo catálogo (nunca confiar no cliente)
+- [x] `createCheckoutPreference`: validar vaga de fundador no ato
+- [x] `createCheckoutPreference`: codificar `external_reference` como `sub-{restauranteId}-{planCode}-{ts}`
+- [x] `updateRestauranteSubscription`: trocar `now + duração` por **`max(now, trialEndsAt) + duração`** (cumulativo)
+- [x] `updateRestauranteSubscription`: se `planCode === 'founder'`, setar `foundingMemberAt`, `foundingNumber` e `planLabel = 'Fundador'`
+- [x] `processWebhook`: extrair também o `planCode` do `external_reference` (hoje fixa `planDurationMonths: 1`)
+- [x] `processWebhook`: revalidar `count < 10` na aprovação (consumo da vaga acontece aqui)
+- [x] Novo endpoint `vagasFundador()` → `{ elegivel, vagasRestantes }` para a UI
 
 ### Fase 4 — Auth
-- [ ] `backend/src/auth/auth.service.ts`: `TRIAL_DIAS = 14 → 7`
+- [x] `backend/src/auth/auth.service.ts`: `TRIAL_DIAS = 14 → 7`
 
 ### Fase 5 — Frontend (`frontend/src/pages/Admin/Assinatura.tsx`)
-- [ ] Buscar elegibilidade/vagas no endpoint novo
-- [ ] Exibir card **Fundador em destaque quando elegível** ("restam X de 10 vagas")
-- [ ] Mostrar os planos também durante o trial (hoje só aparecem em `assinaturaInativa`)
-- [ ] Trocar `abrirCheckout(1|3|12)` por `planCode`
+- [x] Buscar elegibilidade/vagas no endpoint novo
+- [x] Exibir card **Fundador em destaque quando elegível** ("restam X de 10 vagas")
+- [x] Mostrar os planos também durante o trial (hoje só aparecem em `assinaturaInativa`)
+- [x] Trocar `abrirCheckout(1|3|12)` por `planCode`
 
 ### Fase 6 — Segurança e validação
-- [ ] Corrigir/desativar `POST /pagamentos` (cartão direto) que confia no `transaction_amount` do cliente
+- [x] Corrigir `POST /pagamentos` (cartão direto): `transaction_amount` agora calculado no backend pelo `planCode` (cliente não controla o preço)
 - [ ] Testar fluxo de ponta a ponta com webhook (ngrok em dev)
 - [ ] Testar limite global: o 11º fundador não consegue assinar como fundador
 - [ ] Testar cumulativo: comprar durante o trial soma os dias restantes

@@ -1,5 +1,7 @@
 import { requestAutenticado } from './requestAutenticado';
 
+export type PlanCode = 'mensal' | 'trimestral' | 'anual' | 'founder';
+
 export interface PayerIdentification {
     type: string;
     number: string;
@@ -12,12 +14,11 @@ export interface Payer {
 
 export interface CreatePaymentDto {
     token: string;
-    transactionAmount: number;
-    description: string;
+    planCode: PlanCode;
+    description?: string;
     installments: number;
     paymentMethodId: string;
     payer: Payer;
-    planDurationMonths?: number;
 }
 
 export interface Pagamento {
@@ -42,7 +43,14 @@ export interface Restaurante {
     trialEndsAt: string;
     blockedAt: string | null;
     planLabel: string | null;
+    foundingMemberAt: string | null;
+    foundingNumber: number | null;
     pagamentos: Pagamento[];
+}
+
+export interface VagasFundador {
+    elegivel: boolean;
+    vagasRestantes: number;
 }
 
 export function verificarBloqueioAssinatura(restaurante: Restaurante): {
@@ -51,8 +59,7 @@ export function verificarBloqueioAssinatura(restaurante: Restaurante): {
     mensagem: string;
 } {
     const statusPermitidos = ['trialing', 'active'];
-    
-    // Se o status não é permitido, bloqueia imediatamente
+
     if (!statusPermitidos.includes(restaurante.subscriptionStatus)) {
         return {
             bloqueado: true,
@@ -61,7 +68,6 @@ export function verificarBloqueioAssinatura(restaurante: Restaurante): {
         };
     }
 
-    // Se está em trialing, verifica se não expirou
     if (restaurante.subscriptionStatus === 'trialing') {
         const agora = new Date();
         const dataVencimento = new Date(restaurante.trialEndsAt);
@@ -77,11 +83,7 @@ export function verificarBloqueioAssinatura(restaurante: Restaurante): {
         }
     }
 
-    return {
-        bloqueado: false,
-        diasAtraso: 0,
-        mensagem: '',
-    };
+    return { bloqueado: false, diasAtraso: 0, mensagem: '' };
 }
 
 export const ServicoPagamentos = {
@@ -104,17 +106,20 @@ export const ServicoPagamentos = {
         });
     },
 
-    /**
-     * Cria uma preference de checkout do Mercado Pago (aceita PIX, boleto, cartão)
-     */
-    async criarCheckout(planDurationMonths: number = 1): Promise<{ 
-        preferenceId: string; 
-        initPoint: string; 
+    async criarCheckout(planCode: PlanCode = 'mensal'): Promise<{
+        preferenceId: string;
+        initPoint: string;
         sandboxInitPoint: string;
     }> {
         return requestAutenticado('/pagamentos/checkout', {
             method: 'POST',
-            body: JSON.stringify({ planDurationMonths }),
+            body: JSON.stringify({ planCode }),
+        });
+    },
+
+    async obterVagasFundador(): Promise<VagasFundador> {
+        return requestAutenticado<VagasFundador>('/pagamentos/vagas-fundador', {
+            method: 'GET',
         });
     },
 };

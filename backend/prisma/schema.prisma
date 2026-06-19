@@ -52,6 +52,8 @@ model Restaurante {
   billingEmail             String?
   billingPhone             String?
   blockedAt                DateTime?
+  foundingMemberAt         DateTime?
+  foundingNumber           Int?
   createdAt                DateTime            @default(now())
   updatedAt                DateTime            @updatedAt
 }
@@ -238,7 +240,8 @@ model Pagamento {
   payerIdentification  Json?          // {type: "CPF/CNPJ", number: "123456789"}
   cardToken            String?
   idempotencyKey       String         @unique
-  planDurationMonths   Int            @default(1) // Duração do plano em meses
+  planDurationMonths   Int            @default(1)
+  planCode             String?
   createdAt            DateTime       @default(now())
   updatedAt            DateTime       @updatedAt
   restaurante          Restaurante    @relation(fields: [restauranteId], references: [id])

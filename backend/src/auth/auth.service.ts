@@ -14,7 +14,7 @@ const ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutos
 const REFRESH_TTL_DAYS = 14; // expiração absoluta
 const REFRESH_INACTIVITY_DAYS = 5; // expiração por inatividade
 const SENHA_PADRAO_COZINHA = process.env.SENHA_PADRAO_COZINHA ?? 'cozinha123';
-const TRIAL_DIAS = 14;
+const TRIAL_DIAS = 7;
 
 @Injectable()
 export class AuthService {
@@ -114,7 +114,7 @@ export class AuthService {
                 trialStartedAt: agora,
                 trialEndsAt: trialTerminaEm,
                 subscriptionStatus: SubscriptionStatus.trialing,
-                planLabel: 'Trial 14 dias',
+                planLabel: 'Trial 7 dias',
             },
         });
 
