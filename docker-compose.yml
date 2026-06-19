@@ -8,22 +8,13 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-your_password_here}
       POSTGRES_DB: garcom
-    ports:
-      - "54321:5432"
     volumes:
       - garcom_db_data:/var/lib/postgresql/data
-
-  db-test:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: garcom_test
-    ports:
-      - "5433:5432"
-    tmpfs:
-      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d garcom"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     build:
@@ -31,68 +22,36 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgres://admin:${POSTGRES_PASSWORD:-your_password_here}@db:5432/garcom
+      DATABASE_URL: postgres://admin:${POSTGRES_PASSWORD_URL:-your_password_here}@db:5432/garcom
       AUTH_SECRET: ${AUTH_SECRET:-change-me}
       FRONTEND_URL: https://garcomagil.com
-      CORS_ORIGIN: https://garcomagil.com,https://www.garcomagil.com,https://admin.garcomagil.com
+      CORS_ORIGIN: https://garcomagil.com,https://www.garcomagil.com
+      API_URL: ${API_URL:-https://garcomagil.com/api}
+      API_BASE_URL: ${API_URL:-https://garcomagil.com/api}
       MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:-your_access_token_here}
       MERCADO_PAGO_PUBLIC_KEY: ${MERCADO_PAGO_PUBLIC_KEY:-your_public_key_here}
+      MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET:-}
       MERCADO_PAGO_WEBHOOK_URL: https://garcomagil.com/api/webhooks/mercadopago
     command: sh -c "npx prisma migrate deploy && node dist/main.js"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
-      - "3001:3001"
+      - "127.0.0.1:3001:3001"
+    volumes:
+      - garcom_uploads:/app/uploads
     restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       args:
-        VITE_API_URL: https://garcomagil.com/api
+        VITE_API_URL: ${VITE_API_URL:-https://garcomagil.com/api}
         VITE_MERCADO_PAGO_PUBLIC_KEY: ${VITE_MERCADO_PAGO_PUBLIC_KEY:-your_public_key_here}
-    environment:
-      VITE_API_URL: ${VITE_API_URL:-https://garcomagil.com/api}
-      VITE_MERCADO_PAGO_PUBLIC_KEY: ${VITE_MERCADO_PAGO_PUBLIC_KEY:-your_public_key_here}
     ports:
-      - "4173:80"
+      - "127.0.0.1:4173:80"
     restart: unless-stopped
-
-  nginx:
-    build:
-      context: ./nginx
-    depends_on:
-      - frontend
-      - backend
-    environment:
-      CERTBOT_DOMAIN: ${CERTBOT_DOMAIN:-garcomagil.com}
-    command: >
-      sh -c "DOMAIN=${CERTBOT_DOMAIN:-garcomagil.com};
-             if [ ! -f /etc/letsencrypt/live/$$DOMAIN/fullchain.pem ]; then
-               echo 'Certificado não encontrado, gerando self-signed provisório';
-               mkdir -p /etc/letsencrypt/live/$$DOMAIN;
-               openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
-                 -keyout /etc/letsencrypt/live/$$DOMAIN/privkey.pem \
-                 -out /etc/letsencrypt/live/$$DOMAIN/fullchain.pem \
-                 -subj \"/CN=$$DOMAIN\";
-             fi;
-             while :; do sleep 12h; nginx -s reload; done &
-             exec nginx -g 'daemon off;'"
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-      - /var/www/certbot:/var/www/certbot
-    restart: unless-stopped
-    networks:
-      - default
-      - proxy
 
 volumes:
   garcom_db_data:
-
-networks:
-  proxy:
-    external: true
+  garcom_uploads:
