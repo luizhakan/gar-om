@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { Home } from './pages/Home';
+import { Privacidade } from './pages/Privacidade';
 import { DashboardAdmin } from './pages/Admin/Dashboard';
 import { CategoriasAdmin } from './pages/Admin/Categorias';
 import { ProdutosAdmin } from './pages/Admin/Produtos';
@@ -23,6 +24,11 @@ export const router = createBrowserRouter([
     {
         path: '/',
         element: <Home />,
+        errorElement: <PaginaErro />,
+    },
+    {
+        path: '/privacidade',
+        element: <Privacidade />,
         errorElement: <PaginaErro />,
     },
     {

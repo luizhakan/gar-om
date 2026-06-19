@@ -359,6 +359,43 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.rodape {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding: var(--espaco-xl) 0;
+    margin-top: var(--espaco-2xl);
+}
+
+.rodapeContent {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espaco-md);
+    flex-wrap: wrap;
+}
+
+.rodapeBrand {
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--cor-texto-terciario);
+    font-size: 0.9rem;
+}
+
+.rodapeLinks {
+    display: flex;
+    gap: var(--espaco-lg);
+}
+
+.rodapeLinks a {
+    color: var(--cor-texto-secundario);
+    text-decoration: none;
+    font-size: 0.95rem;
+}
+
+.rodapeLinks a:hover {
+    color: var(--cor-primaria);
+}
+
 @media (min-width: 860px) {
     .heroGrid {
         grid-template-columns: 1.1fr 0.9fr;

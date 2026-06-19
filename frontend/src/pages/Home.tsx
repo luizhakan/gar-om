@@ -111,6 +111,17 @@ export function Home() {
 
             </main>
 
+            <footer className={styles.rodape}>
+                <div className="container">
+                    <div className={styles.rodapeContent}>
+                        <span className={styles.rodapeBrand}>Garçom Ágil</span>
+                        <nav className={styles.rodapeLinks}>
+                            <Link to="/privacidade">Política de Privacidade</Link>
+                        </nav>
+                    </div>
+                </div>
+            </footer>
+
             {modalLoginAberto && (
                 <div className={styles.modalOverlay} role="dialog" aria-modal="true">
                     <div className={styles.modalCard}>
