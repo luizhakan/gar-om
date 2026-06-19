@@ -1,21 +1,16 @@
 name: Deploy Production
 
 on:
-  # Roda automaticamente quando há push nas branches principais
   push:
     branches: [ main, master ]
-  
-  # Permite rodar manualmente pela aba "Actions" do GitHub
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # 1. Faz checkout do código para que a action "paths-filter" consiga ler o histórico
       - uses: actions/checkout@v4
 
-      # 2. Detecta quais pastas sofreram alterações neste push
       - uses: dorny/paths-filter@v2
         id: changes
         with:
@@ -24,13 +19,9 @@ jobs:
               - 'backend/**'
             frontend:
               - 'frontend/**'
-            nginx:
-              - 'nginx/**'
             config:
               - 'docker-compose.yml'
-              - '.env.example'
 
-      # 3. Conecta no servidor via SSH e executa os comandos
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -38,77 +29,39 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            # Interrompe o script se qualquer comando falhar
             set -e
 
             echo "🚀 Iniciando Deploy..."
 
-            # --- CLONE INICIAL (se o diretório ainda não existir) ---
-            if [ ! -d "${{ secrets.PROJECT_PATH }}/.git" ]; then
-              echo "📦 Primeiro deploy — clonando repositório..."
-              mkdir -p ${{ secrets.PROJECT_PATH }}
-              git clone ${{ secrets.REPO_URL }} ${{ secrets.PROJECT_PATH }}
-            fi
+            cd /root/garcom-prod
 
-            # Entra na pasta do projeto
-            cd ${{ secrets.PROJECT_PATH }}
-
-            # --- ATUALIZAÇÃO DE CÓDIGO ---
             echo "📥 Atualizando repositório..."
             git fetch --all
-            # Força o código local a ficar igual ao do GitHub (descarta alterações locais não commitadas)
             git reset --hard origin/main
-
-            # --- CONFIGURAÇÃO DE AMBIENTE ---
-            echo "🔐 Atualizando arquivo .env..."
-            # Recria o arquivo .env com o conteúdo da Secret do GitHub
-            echo "${{ secrets.ENV_FILE }}" > .env
-
-            # Configurar .env do frontend
-            echo "🔐 Configurando .env do frontend..."
-            cat > frontend/.env << 'EOF'
-            VITE_API_URL=${{ secrets.VITE_API_URL }}
-            VITE_MERCADO_PAGO_PUBLIC_KEY=${{ secrets.VITE_MERCADO_PAGO_PUBLIC_KEY }}
-            EOF
 
             # --- LÓGICA DE DEPLOY INTELIGENTE ---
 
-            # CASO 1: Mudança Crítica (Docker Compose, Nginx ou Variáveis)
-            # Se mudou a estrutura, precisamos reiniciar tudo para garantir integridade.
-            if [[ "${{ steps.changes.outputs.config }}" == 'true' || "${{ steps.changes.outputs.nginx }}" == 'true' ]]; then
-              echo "⚠️ Mudança estrutural detectada (Config/Nginx). Reiniciando todo o stack..."
+            if [[ "${{ steps.changes.outputs.config }}" == 'true' ]]; then
+              echo "⚠️ docker-compose.yml alterado. Reiniciando todo o stack..."
               docker compose down
               docker compose up -d --build
-            
+
             else
-              # CASO 2: Mudança no Backend
               if [[ "${{ steps.changes.outputs.backend }}" == 'true' ]]; then
                 echo "⚙️ Backend alterado. Reconstruindo imagem..."
                 docker compose up -d --build backend
-                
-                echo "🔄 Reiniciando container do backend..."
-                docker compose up -d --no-recreate backend || docker compose up -d backend
-                
                 echo "Running Migrations..."
                 sleep 10
                 docker compose exec -T backend npx prisma migrate deploy
               fi
 
-              # CASO 3: Mudança no Frontend
               if [[ "${{ steps.changes.outputs.frontend }}" == 'true' ]]; then
                 echo "🎨 Frontend alterado. Reconstruindo imagem..."
                 docker compose up -d --build frontend
-                
-                echo "🔄 Reiniciando container do frontend..."
-                docker compose up -d --no-recreate frontend || docker compose up -d frontend
-                
-                # Reinicia o nginx do host para garantir que os headers anti-cache sejam aplicados
-                echo "🔄 Recarregando nginx do host..."
                 nginx -s reload || true
               fi
             fi
 
-            # Limpeza de imagens antigas para não lotar o disco da VPS
             docker image prune -f
 
             echo "✅ Deploy Finalizado com Sucesso!"
