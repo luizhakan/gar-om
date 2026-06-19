@@ -1,16 +1,16 @@
-import { IsString, IsNumber, IsEmail, IsOptional, IsInt, Min, ValidateNested } from 'class-validator';
+import { IsString, IsOptional, IsInt, Min, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 class PayerIdentificationDto {
     @IsString()
-    type!: string; // CPF, CNPJ, etc
+    type!: string;
 
     @IsString()
     number!: string;
 }
 
 class PayerDto {
-    @IsEmail()
+    @IsString()
     email!: string;
 
     @IsOptional()
@@ -19,35 +19,21 @@ class PayerDto {
     identification?: PayerIdentificationDto;
 }
 
-/**
- * DTO para criar pagamento de ASSINATURA DO RESTAURANTE
- * Não é para pagamento de pedidos dos clientes!
- * 
- * NOTA: Aceita campos em camelCase (do frontend) ou snake_case (backend)
- */
 export class CreatePaymentDto {
-    // Aceita ambos os formatos
-    @IsOptional()
-    @IsNumber()
-    @Min(0.01)
-    transaction_amount?: number;
-
-    @IsOptional()
-    @IsNumber()
-    @Min(0.01)
-    transactionAmount?: number;
+    @IsString()
+    token!: string;
 
     @IsString()
-    token!: string; // Token do cartão gerado pelo frontend
+    planCode!: string; // 'mensal' | 'trimestral' | 'anual' | 'founder'
 
+    @IsOptional()
     @IsString()
-    description!: string; // Ex: "Assinatura Mensal - Garçom"
+    description?: string;
 
     @IsInt()
     @Min(1)
     installments!: number;
 
-    // Aceita ambos os formatos
     @IsOptional()
     @IsString()
     payment_method_id?: string;
@@ -61,12 +47,6 @@ export class CreatePaymentDto {
     payer!: PayerDto;
 
     @IsOptional()
-    @IsInt()
-    @Min(1)
-    planDurationMonths?: number; // Duração do plano (default: 1 mês)
-
-    @IsOptional()
     @IsString()
-    external_reference?: string; // Referência do plano
+    external_reference?: string;
 }
-

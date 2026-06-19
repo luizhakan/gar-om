@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useCarrinho } from '../../hooks/useCarrinho';
 import { ListaProdutos } from '../../components/ListaProdutos';
@@ -15,38 +15,44 @@ export function CardapioCliente() {
     const { idMesa } = useParams();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const { adicionarItem } = useCarrinho();
+    const { adicionarItem, itens } = useCarrinho();
 
     const [produtoSelecionado, setProdutoSelecionado] = useState<Produto | null>(null);
     const [produtos, setProdutos] = useState<Produto[]>([]);
     const [categorias, setCategorias] = useState<Categoria[]>([]);
     const [erro, setErro] = useState<string | null>(null);
     const [carregando, setCarregando] = useState(true);
+    const [categoriaAtiva, setCategoriaAtiva] = useState<string>('');
+    const tabBarRef = useRef<HTMLDivElement>(null);
     const idMesaSeguro = idMesa ?? '';
+
+    // Mapa idProduto → quantidade no carrinho
+    const quantidadesCarrinho = useMemo(
+        () => Object.fromEntries(itens.map(item => [item.idProduto, item.quantidade])),
+        [itens]
+    );
 
     useEffect(() => {
         const restauranteId = searchParams.get('restauranteId');
-        if (restauranteId !== null && restauranteId !== '') {
-            definirSessao(restauranteId, 'cliente');
-        }
+        if (restauranteId) definirSessao(restauranteId, 'cliente');
     }, [searchParams]);
 
     useEffect(() => {
         const restauranteId = searchParams.get('restauranteId');
-        if (restauranteId === null || restauranteId === '') {
+        if (!restauranteId) {
             setErro('Restaurante não informado no QRCode.');
             setCarregando(false);
             return;
         }
 
-        const carregar = async () => {
+        void (async () => {
             try {
                 const [cats, prods] = await Promise.all([
                     ServicoCategorias.listar(restauranteId),
                     ServicoProdutos.listar(restauranteId),
                 ]);
                 setCategorias(cats);
-                setProdutos(prods.filter(p => p.disponivel));
+                setProdutos(prods.filter(p => p.disponivel || !p.disponivel)); // mostra todos, card trata indisponível
                 setErro(null);
             } catch (e) {
                 console.error('[Cardapio] Erro ao carregar', e);
@@ -54,23 +60,29 @@ export function CardapioCliente() {
             } finally {
                 setCarregando(false);
             }
-        };
-
-        void carregar();
+        })();
     }, [searchParams]);
 
-    const handleSelecionarProduto = (produto: Produto) => {
-        setProdutoSelecionado(produto);
-    };
+    // Rola o tab ativo para o centro da tab bar
+    useEffect(() => {
+        if (!categoriaAtiva || !tabBarRef.current) return;
+        const tab = tabBarRef.current.querySelector<HTMLElement>(`[data-tab="${categoriaAtiva}"]`);
+        tab?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }, [categoriaAtiva]);
+
+    function scrollParaCategoria(categoriaId: string) {
+        const el = document.getElementById(`cat-${categoriaId}`);
+        if (!el) return;
+        // scrollIntoView com offset manual para não esconder atrás do header
+        const y = el.getBoundingClientRect().top + window.scrollY - 148;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+
+    const handleSelecionarProduto = (produto: Produto) => setProdutoSelecionado(produto);
 
     const handleConfirmarObservacao = (observacao: string) => {
-        if (produtoSelecionado === null) return;
-
+        if (!produtoSelecionado) return;
         adicionarItem(produtoSelecionado, observacao);
-        setProdutoSelecionado(null);
-    };
-
-    const handleFecharModal = () => {
         setProdutoSelecionado(null);
     };
 
@@ -82,31 +94,60 @@ export function CardapioCliente() {
     if (carregando) {
         return (
             <div className={styles.container}>
-                <div className="container" style={{ paddingTop: '3rem' }}>
-                    <p>Carregando cardápio...</p>
+                <div className={styles.carregando}>
+                    <span className={styles.carregandoPulso} />
+                    Carregando cardápio…
                 </div>
             </div>
         );
     }
 
-    if (erro !== null) {
+    if (erro) {
         return (
             <div className={styles.container}>
-                <div className="container" style={{ paddingTop: '3rem' }}>
-                    <h1>Ops</h1>
-                    <p>{erro}</p>
+                <div className={styles.erroEstado}>
+                    <p>Ops — {erro}</p>
                 </div>
             </div>
         );
     }
+
+    const categoriasComProdutos = categorias.filter(cat =>
+        produtos.some(p => p.idCategoria === cat.id)
+    );
 
     return (
         <div className={styles.container}>
             <header className={styles.cabecalho}>
                 <div className="container">
-                    <h1 className={styles.titulo}>Mesa {idMesaSeguro}</h1>
-                    <p className={styles.subtitulo}>Escolha seus itens</p>
+                    <div className={styles.cabecalhoTopo}>
+                        <div>
+                            <p className={styles.mesaLabel}>Mesa</p>
+                            <h1 className={styles.titulo}>{idMesaSeguro}</h1>
+                        </div>
+                        <p className={styles.subtitulo}>
+                            {produtos.filter(p => p.disponivel).length} itens disponíveis
+                        </p>
+                    </div>
                 </div>
+
+                {/* Tab bar de categorias */}
+                {categoriasComProdutos.length > 1 && (
+                    <div className={styles.tabBarWrap} ref={tabBarRef}>
+                        <div className={styles.tabBar}>
+                            {categoriasComProdutos.map(cat => (
+                                <button
+                                    key={cat.id}
+                                    data-tab={cat.id}
+                                    className={`${styles.tabPill} ${categoriaAtiva === cat.id ? styles.tabPillAtiva : ''}`}
+                                    onClick={() => scrollParaCategoria(cat.id)}
+                                >
+                                    {cat.nome}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </header>
 
             <main className={`container ${styles.conteudoPrincipal}`}>
@@ -114,6 +155,8 @@ export function CardapioCliente() {
                     produtos={produtos}
                     categorias={categorias}
                     aoClicarProduto={handleSelecionarProduto}
+                    quantidadesCarrinho={quantidadesCarrinho}
+                    aoMudarCategoria={setCategoriaAtiva}
                 />
             </main>
 
@@ -123,7 +166,7 @@ export function CardapioCliente() {
                 aberto={!!produtoSelecionado}
                 produto={produtoSelecionado}
                 aoConfirmar={handleConfirmarObservacao}
-                aoCancelar={handleFecharModal}
+                aoCancelar={() => setProdutoSelecionado(null)}
             />
         </div>
     );

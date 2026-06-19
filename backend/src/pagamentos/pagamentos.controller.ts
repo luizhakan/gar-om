@@ -1,9 +1,10 @@
-import { Controller, Post, Body, Get, Param, UseGuards, Query } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, BadRequestException } from '@nestjs/common';
 import { PagamentosService } from './pagamentos.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
 import { UsuarioAutenticado } from '../auth/auth-user.decorator';
 import { AuthGuard } from '../auth/auth.guard';
 import { SkipSubscriptionCheck } from '../auth/subscription.guard';
+import { isValidPlanCode, PlanCode } from './planos';
 
 @Controller('pagamentos')
 @UseGuards(AuthGuard)
@@ -12,7 +13,7 @@ export class PagamentosController {
     constructor(private readonly pagamentosService: PagamentosService) {}
 
     /**
-     * Cria um novo pagamento (método antigo com cartão)
+     * Cria pagamento direto com cartão
      * POST /pagamentos
      */
     @Post()
@@ -20,27 +21,32 @@ export class PagamentosController {
         @Body() createPaymentDto: CreatePaymentDto,
         @UsuarioAutenticado() usuario: any,
     ) {
-        // Normaliza campos camelCase para snake_case
-        const normalizedDto: CreatePaymentDto = {
-            ...createPaymentDto,
-            transaction_amount: createPaymentDto.transaction_amount || createPaymentDto.transactionAmount,
-            payment_method_id: createPaymentDto.payment_method_id || createPaymentDto.paymentMethodId,
-        };
-
-        return this.pagamentosService.createPayment(normalizedDto, usuario.restauranteId);
+        return this.pagamentosService.createPayment(createPaymentDto, usuario.restauranteId);
     }
 
     /**
-     * Cria uma preference de checkout do Mercado Pago (aceita PIX, boleto, cartão)
+     * Cria preferência de checkout (PIX, boleto, cartão)
      * POST /pagamentos/checkout
      */
     @Post('checkout')
     async createCheckout(
-        @Body() body: { planDurationMonths?: number },
+        @Body() body: { planCode?: string },
         @UsuarioAutenticado() usuario: any,
     ) {
-        const planDurationMonths = body.planDurationMonths || 1;
-        return this.pagamentosService.createCheckoutPreference(usuario.restauranteId, planDurationMonths);
+        const planCode = body.planCode || 'mensal';
+        if (!isValidPlanCode(planCode)) {
+            throw new BadRequestException(`planCode inválido: ${planCode}`);
+        }
+        return this.pagamentosService.createCheckoutPreference(usuario.restauranteId, planCode as PlanCode);
+    }
+
+    /**
+     * Retorna elegibilidade e vagas do Plano Fundador
+     * GET /pagamentos/vagas-fundador
+     */
+    @Get('vagas-fundador')
+    async vagasFundador(@UsuarioAutenticado() usuario: any) {
+        return this.pagamentosService.vagasFundador(usuario.restauranteId);
     }
 
     /**

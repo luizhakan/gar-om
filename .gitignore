@@ -14,9 +14,11 @@ dist-ssr
 
 # Environment files
 .env
+.env.producao
 .env.local
 .env.*.local
 !.env.example
+!.env.producao.example
 !.env.test
 
 # Editor directories and files

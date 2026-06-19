@@ -7,11 +7,16 @@ import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { IoAdapter } from '@nestjs/platform-socket.io';
 import { corsWhitelist } from './whitelist';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { UPLOADS_ROOT } from './uploads/uploads.controller';
 
 async function bootstrap() {
-    const app = await NestFactory.create(AppModule, {
-        bodyParser: true, // Habilita body parser
+    const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+        bodyParser: true,
     });
+
+    // Serve uploaded images as static files at /uploads/:restauranteId/:filename
+    app.useStaticAssets(UPLOADS_ROOT, { prefix: '/uploads/' });
     app.useWebSocketAdapter(new IoAdapter(app));
     app.use(helmet());
 

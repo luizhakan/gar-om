@@ -1,0 +1,61 @@
+services:
+  garcom_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?configure POSTGRES_PASSWORD}
+      POSTGRES_DB: garcom
+    volumes:
+      - garcom_db_data:/var/lib/postgresql/data
+    networks:
+      - garcom_interna
+
+  backend:
+    image: garcom_agil_backend:latest
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://admin:${POSTGRES_PASSWORD_URL:?configure POSTGRES_PASSWORD_URL}@garcom_db:5432/garcom?schema=public
+      AUTH_SECRET: ${AUTH_SECRET:?configure AUTH_SECRET}
+      FRONTEND_URL: https://garcomagil.com
+      CORS_ORIGIN: https://garcomagil.com,https://www.garcomagil.com
+      API_BASE_URL: https://garcomagil.com/api
+      MERCADO_PAGO_ACCESS_TOKEN: ${MERCADO_PAGO_ACCESS_TOKEN:?configure MERCADO_PAGO_ACCESS_TOKEN}
+      MERCADO_PAGO_PUBLIC_KEY: ${MERCADO_PAGO_PUBLIC_KEY:?configure MERCADO_PAGO_PUBLIC_KEY}
+      MERCADO_PAGO_WEBHOOK_SECRET: ${MERCADO_PAGO_WEBHOOK_SECRET:?configure MERCADO_PAGO_WEBHOOK_SECRET}
+      MERCADO_PAGO_WEBHOOK_URL: https://garcomagil.com/api/webhooks/mercadopago
+    networks:
+      garcom_interna:
+        aliases:
+          - backend
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+
+  frontend:
+    image: garcom_agil_frontend:latest
+    networks:
+      - garcom_interna
+      - traefik_public
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      labels:
+        traefik.enable: "true"
+        traefik.docker.network: traefik_public
+        traefik.http.routers.garcom_agil.entrypoints: websecure
+        traefik.http.routers.garcom_agil.rule: Host(`garcomagil.com`) || Host(`www.garcomagil.com`)
+        traefik.http.routers.garcom_agil.tls: "true"
+        traefik.http.routers.garcom_agil.tls.certresolver: le
+        traefik.http.services.garcom_agil.loadbalancer.server.port: "80"
+
+volumes:
+  garcom_db_data:
+
+networks:
+  garcom_interna:
+  traefik_public:
+    external: true

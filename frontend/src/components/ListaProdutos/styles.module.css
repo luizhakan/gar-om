@@ -1,18 +1,15 @@
 .container {
     display: flex;
     flex-direction: column;
-    gap: var(--espaco-xl);
+    gap: var(--espaco-2xl);
 }
 
 .secaoCategoria {
     display: flex;
     flex-direction: column;
     gap: var(--espaco-lg);
-    background: rgba(15, 19, 26, 0.7);
-    border: 1px solid var(--cor-borda);
-    border-radius: var(--raio-xl);
-    padding: var(--espaco-lg);
-    box-shadow: var(--sombra-suave);
+    /* Offset para não ficar atrás do header sticky (header ~88px + tabbar ~48px + buffer) */
+    scroll-margin-top: 148px;
 }
 
 .tituloCategoria {
@@ -20,9 +17,8 @@
     font-weight: var(--peso-negrito);
     color: var(--cor-texto-primario);
     margin: 0;
-    padding-bottom: var(--espaco-xs);
-    border-bottom: 0.125rem solid var(--cor-primaria);
     letter-spacing: -0.01em;
+    padding-left: 0.1rem;
 }
 
 .grade {
@@ -31,7 +27,6 @@
     gap: var(--espaco-md);
 }
 
-/* Responsividade */
 @media (max-width: 48rem) {
     .grade {
         grid-template-columns: 1fr;
