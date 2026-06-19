@@ -361,6 +361,11 @@ export class AuthService {
             throw new NotFoundException('Restaurante não encontrado');
         }
 
-        return restaurante;
+        // BigInt não é serializável para JSON — converte para string
+        return {
+            ...restaurante,
+            storageUsedBytes: restaurante.storageUsedBytes.toString(),
+        };
     }
 }
+

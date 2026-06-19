@@ -1,5 +1,6 @@
 import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { ServicoUploads } from '../../services/ServicoUploads';
 import { useAdmin } from '../../hooks/useAdmin';
 import { CardProdutoAdmin } from '../../components/CardProdutoAdmin';
 import { Botao } from '../../components/Botao';
@@ -12,6 +13,7 @@ interface EstadoFormulario {
     preco: string;
     idCategoria: string;
     disponivel: boolean;
+    imagemUrl: string;
 }
 
 const estadoInicial: EstadoFormulario = {
@@ -20,6 +22,7 @@ const estadoInicial: EstadoFormulario = {
     preco: '',
     idCategoria: '',
     disponivel: true,
+    imagemUrl: '',
 };
 
 export function ProdutosAdmin() {
@@ -28,6 +31,9 @@ export function ProdutosAdmin() {
     const [modalAberto, setModalAberto] = useState(false);
     const [busca, setBusca] = useState('');
     const [filtroCategoria, setFiltroCategoria] = useState('');
+    const [enviandoImagem, setEnviandoImagem] = useState(false);
+    const [erroUpload, setErroUpload] = useState<string | null>(null);
+    const inputArquivoRef = useRef<HTMLInputElement>(null);
 
     const categoriasOrdenadas = useMemo(
         () => [...categorias].sort((a, b) => a.ordem - b.ordem),
@@ -86,6 +92,8 @@ export function ProdutosAdmin() {
         if (Number.isNaN(precoNumber)) return;
         if (restauranteId === undefined || restauranteId === '') return;
 
+        const imagemUrl = (form.imagemUrl ?? '').trim() || undefined;
+
         try {
             if (form.id !== undefined && form.id !== '') {
                 await atualizarProduto({
@@ -95,6 +103,7 @@ export function ProdutosAdmin() {
                     preco: precoNumber,
                     idCategoria: categoriaId,
                     disponivel: form.disponivel,
+                    imagemUrl,
                     restauranteId,
                 });
             } else {
@@ -104,6 +113,7 @@ export function ProdutosAdmin() {
                     preco: precoNumber,
                     idCategoria: categoriaId,
                     disponivel: form.disponivel,
+                    imagemUrl,
                 });
             }
         } catch (erro) {
@@ -124,6 +134,7 @@ export function ProdutosAdmin() {
             preco: String(produto.preco),
             idCategoria: produto.idCategoria,
             disponivel: produto.disponivel,
+            imagemUrl: produto.imagemUrl ?? '',
         });
         setModalAberto(true);
     }
@@ -135,6 +146,23 @@ export function ProdutosAdmin() {
         const confirmar = window.confirm(`Remover "${produto.nome}" do cardápio?`);
         if (confirmar) {
             await removerProduto(idProduto);
+        }
+    }
+
+    async function handleUploadArquivo(event: React.ChangeEvent<HTMLInputElement>) {
+        const arquivo = event.target.files?.[0];
+        if (!arquivo) return;
+
+        setEnviandoImagem(true);
+        setErroUpload(null);
+        try {
+            const resultado = await ServicoUploads.uploadImagem(arquivo);
+            setForm(f => ({ ...f, imagemUrl: resultado.url }));
+        } catch (err) {
+            setErroUpload(err instanceof Error ? err.message : 'Falha ao enviar imagem');
+        } finally {
+            setEnviandoImagem(false);
+            if (inputArquivoRef.current) inputArquivoRef.current.value = '';
         }
     }
 
@@ -246,6 +274,45 @@ export function ProdutosAdmin() {
                                     rows={3}
                                     placeholder="Detalhes para a cozinha ou cliente"
                                 />
+                            </div>
+
+                            <div className={styles.campo}>
+                                <label>Imagem</label>
+                                <div className={styles.imagemRow}>
+                                    <input
+                                        value={form.imagemUrl}
+                                        onChange={e => { setForm(f => ({ ...f, imagemUrl: e.target.value })); }}
+                                        type="text"
+                                        placeholder="URL externa ou clique em Enviar"
+                                        className={styles.imagemInput}
+                                    />
+                                    <input
+                                        ref={inputArquivoRef}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp,image/gif"
+                                        className={styles.inputArquivoHidden}
+                                        onChange={e => { void handleUploadArquivo(e); }}
+                                    />
+                                    <button
+                                        type="button"
+                                        className={styles.btnUpload}
+                                        disabled={enviandoImagem}
+                                        onClick={() => inputArquivoRef.current?.click()}
+                                    >
+                                        {enviandoImagem ? '…' : '↑ Enviar'}
+                                    </button>
+                                </div>
+                                {erroUpload && <p className={styles.erroUpload}>{erroUpload}</p>}
+                                {(form.imagemUrl ?? '').trim() !== '' && (
+                                    <div className={styles.previewImagem}>
+                                        <img
+                                            src={form.imagemUrl}
+                                            alt="Prévia"
+                                            onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                            onLoad={e => { (e.target as HTMLImageElement).style.display = ''; }}
+                                        />
+                                    </div>
+                                )}
                             </div>
 
                             <div className={styles.formFooter}>

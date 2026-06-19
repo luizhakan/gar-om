@@ -54,6 +54,8 @@ model Restaurante {
   blockedAt                DateTime?
   foundingMemberAt         DateTime?
   foundingNumber           Int?
+  planCode                 String?
+  storageUsedBytes         BigInt              @default(0)
   createdAt                DateTime            @default(now())
   updatedAt                DateTime            @updatedAt
 }

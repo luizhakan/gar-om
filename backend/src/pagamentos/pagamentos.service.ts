@@ -235,6 +235,7 @@ export class PagamentosService {
                 subscriptionStatus: 'active',
                 trialEndsAt: novaExpiracao,
                 planLabel: plano.label,
+                planCode,
                 blockedAt: null,
                 ...dadosExtra,
             },

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ServicoPagamentos, type Restaurante, type VagasFundador, type PlanCode } from '../../services/ServicoPagamentos';
-import './Assinatura.module.css';
-import { Botao } from '../../components/Botao';
+import styles from './Assinatura.module.css';
 
 export function Assinatura() {
     const [restaurante, setRestaurante] = useState<Restaurante | null>(null);
@@ -61,10 +60,8 @@ export function Assinatura() {
         try {
             setProcessando(true);
             setErro('');
-
             const resultado = await ServicoPagamentos.criarCheckout(planCode);
             const checkoutUrl = resultado.initPoint || resultado.sandboxInitPoint;
-
             if (checkoutUrl) {
                 window.location.href = checkoutUrl;
             } else {
@@ -78,15 +75,13 @@ export function Assinatura() {
 
     function calcularDiasRestantes(): number {
         if (!restaurante) return 0;
-        const agora = new Date();
-        const fim = new Date(restaurante.trialEndsAt);
-        const diff = fim.getTime() - agora.getTime();
+        const diff = new Date(restaurante.trialEndsAt).getTime() - Date.now();
         return Math.ceil(diff / (1000 * 60 * 60 * 24));
     }
 
-    function obterStatusLabel(status: string): string {
+    function obterLabelStatus(status: string): string {
         const labels: Record<string, string> = {
-            trialing: 'Em período de trial',
+            trialing: 'Trial ativo',
             active: 'Ativa',
             past_due: 'Pagamento pendente',
             canceled: 'Cancelada',
@@ -95,194 +90,212 @@ export function Assinatura() {
         return labels[status] || status;
     }
 
-    function obterCorStatus(status: string): string {
-        const cores: Record<string, string> = {
-            trialing: '#2196F3',
-            active: '#4CAF50',
-            past_due: '#FF9800',
-            canceled: '#F44336',
-            blocked: '#9E9E9E',
-        };
-        return cores[status] || '#9E9E9E';
+    function obterVarianteStatus(status: string): string {
+        if (status === 'trialing' || status === 'active') return '';
+        if (status === 'past_due') return styles.aviso;
+        return styles.inativo;
     }
 
     if (carregando) {
         return (
-            <div className="assinatura-container">
-                <div className="carregando">Carregando...</div>
+            <div className={styles.container}>
+                <div className={styles.carregando}>Carregando...</div>
             </div>
         );
     }
 
     if (!restaurante) {
         return (
-            <div className="assinatura-container">
-                <div className="erro">{erro || 'Restaurante não encontrado'}</div>
+            <div className={styles.container}>
+                <div className={styles.erroEstado}>{erro || 'Restaurante não encontrado'}</div>
             </div>
         );
     }
 
     const diasRestantes = calcularDiasRestantes();
-    const expirouOuProximoExpirar = diasRestantes <= 7;
-    // Mostra planos tanto quando a assinatura está inativa quanto durante o trial
-    const mostrarPlanos =
-        restaurante.subscriptionStatus !== 'active' ||
-        restaurante.subscriptionStatus === 'trialing';
+    const mostrarPlanos = restaurante.subscriptionStatus !== 'active';
 
     return (
-        <div className="assinatura-container">
-            <div className="assinatura-header">
-                <h1>Gestão de Assinatura</h1>
-                <p className="restaurante-nome">{restaurante.nome}</p>
+        <div className={styles.container}>
+
+            {/* ── Header ── */}
+            <div className={styles.header}>
+                <h1 className={styles.titulo}>Gestão de Assinatura</h1>
+                <p className={styles.restauranteNome}>{restaurante.nome}</p>
             </div>
 
-            {/* Status da Assinatura */}
-            <div className="card status-card">
-                <h2>Status Atual</h2>
-                <div className="status-info">
+            {/* ── Status ── */}
+            <div className={styles.statusCard}>
+                <div className={styles.statusInfo}>
+                    <p className={styles.statusLabel}>Status da assinatura</p>
                     <div
-                        className="status-badge"
-                        style={{ backgroundColor: obterCorStatus(restaurante.subscriptionStatus) }}
+                        className={`${styles.statusBadge} ${obterVarianteStatus(restaurante.subscriptionStatus)}`}
                     >
-                        {obterStatusLabel(restaurante.subscriptionStatus)}
+                        {restaurante.subscriptionStatus === 'trialing' ? '● ' : ''}
+                        {obterLabelStatus(restaurante.subscriptionStatus)}
                     </div>
-                    <div className="dias-restantes">
-                        <strong>{diasRestantes > 0 ? diasRestantes : 0}</strong> dias restantes
-                    </div>
-                </div>
-                <div className="datas">
-                    <p>
-                        <span>Válido até:</span>{' '}
-                        {new Date(restaurante.trialEndsAt).toLocaleDateString('pt-BR')}
+                    <p className={styles.statusDatas}>
+                        <span>Válido até </span>
+                        {new Date(restaurante.trialEndsAt).toLocaleDateString('pt-BR', {
+                            day: '2-digit',
+                            month: 'long',
+                            year: 'numeric',
+                        })}
                     </p>
+
+                    {diasRestantes <= 3 && diasRestantes > 0 && (
+                        <div className={styles.alertaExpiracao}>
+                            ⚠️ Sua assinatura expira em {diasRestantes} {diasRestantes === 1 ? 'dia' : 'dias'}. Renove para evitar interrupções.
+                        </div>
+                    )}
+                    {diasRestantes <= 0 && (
+                        <div className={styles.alertaExpiracao}>
+                            ⚠️ Sua assinatura expirou. Escolha um plano abaixo para continuar usando o sistema.
+                        </div>
+                    )}
                 </div>
 
-                {expirouOuProximoExpirar && (
-                    <div className="alerta-expiracao">
-                        ⚠️{' '}
-                        {diasRestantes <= 0
-                            ? 'Sua assinatura expirou! Renove agora para continuar usando o sistema.'
-                            : 'Sua assinatura está próxima do vencimento. Renove para evitar interrupções.'}
-                    </div>
-                )}
+                <div className={styles.diasRestantes}>
+                    <span className={styles.diasNumero}>{Math.max(0, diasRestantes)}</span>
+                    <span className={styles.diasLabel}>dias restantes</span>
+                </div>
             </div>
 
-            {/* Card Fundador — só aparece quando elegível */}
+            {/* ── Card Fundador ── */}
             {vagasFundador?.elegivel && (
-                <div className="card founder-card">
-                    <div className="founder-badge">🚀 Oferta Exclusiva — Plano Fundador</div>
-                    <h2>Seja um dos 10 Fundadores</h2>
-                    <p className="founder-descricao">
+                <div className={styles.founderCard}>
+                    <div className={styles.founderBadge}>🚀 Oferta Exclusiva — Apenas durante o Trial</div>
+
+                    <h2 className={styles.founderTitulo}>Seja um dos 10 Fundadores</h2>
+                    <p className={styles.founderDescricao}>
                         Garanta acesso anual completo por um preço especial disponível{' '}
-                        <strong>apenas durante seu trial</strong>. Quando os {' '}
-                        {vagasFundador.vagasRestantes} {vagasFundador.vagasRestantes === 1 ? 'lugar restante' : 'lugares restantes'} acabarem,
-                        essa oferta some para sempre.
+                        <strong>apenas enquanto o seu trial estiver ativo</strong>. Quando as{' '}
+                        {vagasFundador.vagasRestantes}{' '}
+                        {vagasFundador.vagasRestantes === 1 ? 'vaga restante' : 'vagas restantes'}{' '}
+                        acabarem, essa oferta desaparece para sempre.
                     </p>
 
-                    <div className="founder-preco-container">
-                        <div className="founder-preco">
-                            <span className="preco-original">R$ 960,00/ano</span>
-                            <span className="preco-fundador">R$ 500,00/ano</span>
-                            <span className="economia-fundador">Economize R$ 460,00</span>
+                    <div className={styles.founderCorpo}>
+                        <div className={styles.founderPrecos}>
+                            <span className={styles.precoOriginal}>R$ 960,00/ano</span>
+                            <div className={styles.precoFundador}>
+                                R$ 500,00 <span>/ano</span>
+                            </div>
+                            <span className={styles.economiaFundador}>Economia de R$ 460,00</span>
                         </div>
-                        <div className="founder-vagas">
-                            <span className="vagas-numero">{vagasFundador.vagasRestantes}</span>
-                            <span className="vagas-label">
-                                {vagasFundador.vagasRestantes === 1 ? 'vaga restante' : 'vagas restantes'} de 10
+
+                        <div className={styles.founderVagas}>
+                            <span className={styles.vagasNumero}>{vagasFundador.vagasRestantes}</span>
+                            <span className={styles.vagasLabel}>
+                                {vagasFundador.vagasRestantes === 1 ? 'vaga' : 'vagas'} de 10
                             </span>
                         </div>
                     </div>
 
-                    <Botao
-                        className="btn-founder"
-                        onClick={() => abrirCheckout('founder')}
-                        disabled={processando}
-                    >
-                        ⚡ Garantir minha vaga de Fundador
-                    </Botao>
-
-                    <p className="founder-aviso">
-                        * Após o 1º ano, renova pelo plano Anual (R$ 960,00). Pagamento único via Mercado Pago.
-                    </p>
+                    <div className={styles.founderAcoes}>
+                        <button
+                            className={styles.btnFounder}
+                            onClick={() => abrirCheckout('founder')}
+                            disabled={processando}
+                        >
+                            ⚡ Garantir minha vaga de Fundador
+                        </button>
+                        <p className={styles.founderAviso}>
+                            * Após o 1º ano, renova pelo Plano Anual (R$ 960,00). Pagamento único via Mercado Pago.
+                        </p>
+                    </div>
                 </div>
             )}
 
-            {/* Planos — visível durante trial e quando inativo */}
+            {/* ── Planos ── */}
             {mostrarPlanos && (
-                <div className="card acoes-card">
-                    <h2>
-                        {restaurante.subscriptionStatus === 'trialing'
-                            ? 'Assine agora e some os dias ao seu trial'
-                            : 'Renovar Assinatura'}
-                    </h2>
-                    <p>Escolha o plano que melhor se adequa às suas necessidades:</p>
+                <div className={styles.planosCard}>
+                    <div className={styles.planosHeader}>
+                        <h2>
+                            {restaurante.subscriptionStatus === 'trialing'
+                                ? 'Assine agora e some os dias ao seu trial'
+                                : 'Escolha um plano para continuar'}
+                        </h2>
+                        <p>Pagamento único via Mercado Pago · PIX, Boleto ou Cartão</p>
+                    </div>
 
-                    <div className="planos-container">
-                        <div className="plano">
-                            <h3>Plano Mensal</h3>
-                            <p className="preco">R$ 100,00/mês</p>
-                            <Botao
-                                className="btn-renovar"
+                    <div className={styles.planosGrid}>
+                        {/* Mensal */}
+                        <div className={styles.plano}>
+                            <p className={styles.planoNome}>Mensal</p>
+                            <p className={styles.planPreco}>R$ 100</p>
+                            <button
+                                className={styles.btnRenovar}
                                 onClick={() => abrirCheckout('mensal')}
                                 disabled={processando}
                             >
-                                💳 Pagar com PIX, Boleto ou Cartão
-                            </Botao>
+                                Assinar agora
+                            </button>
                         </div>
 
-                        <div className="plano destaque">
-                            <div className="badge-destaque">Mais Popular</div>
-                            <h3>Plano Trimestral</h3>
-                            <p className="preco">R$ 270,00</p>
-                            <p className="economia">(Economize 10% — R$ 90,00/mês)</p>
-                            <Botao
-                                className="btn-renovar"
+                        {/* Trimestral */}
+                        <div className={`${styles.plano} ${styles.planoDestaque}`}>
+                            <div className={styles.badgeDestaque}>Mais Popular</div>
+                            <p className={styles.planoNome}>Trimestral</p>
+                            <p className={styles.planPreco}>R$ 270</p>
+                            <p className={styles.planoEconomia}>Economize 10%</p>
+                            <button
+                                className={styles.btnRenovar}
                                 onClick={() => abrirCheckout('trimestral')}
                                 disabled={processando}
                             >
-                                💳 Pagar com PIX, Boleto ou Cartão
-                            </Botao>
+                                Assinar agora
+                            </button>
                         </div>
 
-                        <div className="plano">
-                            <h3>Plano Anual</h3>
-                            <p className="preco">R$ 960,00</p>
-                            <p className="economia">(Economize 20% — R$ 80,00/mês)</p>
-                            <Botao
-                                className="btn-renovar"
+                        {/* Anual */}
+                        <div className={styles.plano}>
+                            <p className={styles.planoNome}>Anual</p>
+                            <p className={styles.planPreco}>R$ 960</p>
+                            <p className={styles.planoEconomia}>Economize 20%</p>
+                            <button
+                                className={styles.btnRenovar}
                                 onClick={() => abrirCheckout('anual')}
                                 disabled={processando}
                             >
-                                💳 Pagar com PIX, Boleto ou Cartão
-                            </Botao>
+                                Assinar agora
+                            </button>
                         </div>
                     </div>
 
-                    <div className="info-pagamento">
+                    <div className={styles.infoSeguranca}>
                         <p>✅ Pagamento 100% seguro via Mercado Pago</p>
                         <p>✅ Aceita PIX, Boleto Bancário e Cartão de Crédito</p>
-                        <p>✅ Dias somados ao tempo restante do seu trial</p>
+                        {restaurante.subscriptionStatus === 'trialing' && (
+                            <p>✅ Dias somados ao tempo restante do seu trial</p>
+                        )}
                     </div>
                 </div>
             )}
 
-            {/* Mensagens */}
-            {erro && <div className="mensagem erro-mensagem">❌ {erro}</div>}
+            {/* ── Mensagens ── */}
+            {erro && (
+                <div className={`${styles.mensagem} ${styles.mensagemErro}`}>
+                    ❌ {erro}
+                </div>
+            )}
             {sucesso && (
-                <div className="mensagem sucesso-mensagem">
+                <div className={`${styles.mensagem} ${styles.mensagemSucesso}`}>
                     ✅ Pagamento processado com sucesso! Sua assinatura foi atualizada.
                 </div>
             )}
             {processando && (
-                <div className="mensagem processando-mensagem">⏳ Abrindo checkout...</div>
+                <div className={`${styles.mensagem} ${styles.mensagemProcessando}`}>
+                    ⏳ Abrindo checkout...
+                </div>
             )}
 
-            {/* Histórico de Pagamentos */}
+            {/* ── Histórico ── */}
             {restaurante.pagamentos && restaurante.pagamentos.length > 0 && (
-                <div className="card historico-card">
+                <div className={styles.historicoCard}>
                     <h2>Histórico de Pagamentos</h2>
-                    <div className="tabela-container">
-                        <table className="tabela-pagamentos">
+                    <div className={styles.tabelaContainer}>
+                        <table className={styles.tabelaPagamentos}>
                             <thead>
                                 <tr>
                                     <th>Data</th>
@@ -300,12 +313,18 @@ export function Assinatura() {
                                         <td>R$ {pagamento.transactionAmount.toFixed(2)}</td>
                                         <td>
                                             <span
-                                                className={`status-pagamento status-${pagamento.status}`}
+                                                className={`${styles.statusPagamento} ${
+                                                    pagamento.status === 'approved'
+                                                        ? styles.statusApproved
+                                                        : pagamento.status === 'pending'
+                                                        ? styles.statusPending
+                                                        : styles.statusRejected
+                                                }`}
                                             >
                                                 {pagamento.status}
                                             </span>
                                         </td>
-                                        <td>{pagamento.paymentMethodId}</td>
+                                        <td>{pagamento.paymentMethodId || '—'}</td>
                                     </tr>
                                 ))}
                             </tbody>
