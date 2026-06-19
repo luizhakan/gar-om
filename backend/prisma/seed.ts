@@ -87,7 +87,7 @@ async function main() {
 
     console.log(`Produtos criados: ${produtos.count}`);
 
-    const baseUrl = 'http://localhost:5173';
+    const baseUrl = (process.env.FRONTEND_URL ?? 'http://localhost:5173').replace(/\/$/, '');
     const mesas = await prisma.mesa.createMany({
         data: Array.from({ length: 10 }, (_, index) => {
             const numero = index + 1;
