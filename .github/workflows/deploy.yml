@@ -42,8 +42,15 @@ jobs:
             set -e
 
             echo "🚀 Iniciando Deploy..."
-            
-            # Entra na pasta do projeto (ajuste o caminho conforme sua VPS)
+
+            # --- CLONE INICIAL (se o diretório ainda não existir) ---
+            if [ ! -d "${{ secrets.PROJECT_PATH }}/.git" ]; then
+              echo "📦 Primeiro deploy — clonando repositório..."
+              mkdir -p ${{ secrets.PROJECT_PATH }}
+              git clone ${{ secrets.REPO_URL }} ${{ secrets.PROJECT_PATH }}
+            fi
+
+            # Entra na pasta do projeto
             cd ${{ secrets.PROJECT_PATH }}
 
             # --- ATUALIZAÇÃO DE CÓDIGO ---
