@@ -29,7 +29,11 @@ export function Home() {
                 <div className="container">
                     <div className={styles.topbarContent}>
                         <div className={styles.brand}>Garçom Ágil</div>
-                        <Botao variante="secundario" tamanho="pequeno" onClick={abrirLogin}>Login</Botao>
+                        <nav className={styles.topbarNav}>
+                            <Link to="/como-funciona" className={styles.topbarLink}>Como funciona</Link>
+                            <Link to="/precos" className={styles.topbarLink}>Preços</Link>
+                            <Botao variante="secundario" tamanho="pequeno" onClick={abrirLogin}>Login</Botao>
+                        </nav>
                     </div>
                 </div>
             </div>
@@ -116,6 +120,8 @@ export function Home() {
                     <div className={styles.rodapeContent}>
                         <span className={styles.rodapeBrand}>Garçom Ágil</span>
                         <nav className={styles.rodapeLinks}>
+                            <Link to="/como-funciona">Como funciona</Link>
+                            <Link to="/precos">Preços</Link>
                             <Link to="/privacidade">Política de Privacidade</Link>
                         </nav>
                     </div>

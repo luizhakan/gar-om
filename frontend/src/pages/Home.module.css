@@ -29,6 +29,30 @@
     color: var(--cor-texto-principal);
 }
 
+.topbarNav {
+    display: flex;
+    align-items: center;
+    gap: var(--espaco-lg);
+}
+
+.topbarLink {
+    display: none;
+    color: var(--cor-texto-secundario);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.topbarLink:hover {
+    color: var(--cor-primaria);
+}
+
+@media (min-width: 640px) {
+    .topbarLink {
+        display: inline;
+    }
+}
+
 .modalOverlay {
     position: fixed;
     inset: 0;

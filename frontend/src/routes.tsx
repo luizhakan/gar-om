@@ -1,6 +1,8 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { Privacidade } from './pages/Privacidade';
+import { ComoFunciona } from './pages/ComoFunciona';
+import { Precos } from './pages/Precos';
 import { DashboardAdmin } from './pages/Admin/Dashboard';
 import { CategoriasAdmin } from './pages/Admin/Categorias';
 import { ProdutosAdmin } from './pages/Admin/Produtos';
@@ -29,6 +31,16 @@ export const router = createBrowserRouter([
     {
         path: '/privacidade',
         element: <Privacidade />,
+        errorElement: <PaginaErro />,
+    },
+    {
+        path: '/como-funciona',
+        element: <ComoFunciona />,
+        errorElement: <PaginaErro />,
+    },
+    {
+        path: '/precos',
+        element: <Precos />,
         errorElement: <PaginaErro />,
     },
     {
