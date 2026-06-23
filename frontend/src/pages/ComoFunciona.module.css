@@ -274,6 +274,51 @@
     color: var(--cor-primaria);
 }
 
+.segurancaGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--espaco-lg);
+}
+
+.segurancaCard {
+    padding: var(--espaco-lg);
+    border-radius: var(--raio-lg);
+    background: linear-gradient(135deg, rgba(16, 22, 30, 0.9), rgba(9, 12, 18, 0.85));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: var(--sombra-suave);
+    position: relative;
+    overflow: hidden;
+}
+
+.segurancaCard::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--cor-primaria);
+}
+
+.segurancaCard h3 {
+    margin: 0 0 var(--espaco-xs);
+    font-size: 1.25rem;
+    color: var(--cor-texto-principal);
+}
+
+.segurancaCard p {
+    margin: 0;
+    color: var(--cor-texto-secundario);
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.ctaLink {
+    display: block;
+    width: 100%;
+    text-decoration: none;
+}
+
 @media (min-width: 720px) {
     .ctas {
         flex-direction: row;
@@ -287,5 +332,14 @@
 
     .atorGrid {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .segurancaGrid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .ctaLink {
+        width: auto;
+        flex: 1;
     }
 }

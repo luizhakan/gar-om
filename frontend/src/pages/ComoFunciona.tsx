@@ -1,4 +1,5 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Botao } from '../components/Botao';
 import styles from './ComoFunciona.module.css';
 
@@ -52,7 +53,9 @@ const ATORES = [
 ];
 
 export function ComoFunciona() {
-    const navigate = useNavigate();
+    useEffect(() => {
+        document.title = "Como Funciona a Comanda Digital e Cardápio QR Code | Garçom Ágil";
+    }, []);
 
     return (
         <div className={styles.page}>
@@ -71,18 +74,22 @@ export function ComoFunciona() {
             <header className={styles.hero}>
                 <div className="container">
                     <p className={styles.kicker}>Como funciona</p>
-                    <h1 className={styles.titulo}>Do salão à cozinha, sem fricção</h1>
+                    <h1 className={styles.titulo}>Como funciona o Garçom Ágil: comanda digital e cardápio QR Code</h1>
                     <p className={styles.subtitulo}>
                         O Garçom Ágil conecta cliente, cozinha e caixa em tempo real. O cliente pede pelo
                         próprio celular, a cozinha recebe na hora e você acompanha tudo de um só lugar.
                     </p>
                     <div className={styles.ctas}>
-                        <Botao variante="primario" tamanho="grande" onClick={() => navigate('/admin/registro')}>
-                            Começar teste de 14 dias
-                        </Botao>
-                        <Botao variante="secundario" tamanho="grande" onClick={() => navigate('/precos')}>
-                            Ver preços
-                        </Botao>
+                        <Link to="/admin/registro" className={styles.ctaLink}>
+                            <Botao variante="primario" tamanho="grande">
+                                Começar teste de 14 dias
+                            </Botao>
+                        </Link>
+                        <Link to="/precos" className={styles.ctaLink}>
+                            <Botao variante="secundario" tamanho="grande">
+                                Ver preços
+                            </Botao>
+                        </Link>
                     </div>
                 </div>
             </header>
@@ -122,16 +129,41 @@ export function ComoFunciona() {
                     </div>
                 </section>
 
+                <section className={styles.section}>
+                    <div className={styles.sectionHeader}>
+                        <p className={styles.kicker}>Segurança e Controle</p>
+                        <h2>Sua operação protegida contra fraudes</h2>
+                    </div>
+                    <div className={styles.segurancaGrid}>
+                        <div className={styles.segurancaCard}>
+                            <h3>🔒 Aprovação de Dispositivos</h3>
+                            <p>Evite pedidos indesejados. Quando um cliente lê o QR Code da mesa, ele precisa de aprovação para começar a pedir.</p>
+                        </div>
+                        <div className={styles.segurancaCard}>
+                            <h3>👑 Controle do Cliente Master</h3>
+                            <p>A primeira pessoa que abre a mesa torna-se o "Master", com autonomia para gerenciar e aprovar os dispositivos de quem se senta com ela.</p>
+                        </div>
+                        <div className={styles.segurancaCard}>
+                            <h3>🛡️ Poder do Estabelecimento</h3>
+                            <p>A equipe do restaurante (caixa e gerência) tem total controle, podendo remover acessos e gerenciar os participantes de cada comanda pelo painel.</p>
+                        </div>
+                    </div>
+                </section>
+
                 <section className={styles.cta}>
                     <h2>Pronto para testar no seu restaurante?</h2>
                     <p>14 dias grátis, sem cartão. Cancele quando quiser.</p>
                     <div className={styles.ctas}>
-                        <Botao variante="primario" tamanho="grande" onClick={() => navigate('/admin/registro')}>
-                            Criar conta grátis
-                        </Botao>
-                        <Botao variante="secundario" tamanho="grande" onClick={() => navigate('/precos')}>
-                            Ver planos e preços
-                        </Botao>
+                        <Link to="/admin/registro" className={styles.ctaLink}>
+                            <Botao variante="primario" tamanho="grande">
+                                Criar conta grátis
+                            </Botao>
+                        </Link>
+                        <Link to="/precos" className={styles.ctaLink}>
+                            <Botao variante="secundario" tamanho="grande">
+                                Ver planos e preços
+                            </Botao>
+                        </Link>
                     </div>
                 </section>
             </main>
